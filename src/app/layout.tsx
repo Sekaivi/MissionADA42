@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="fr">
-            <body className='bg-(--background)'>
+            <body>
                 <main className="mx-auto min-h-screen w-full max-w-6xl p-4">{children}</main>
             </body>
         </html>
