@@ -1,0 +1,153 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import Image from 'next/image';
+
+import { AlphaButton } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaError } from '@/components/alpha/AlphaError';
+import { AlphaGrid } from '@/components/alpha/AlphaGrid';
+import { AlphaHeader } from '@/components/alpha/AlphaHeader';
+import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
+import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
+import { useCamera } from '@/hooks/useCamera';
+
+export default function AlphaCameraOnly() {
+    const { videoRef, error } = useCamera();
+
+    // states pour le debug technique
+    const [videoInfo, setVideoInfo] = useState<{
+        width: number;
+        height: number;
+        label: string;
+        frameRate?: number;
+    } | null>(null);
+    const [snapshot, setSnapshot] = useState<string | null>(null);
+
+    // extraire les metadata du flux
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const updateInfo = () => {
+            // check si le stream est actif
+            const stream = video.srcObject as MediaStream;
+            const track = stream?.getVideoTracks()[0];
+            const settings = track?.getSettings();
+
+            if (video.videoWidth > 0) {
+                setVideoInfo({
+                    width: video.videoWidth,
+                    height: video.videoHeight,
+                    label: track?.label || 'Caméra générique',
+                    frameRate: settings?.frameRate,
+                });
+            }
+        };
+
+        // on écoute le chargement, et on poll toutes les secondes pour détecter les changements (rotation, etc)
+        video.addEventListener('loadedmetadata', updateInfo);
+        const interval = setInterval(updateInfo, 1000);
+
+        return () => {
+            video.removeEventListener('loadedmetadata', updateInfo);
+            clearInterval(interval);
+        };
+    }, [videoRef]);
+
+    // test de screenshot
+    const takeSnapshot = () => {
+        if (!videoRef.current) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(videoRef.current, 0, 0);
+
+        setSnapshot(canvas.toDataURL('image/png'));
+    };
+
+    return (
+        <>
+            <AlphaHeader title="Camera" subtitle="Test d'accès aux flux vidéo" />
+
+            <AlphaError message={error} />
+
+            <AlphaGrid>
+                {/* col 1 : visuel */}
+                <AlphaCard
+                    title="Flux Vidéo Brut"
+                    action={
+                        <AlphaButton onClick={takeSnapshot} variant="secondary">
+                            Screenshot
+                        </AlphaButton>
+                    }
+                >
+                    <div className="space-y-4">
+                        <AlphaVideoContainer label="RECORDING">
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="h-full w-full object-contain"
+                            />
+                        </AlphaVideoContainer>
+                    </div>
+                </AlphaCard>
+
+                {/* col 2 : data */}
+                <div className="space-y-6">
+                    <AlphaCard title="Métadonnées du Stream">
+                        {!videoInfo ? (
+                            <div className="text-brand-blue animate-pulse text-sm">
+                                Synchronisation matériel...
+                            </div>
+                        ) : (
+                            <div className="flex flex-col">
+                                <AlphaInfoRow label="Statut" value="ACTIF" active />
+                                <AlphaInfoRow
+                                    label="Résolution"
+                                    value={`${videoInfo.width} x ${videoInfo.height} px`}
+                                />
+                                <AlphaInfoRow
+                                    label="Ratio"
+                                    value={(videoInfo.width / videoInfo.height).toFixed(2)}
+                                />
+                                <AlphaInfoRow
+                                    label="Frame Rate"
+                                    value={
+                                        videoInfo.frameRate
+                                            ? `${videoInfo.frameRate} fps`
+                                            : undefined
+                                    }
+                                />
+                                <div className="pt-4">
+                                    <p className="text-muted mb-1 text-xs">Hardware ID</p>
+                                    <code className="bg-background text-muted block truncate rounded p-1 text-xs">
+                                        {videoInfo.label}
+                                    </code>
+                                </div>
+                            </div>
+                        )}
+                    </AlphaCard>
+
+                    {snapshot && videoInfo && (
+                        <AlphaCard title="Dernière Capture">
+                            <Image
+                                src={snapshot}
+                                alt="Snapshot"
+                                width={videoInfo.width}
+                                height={videoInfo.height}
+                                className="h-auto w-full"
+                                unoptimized
+                            />
+                        </AlphaCard>
+                    )}
+                </div>
+            </AlphaGrid>
+        </>
+    );
+}
