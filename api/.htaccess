@@ -1,0 +1,18 @@
+# /api/.htaccess
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp)$">
+    Header set Access-Control-Allow-Origin "http://localhost:3000"
+    Header set Access-Control-Allow-Credentials "true"
+    Header set Vary "Origin"
+  </FilesMatch>
+</IfModule>
+
+RewriteEngine On
+RewriteBase /api/
+
+# Ne pas réécrire si fichier ou dossier existe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Tout le reste va vers index.php
+RewriteRule ^ /api/index.php [QSA,L]
