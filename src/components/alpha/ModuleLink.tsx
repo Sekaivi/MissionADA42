@@ -12,15 +12,15 @@ export function ModuleLink({ href, title, subtitle, icon: Icon, isGame = false }
             href={href}
             className={`group relative flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
                 isGame
-                    ? 'border-emerald-500/30 bg-emerald-950/10 hover:border-emerald-500 hover:bg-emerald-900/20'
-                    : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-600 hover:bg-neutral-800'
+                    ? 'border-brand-emerald/30 bg-brand-emerald/10 hover:border-brand-emerald hover:bg-brand-emerald/20'
+                    : 'border-border bg-surface hover:border-muted hover:bg-surface-highlight'
             }`}
         >
             <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                     isGame
-                        ? 'border-emerald-500/30 bg-emerald-900/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black'
-                        : 'border-neutral-700 bg-neutral-800 text-neutral-400 group-hover:border-neutral-500 group-hover:text-white'
+                        ? 'border-brand-emerald/30 bg-brand-emerald/20 text-brand-emerald group-hover:bg-brand-emerald group-hover:text-background'
+                        : 'border-border bg-surface text-muted group-hover:border-muted group-hover:text-foreground'
                 }`}
             >
                 <Icon className="h-6 w-6" />
@@ -28,20 +28,24 @@ export function ModuleLink({ href, title, subtitle, icon: Icon, isGame = false }
 
             <div className="flex-1">
                 <div className="flex items-center gap-2">
-                    <h3 className={`font-bold ${isGame ? 'text-emerald-100' : 'text-neutral-200'}`}>
+                    <h3
+                        className={`font-bold ${isGame ? 'text-brand-emerald' : 'text-foreground'}`}
+                    >
                         {title}
                     </h3>
                     {isGame && (
-                        <span className="rounded bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
+                        <span className="bg-brand-emerald text-background rounded px-1.5 py-0.5 text-xs font-bold">
                             JEU
                         </span>
                     )}
                 </div>
-                <p className="text-sm text-neutral-500 group-hover:text-neutral-400">{subtitle}</p>
+                <p className="text-muted group-hover:text-foreground text-sm transition-colors">
+                    {subtitle}
+                </p>
             </div>
 
             {isGame && (
-                <PlayCircleIcon className="h-8 w-8 text-emerald-500 opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
+                <PlayCircleIcon className="text-brand-emerald h-8 w-8 opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
             )}
         </Link>
     );

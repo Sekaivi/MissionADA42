@@ -2,16 +2,16 @@ import React from 'react';
 
 import type { Metadata } from 'next';
 
-import { AlphaPage } from '@/components/alpha/AlphaPage';
+import ClientLayout from '@/app/ClientLayout';
 
 export const metadata: Metadata = {
     title: 'Alpha tests',
 };
 
-export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
-    return <AlphaPage>{children}</AlphaPage>;
+export default function AlphaLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <ClientLayout variant="dark">
+            <div className="space-y-8 font-mono">{children}</div>
+        </ClientLayout>
+    );
 }

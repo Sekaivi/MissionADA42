@@ -13,8 +13,8 @@ export const AlphaButton = ({
 }) => {
     const styles =
         variant === 'primary'
-            ? 'bg-emerald-900/30 hover:bg-emerald-800/50 border-emerald-700 text-emerald-300'
-            : 'bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white';
+            ? 'border-brand-emerald/50 bg-brand-emerald/10 text-brand-emerald hover:bg-brand-emerald hover:text-background hover:border-brand-emerald'
+            : 'border-border bg-surface text-foreground hover:bg-surface-highlight hover:border-muted';
 
     return (
         <button

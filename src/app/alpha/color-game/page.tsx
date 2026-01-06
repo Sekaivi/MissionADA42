@@ -15,6 +15,7 @@ import { PRESETS } from '@/utils/colorPresets';
 
 const GAME_PRESETS = [PRESETS.BLEU, PRESETS.VERT, PRESETS.ROUGE, PRESETS.ORANGE];
 
+// couleurs brutes pour les éléments du jeu
 const STYLE_MAP: Record<string, string> = {
     [PRESETS.ROUGE.id]: 'bg-red-500 border-red-500',
     [PRESETS.VERT.id]: 'bg-green-500 border-green-500',
@@ -36,7 +37,7 @@ export default function ChromaticGame() {
 
     const activePresets = useMemo(() => GAME_PRESETS, []);
 
-    // état du jeu
+    // states du jeu
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);
     const [phase, setPhase] = useState<'init' | 'memory' | 'scan' | 'win'>('init');
@@ -90,7 +91,7 @@ export default function ChromaticGame() {
             const expectedId = sequence[step];
 
             if (detectedId === expectedId) {
-                processingRef.current = true; // vérouille
+                processingRef.current = true; // vérrouille
 
                 // logique asynchrone
                 const timer = setTimeout(() => {
@@ -100,7 +101,7 @@ export default function ChromaticGame() {
                     const nextStep = step + 1;
                     setStep(nextStep);
 
-                    processingRef.current = false; // déverouille
+                    processingRef.current = false; // déverrouille
 
                     if (nextStep >= sequence.length) {
                         setPhase('win');
@@ -125,91 +126,107 @@ export default function ChromaticGame() {
         <>
             <AlphaHeader title={'Module de Sécurité'} />
 
-            <AlphaCard>
-                <div className={'mb-6 flex justify-center gap-4'}>
-                    {sequence.map((colorId, index) => {
-                        const colorStyle = STYLE_MAP[colorId] || 'bg-gray-500';
-                        let styles =
-                            'w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ';
+            <div className="space-y-6">
+                <AlphaCard>
+                    <div className={'mb-6 flex justify-center gap-4'}>
+                        {sequence.map((colorId, index) => {
+                            const colorStyle = STYLE_MAP[colorId] || 'bg-muted';
+                            let styles =
+                                'w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ';
 
-                        if (phase === 'memory') {
-                            styles += `${colorStyle} text-black`;
-                        } else {
-                            if (index < step) {
-                                styles += `${colorStyle} opacity-50 text-black`;
-                            } else if (index === step && phase === 'scan') {
-                                styles +=
-                                    'bg-neutral-800 border-white scale-110 shadow-[0_0_15px_white] text-white';
+                            if (phase === 'memory') {
+                                // phase memory => on affiche les vraies couleurs
+                                styles += `${colorStyle} text-white shadow-lg`;
                             } else {
-                                styles += 'bg-neutral-800 border-neutral-600 text-neutral-600';
+                                if (index < step) {
+                                    // couleur validée => couleur atténuée
+                                    styles += `${colorStyle} opacity-50 text-white`;
+                                } else if (index === step && phase === 'scan') {
+                                    // étape actuelle
+                                    styles +=
+                                        'bg-background border-foreground scale-110 shadow-[0_0_15px_var(--color-foreground)] text-foreground';
+                                } else {
+                                    // étapes manquantes
+                                    styles += 'bg-surface-highlight border-border text-muted';
+                                }
                             }
-                        }
 
-                        return (
-                            <div key={index} className={styles}>
-                                {phase === 'memory' ? (
-                                    ''
-                                ) : index < step ? (
-                                    <CheckIcon />
-                                ) : (
-                                    <QuestionMarkCircleIcon />
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                            return (
+                                <div key={index} className={styles}>
+                                    {phase === 'memory' ? (
+                                        ''
+                                    ) : index < step ? (
+                                        <CheckIcon className="h-6 w-6" />
+                                    ) : (
+                                        <QuestionMarkCircleIcon className="h-6 w-6" />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
 
-                <div className="text-center font-mono text-neutral-300">
-                    {phase === 'memory' && `MÉMORISEZ : ${timeLeft}s`}
-                    {phase === 'scan' && "SCANNEZ LES OBJETS DANS L'ORDRE"}
-                    {phase === 'win' && 'SYSTÈME DÉVERROUILLÉ'}
-                </div>
-            </AlphaCard>
-
-            <AlphaCard>
-                <AlphaVideoContainer
-                    scanSettings={phase === 'scan' ? scanConfig : undefined}
-                    label="COLOR GAME"
-                >
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="h-full w-full object-cover"
-                    />
-
-                    {detectedId && phase === 'scan' && (
-                        <div className="absolute right-0 bottom-4 left-0 text-center">
-                            <span
-                                className="rounded border border-white/20 bg-black/70 px-3 py-1 font-bold text-white shadow-lg"
-                                style={{
-                                    borderColor: GAME_PRESETS.find((p) => p.id === detectedId)
-                                        ?.displayHex,
-                                    color: GAME_PRESETS.find((p) => p.id === detectedId)
-                                        ?.displayHex,
-                                }}
-                            >
-                                {GAME_PRESETS.find((p) => p.id === detectedId)?.name}
+                    <div className="text-muted text-center font-mono">
+                        {phase === 'memory' && (
+                            <span className="text-foreground animate-pulse">
+                                MÉMORISEZ : {timeLeft}s
                             </span>
-                        </div>
-                    )}
-                </AlphaVideoContainer>
-            </AlphaCard>
+                        )}
+                        {phase === 'scan' && "SCANNEZ LES OBJETS DANS L'ORDRE"}
+                        {phase === 'win' && (
+                            <span className="text-brand-emerald font-bold">
+                                SYSTÈME DÉVERROUILLÉ
+                            </span>
+                        )}
+                    </div>
+                </AlphaCard>
 
-            <div
-                className={`mt-6 min-h-[60px] w-full max-w-sm rounded border p-4 text-center font-bold transition-colors ${
-                    phase === 'win'
-                        ? 'border-green-500 bg-green-900/30 text-green-400'
-                        : 'border-transparent text-white'
-                }`}
-            >
-                {feedbackMsg}
+                <AlphaCard>
+                    <AlphaVideoContainer
+                        scanSettings={phase === 'scan' ? scanConfig : undefined}
+                        label="COLOR GAME"
+                    >
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="h-full w-full object-cover"
+                        />
+
+                        {detectedId && phase === 'scan' && (
+                            <div className="absolute right-0 bottom-4 left-0 text-center">
+                                {/* badge de couleur détectée */}
+                                <span
+                                    className="border-border bg-background text-foreground rounded border px-3 py-1 font-bold shadow-lg backdrop-blur-sm"
+                                    style={{
+                                        borderColor: GAME_PRESETS.find((p) => p.id === detectedId)
+                                            ?.displayHex,
+                                        color: GAME_PRESETS.find((p) => p.id === detectedId)
+                                            ?.displayHex,
+                                    }}
+                                >
+                                    {GAME_PRESETS.find((p) => p.id === detectedId)?.name}
+                                </span>
+                            </div>
+                        )}
+                    </AlphaVideoContainer>
+                </AlphaCard>
+
+                {/* feedback */}
+                <div
+                    className={`mt-6 min-h-[60px] w-full rounded border p-4 text-center font-bold transition-colors ${
+                        phase === 'win'
+                            ? 'border-brand-emerald bg-brand-emerald/10 text-brand-emerald'
+                            : 'text-foreground border-transparent'
+                    }`}
+                >
+                    {feedbackMsg}
+                </div>
+
+                {(phase === 'scan' || phase === 'win') && (
+                    <AlphaButton onClick={startGame}>Réinitialiser le système</AlphaButton>
+                )}
             </div>
-
-            {(phase === 'scan' || phase === 'win') && (
-                <AlphaButton onClick={startGame}>Réinitialiser le système</AlphaButton>
-            )}
         </>
     );
 }
