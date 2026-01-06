@@ -22,6 +22,7 @@ import {
     SwatchIcon,
     UserGroupIcon,
     VideoCameraIcon,
+    MapPinIcon,
 } from '@heroicons/react/24/outline';
 
 import { AlphaCard } from '@/components/alpha/AlphaCard';
@@ -79,6 +80,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'Calibrage gyroscopique',
                 subtitle: 'Valide, construit sur des composants et hooks réutilisables',
                 icon: CubeTransparentIcon,
+            },
+            {
+                href: '/alpha/geolocation-debug',
+                title: 'Informations GPS',
+                subtitle: 'Données GPS précises en temps réel',
+                icon: MapPinIcon,
             },
             {
                 href: '/alpha/sensors/orientation-puzzle-page',
