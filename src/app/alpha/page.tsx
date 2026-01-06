@@ -24,6 +24,7 @@ import {
     SwatchIcon,
     UserGroupIcon,
     VideoCameraIcon,
+    MapPinIcon,
 } from '@heroicons/react/24/outline';
 
 import { AlphaCard } from '@/components/alpha/AlphaCard';
