@@ -1,13 +1,13 @@
 import React from 'react';
 
 export const AlphaHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
-    <header className="border-b border-neutral-800 pb-4">
+    <header className="border-border border-b pb-4">
         <div className="flex items-center gap-3">
             <div>
-                <h1 className="text-xl font-bold tracking-widest text-emerald-400 uppercase">
+                <h1 className="text-brand-emerald text-xl font-bold tracking-widest uppercase">
                     {title}
                 </h1>
-                {subtitle && <p className="mt-1 text-xs text-neutral-500">{subtitle}</p>}
+                {subtitle && <p className="text-muted mt-1 text-xs">{subtitle}</p>}
             </div>
         </div>
     </header>

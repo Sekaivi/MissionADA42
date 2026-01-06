@@ -11,6 +11,7 @@ import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { PRESETS } from '@/utils/colorPresets';
 
+// composant interne pour les barres de score
 const ScoreBar = ({
     label,
     value,
@@ -36,9 +37,10 @@ const ScoreBar = ({
                 >
                     {label}
                 </span>
-                <span className="text-neutral-500">{Math.round(value)}</span>
+                <span className="text-muted">{Math.round(value)}</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-sm border border-neutral-700/50 bg-neutral-800">
+            {/* barre de fond */}
+            <div className="border-border bg-surface-highlight h-2 w-full overflow-hidden rounded-sm border">
                 <div
                     className="h-full transition-all duration-200 ease-out"
                     style={{
@@ -111,20 +113,21 @@ export default function AlphaColorCameraTest() {
                                 )}
                             </AlphaVideoContainer>
 
-                            {/* résultat */}
-                            <div className="flex rounded border border-neutral-800 bg-neutral-900 p-4 text-center">
+                            {/* résultat détecté */}
+                            <div className="border-border bg-background flex rounded border p-4 text-center">
                                 <canvas
                                     ref={debugCanvasRef}
                                     className="pixelated h-auto max-h-[150px] w-auto"
                                 />
                                 <div className={'flex flex-1 flex-col justify-center'}>
-                                    <p className="mb-1 text-xs tracking-widest text-neutral-500 uppercase">
+                                    <p className="text-muted mb-1 text-xs tracking-widest uppercase">
                                         Cible verrouillée
                                     </p>
                                     <div
                                         className="text-4xl font-black tracking-wider transition-colors duration-300"
                                         style={{
-                                            color: detectedColorHex || '#404040',
+                                            // fallback sur la couleur muted si rien n'est détecté
+                                            color: detectedColorHex || 'var(--color-muted)',
                                             textShadow: detectedColorHex
                                                 ? `0 0 20px ${detectedColorHex}40`
                                                 : 'none',
@@ -143,12 +146,12 @@ export default function AlphaColorCameraTest() {
                     {/* analyse RGB brute */}
                     <AlphaCard title="Calibration RGB (Luminosité)">
                         {!debugData ? (
-                            <div className="animate-pulse text-sm text-yellow-500">
+                            <div className="text-brand-blue animate-pulse text-sm">
                                 Initialisation...
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {/* Barres R G B */}
+                                {/* barres R G B -> couleurs spécifiques car elles représentent des données physiques */}
                                 <div className="flex h-16 gap-2">
                                     <div className="group relative flex flex-1 flex-col items-center justify-end overflow-hidden rounded border border-red-900/50 bg-red-950/30 pb-2">
                                         <div
@@ -191,14 +194,14 @@ export default function AlphaColorCameraTest() {
                                 {/* aperçu couleur moyenne */}
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="h-12 w-12 rounded border border-white/10 shadow-inner"
+                                        className="border-border h-12 w-12 rounded border shadow-inner"
                                         style={{
                                             backgroundColor: `rgb(${debugData.rgbAverage.r},${debugData.rgbAverage.g},${debugData.rgbAverage.b})`,
                                         }}
                                     />
-                                    <p className="flex-1 text-xs leading-relaxed text-neutral-500">
+                                    <p className="text-muted flex-1 text-xs leading-relaxed">
                                         Moyenne calculée sur la zone centrale (100px²). <br />
-                                        <span className="text-neutral-400">
+                                        <span className="text-foreground/70">
                                             Seuil dynamique actuel :{' '}
                                             {Math.round(debugData.threshold)}px
                                         </span>
@@ -211,7 +214,7 @@ export default function AlphaColorCameraTest() {
                     {/* matching */}
                     <AlphaCard title="Algorithme de Matching">
                         {!debugData ? (
-                            <div className="text-sm text-neutral-600">En attente de flux...</div>
+                            <div className="text-muted text-sm">En attente de flux...</div>
                         ) : (
                             <div className="space-y-4">
                                 {activePresets.map((preset) => {

@@ -40,8 +40,8 @@ export default function AlphaOrientationDebug() {
 
             {/* cas iOS demande la permission */}
             {!permissionGranted && !error && (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 p-10">
-                    <p className="mb-4 text-neutral-400">
+                <div className="border-border bg-surface flex flex-col items-center justify-center rounded-lg border p-10">
+                    <p className="text-muted mb-4">
                         L'accès aux capteurs nécessite une validation.
                     </p>
                     <AlphaButton onClick={requestPermission}>
@@ -52,7 +52,7 @@ export default function AlphaOrientationDebug() {
 
             <AlphaError message={error} />
 
-            {/* cas permission OK, mais aucune donnée (PC sans DevTools ou Mobile posé à plat absolu) */}
+            {/* cas permission OK, mais aucune donnée */}
             {permissionGranted && !hasSensorData && (
                 <AlphaError message="En attente de données... (Sur PC : Ouvrez DevTools > Sensors)" />
             )}
@@ -63,9 +63,9 @@ export default function AlphaOrientationDebug() {
                     <div className="space-y-6">
                         <AlphaCard title="Visualisation Temps Réel">
                             <div className="flex h-64 items-center justify-center perspective-[800px]">
-                                {/* téléphone */}
+                                {/* téléphone 2D */}
                                 <div
-                                    className="relative flex h-64 w-32 items-center justify-center rounded-3xl border-4 border-neutral-600 bg-neutral-800 shadow-2xl transition-transform duration-100 ease-out"
+                                    className="border-foreground bg-surface relative flex h-64 w-32 items-center justify-center rounded-3xl border-4 shadow-2xl transition-transform duration-100 ease-out"
                                     style={{
                                         transform: `
                                             /* CORRECTION DU SENS DE ROTATION */
@@ -76,8 +76,8 @@ export default function AlphaOrientationDebug() {
                                     }}
                                 >
                                     {/* screen */}
-                                    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[20px] bg-black/50">
-                                        <div className="text-4xl font-black text-emerald-500/50">
+                                    <div className="bg-background/50 flex h-full w-full items-center justify-center overflow-hidden rounded-[20px]">
+                                        <div className="text-brand-emerald/50 text-4xl font-black">
                                             {instantDirection === 'Stable'
                                                 ? '•'
                                                 : instantDirection[0]}
@@ -95,7 +95,7 @@ export default function AlphaOrientationDebug() {
                                             </div>
                                         </div>
 
-                                        {/* Boussole visuelle (Heading - Absolu/Nord) */}
+                                        {/* heading absolu/nord */}
                                         <div className="absolute flex h-full w-full items-center justify-center">
                                             <div
                                                 className="h-16 w-1 bg-red-500 shadow-[0_0_10px_red]"
@@ -113,7 +113,7 @@ export default function AlphaOrientationDebug() {
                                 </div>
                             </div>
 
-                            <p className="mt-4 text-center text-xs text-neutral-500">
+                            <p className="text-muted mt-4 text-center text-xs">
                                 Rouge : Nord Magnétique (Heading) <br />
                                 Vert : Rotation Relative (Alpha)
                             </p>
@@ -145,27 +145,37 @@ export default function AlphaOrientationDebug() {
 
                         <AlphaCard title="Interprétation Gestuelle">
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between rounded border border-neutral-700 bg-neutral-800 p-3">
-                                    <span className="text-sm text-neutral-400">Instantanné</span>
+                                {/* bloc instant */}
+                                <div className="border-border bg-surface-highlight flex items-center justify-between rounded border p-3">
+                                    <span className="text-muted text-sm">Instantanné</span>
                                     <span
-                                        className={`font-mono font-bold ${instantDirection !== 'Stable' ? 'text-yellow-400' : 'text-neutral-500'}`}
+                                        className={`font-mono font-bold ${
+                                            instantDirection !== 'Stable'
+                                                ? 'text-brand-blue'
+                                                : 'text-muted'
+                                        }`}
                                     >
                                         {instantDirection.toUpperCase()}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center justify-between rounded border border-neutral-700 bg-neutral-800 p-3">
-                                    <span className="text-sm text-neutral-400">
+                                {/* bloc validé */}
+                                <div className="border-border bg-surface-highlight flex items-center justify-between rounded border p-3">
+                                    <span className="text-muted text-sm">
                                         Validé (Stable {'>'} 500ms)
                                     </span>
                                     <span
-                                        className={`font-mono text-xl font-bold ${validatedDirection !== 'Stable' ? 'text-emerald-400' : 'text-neutral-600'}`}
+                                        className={`font-mono text-xl font-bold ${
+                                            validatedDirection !== 'Stable'
+                                                ? 'text-brand-emerald'
+                                                : 'text-muted/50'
+                                        }`}
                                     >
                                         {validatedDirection.toUpperCase()}
                                     </span>
                                 </div>
 
-                                <p className="text-xs text-neutral-500">
+                                <p className="text-muted text-xs">
                                     Maintenez une position pour valider. <br />
                                     Seuil: 20° | Stabilité: 500ms
                                 </p>
