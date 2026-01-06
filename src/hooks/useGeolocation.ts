@@ -51,16 +51,16 @@ export function useGeolocation(): GeolocationState {
     const onError = useCallback((err: GeolocationPositionError) => {
         switch (err.code) {
             case err.PERMISSION_DENIED:
-                setError('Permission de localisation refusée.');
+                setError("Permission de localisation refusée.");
                 break;
             case err.POSITION_UNAVAILABLE:
-                setError('Position indisponible.');
+                setError("Position indisponible.");
                 break;
             case err.TIMEOUT:
                 setError("Délai d'obtention de la position dépassé.");
                 break;
             default:
-                setError('Erreur inconnue de géolocalisation.');
+                setError("Erreur inconnue de géolocalisation.");
         }
     }, []);
 
@@ -82,15 +82,19 @@ export function useGeolocation(): GeolocationState {
     useEffect(() => {
         if (!permissionGranted) return;
 
-        watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-            enableHighAccuracy: true,
-            maximumAge: 1000,
-            timeout: 10000,
-        });
+        watchId.current = navigator.geolocation.watchPosition(
+            onSuccess,
+            onError,
+            {
+                enableHighAccuracy: true,
+                maximumAge: 1000,
+                timeout: 10000,
+            }
+        );
 
         return () => {
             if (watchId.current !== null) {
-                if (typeof watchId.current === 'number') {
+                if (typeof watchId.current === "number") {
                     navigator.geolocation.clearWatch(watchId.current);
                 }
             }
