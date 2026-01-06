@@ -26,7 +26,7 @@ import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { GameState, HistoryEntry, Player } from '@/types/game';
 
 // ============================================================================
-// UTILITAIRES & COMPOSANTS PARTAGÉS
+// UTILITAIRES
 // ============================================================================
 
 const toMs = (timestamp: number | string | undefined) => {
@@ -43,6 +43,10 @@ const formatTime = (seconds: number) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
+// ============================================================================
+// COMPOSANTS PARTAGÉS
+// ============================================================================
+
 const GlobalTimer = ({
     startTime,
     label = 'TEMPS TOTAL',
@@ -52,10 +56,12 @@ const GlobalTimer = ({
 }) => {
     const [now, setNow] = useState(0);
     useEffect(() => {
-        const animate = requestAnimationFrame(() => setNow(Date.now()));
+        // Init via setTimeout pour éviter le rendu synchrone
+        const initTimer = setTimeout(() => setNow(Date.now()), 0);
         const interval = setInterval(() => setNow(Date.now()), 1000);
+
         return () => {
-            cancelAnimationFrame(animate);
+            clearTimeout(initTimer);
             clearInterval(interval);
         };
     }, []);
@@ -78,7 +84,7 @@ const GlobalTimer = ({
     );
 };
 
-// --- HEADER COMMUN ---
+// HEADER COMMUN
 const GameHeader = ({
     code,
     step,
@@ -132,7 +138,7 @@ const GameHeader = ({
     </div>
 );
 
-// --- SECTION PROPOSITION COMMUNE ---
+// SECTION PROPOSITION COMMUNE
 const ProposalSection = ({
     gameState,
     isHost,
@@ -227,6 +233,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
     const [isLeaving, setIsLeaving] = useState(false);
     const [generatedHostId] = useState(() => `host-${crypto.randomUUID().slice(0, 8)}`);
 
+    // SYNC SESSION
     useEffect(() => {
         if (isLoaded) {
             const timer = setTimeout(() => {
@@ -254,6 +261,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [hostId, pseudo, saveSession]);
 
+    // INITIALISATION BDD
     useEffect(() => {
         if (activeCode && hostId && gameState && typeof gameState.step === 'undefined') {
             const now = Date.now();
@@ -272,6 +280,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [gameState, activeCode, hostId, pseudo, updateState]);
 
+    // AUTO-ENREGISTREMENT HOST
     useEffect(() => {
         if (gameState && activeCode && hostId && !isLeaving) {
             const currentPlayers = gameState.players || [];
@@ -287,6 +296,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [gameState, activeCode, hostId, isLeaving, pseudo, updateState]);
 
+    // DÉPART HÔTE
     const handleHostLogout = useCallback(async () => {
         if (!gameState) {
             onLogout();
@@ -302,7 +312,10 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                 return p;
             });
         }
-        await updateState({ ...gameState, players: nextPlayersList });
+        await updateState({
+            ...gameState,
+            players: nextPlayersList,
+        });
         onLogout();
     }, [gameState, hostId, onLogout, updateState]);
 
@@ -519,24 +532,34 @@ const PlayerInterface = ({
     const [connectedCode, setConnectedCode] = useState<string | null>(null);
     const [playerId, setPlayerId] = useState('');
     const hasJoinedRef = useRef(false);
+
+    // verrou pour empêcher les mises à jour d'état lors de la promotion
+    const isPromotingRef = useRef(false);
+
     const [generatedPlayerId] = useState(() => `player-${crypto.randomUUID().slice(0, 8)}`);
 
+    // SYNC SESSION
     useEffect(() => {
-        if (isLoaded) {
-            const timer = setTimeout(() => {
-                if (session) {
-                    setPseudo((prev) => (prev !== session.pseudo ? session.pseudo : prev));
-                    setConnectedCode((prev) =>
-                        prev !== session.gameCode ? session.gameCode : prev
-                    );
-                    setInputCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
-                    setPlayerId((prev) => (prev !== session.playerId ? session.playerId : prev));
-                } else {
-                    setPlayerId((prev) => (prev !== generatedPlayerId ? generatedPlayerId : prev));
-                }
-            }, 0);
-            return () => clearTimeout(timer);
-        }
+        if (!isLoaded) return;
+
+        // si on devient chef, on ne synchronise plus l'interface joueur
+        if (isPromotingRef.current) return;
+
+        const timer = setTimeout(() => {
+            // double sécurité
+            if (isPromotingRef.current) return;
+
+            if (session) {
+                setPseudo((prev) => (prev !== session.pseudo ? session.pseudo : prev));
+                setConnectedCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
+                setInputCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
+                setPlayerId((prev) => (prev !== session.playerId ? session.playerId : prev));
+            } else {
+                setPlayerId((prev) => (prev !== generatedPlayerId ? generatedPlayerId : prev));
+            }
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, [isLoaded, session, generatedPlayerId]);
 
     const { gameState, updateState, refresh, error } = useGameSync(connectedCode, false);
@@ -548,15 +571,23 @@ const PlayerInterface = ({
         setConnectedCode(inputCode.toUpperCase());
     }, [inputCode, pseudo, playerId, saveSession]);
 
+    // LOGIQUE JOIN/KICK/PROMOTE
     useEffect(() => {
         if (gameState && connectedCode && playerId) {
             const currentPlayers = gameState.players || [];
             const me = currentPlayers.find((p) => p.id === playerId);
+
             if (me) {
-                if (!hasJoinedRef.current) hasJoinedRef.current = true;
+                if (!hasJoinedRef.current) {
+                    hasJoinedRef.current = true;
+                }
+
                 if (me.isGM) {
+                    // verrouillage + promotion
+                    isPromotingRef.current = true;
                     promoteSession();
                     onPromote();
+                    return; // arrêt immédiat
                 }
             } else {
                 if (hasJoinedRef.current) {
