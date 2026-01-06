@@ -15,7 +15,7 @@ export default function Home() {
         if (!localStorage.getItem('debugStartTime')) {
             localStorage.setItem('debugStartTime', Date.now().toString());
         }
-        router.push('/Debogage');
+        router.push('/Debug');
     };
 
 
@@ -103,7 +103,7 @@ export default function Home() {
                                     Commencer le Tutoriel
                                 </CTAButton>
 
-                                <CTAButton href="/Debogage" variant="secondary" onClick={startDebug} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}>
+                                <CTAButton href="/Debug" variant="secondary" onClick={startDebug} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}>
                                     Mode Débogage
                                 </CTAButton>
                             </motion.div>
