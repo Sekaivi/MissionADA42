@@ -26,7 +26,7 @@ import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { GameState, HistoryEntry, Player } from '@/types/game';
 
 // ============================================================================
-// TYPES ET UTILITAIRES
+// UTILITAIRES & COMPOSANTS PARTAGÉS
 // ============================================================================
 
 const toMs = (timestamp: number | string | undefined) => {
@@ -51,11 +51,9 @@ const GlobalTimer = ({
     label?: string;
 }) => {
     const [now, setNow] = useState(0);
-
     useEffect(() => {
         const animate = requestAnimationFrame(() => setNow(Date.now()));
         const interval = setInterval(() => setNow(Date.now()), 1000);
-
         return () => {
             cancelAnimationFrame(animate);
             clearInterval(interval);
@@ -64,7 +62,6 @@ const GlobalTimer = ({
 
     const startMs = toMs(startTime);
     let displayTime = '--:--';
-
     if (startMs > 0 && now > 0) {
         const diff = Math.floor((now - startMs) / 1000);
         displayTime = formatTime(diff > 0 ? diff : 0);
@@ -81,26 +78,159 @@ const GlobalTimer = ({
     );
 };
 
+// --- HEADER COMMUN ---
+const GameHeader = ({
+    code,
+    step,
+    startTime,
+    onLogout,
+    isLeaving,
+    connectionStatus,
+    showConnectionStatus,
+}: {
+    code: string | null;
+    step?: number;
+    startTime?: number | string;
+    onLogout: () => void;
+    isLeaving?: boolean;
+    connectionStatus?: string;
+    showConnectionStatus?: boolean;
+}) => (
+    <div className="border-border mb-6 grid grid-cols-3 items-start gap-4 border-b pb-4">
+        <div>
+            {showConnectionStatus ? (
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                    <span className="text-muted font-mono text-xs">
+                        {connectionStatus || 'EN LIGNE'}
+                    </span>
+                </div>
+            ) : (
+                <>
+                    <div className="text-muted text-[10px] tracking-widest uppercase">Code</div>
+                    <div className="text-brand-emerald text-4xl font-black tracking-widest select-all">
+                        {code}
+                    </div>
+                </>
+            )}
+        </div>
+        <div className="text-center">
+            <div className="text-muted text-[10px] tracking-widest uppercase">Étape</div>
+            <div className="text-4xl font-black text-white">{step ?? '-'}</div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+            <GlobalTimer startTime={startTime} />
+            <button
+                onClick={onLogout}
+                disabled={isLeaving}
+                className="text-brand-error mt-1 flex items-center gap-1 text-xs hover:text-red-300 disabled:opacity-50"
+            >
+                <ArrowRightEndOnRectangleIcon className="h-3 w-3" />{' '}
+                {isLeaving ? 'Départ...' : 'Fin'}
+            </button>
+        </div>
+    </div>
+);
+
+// --- SECTION PROPOSITION COMMUNE ---
+const ProposalSection = ({
+    gameState,
+    isHost,
+    onAccept,
+    onReject,
+    playerId,
+}: {
+    gameState: GameState | null;
+    isHost: boolean;
+    onAccept?: () => void;
+    onReject?: () => void;
+    playerId?: string;
+}) => {
+    const proposal = gameState?.pendingProposal;
+
+    if (!proposal) {
+        if (isHost) {
+            return (
+                <div className="border-border text-muted bg-surface/50 mb-6 rounded-xl border border-dashed p-6 text-center">
+                    <div className="animate-pulse">En attente de résolution...</div>
+                    <span className="text-xs opacity-50">Les joueurs réfléchissent</span>
+                </div>
+            );
+        }
+        return null; // Joueur : Rien à afficher si pas de prop
+    }
+
+    const isMyProposal = proposal.playerId === playerId;
+
+    if (isHost || isMyProposal) {
+        return (
+            <div className="animate-in zoom-in mb-6 rounded-xl border border-yellow-500/50 bg-yellow-500/10 p-4 duration-300">
+                <div className="flex gap-4">
+                    <BellAlertIcon className="h-8 w-8 animate-bounce text-yellow-500" />
+                    <div className="flex-1">
+                        <h3 className="font-bold text-yellow-400">
+                            {isHost ? 'Proposition en attente !' : 'En attente du MJ...'}
+                        </h3>
+                        <p className="mt-1 text-sm text-white">
+                            <span className="text-lg font-bold">{proposal.playerName}</span>{' '}
+                            {isHost ? 'propose :' : 'a proposé :'}
+                        </p>
+                        <div className="my-3 rounded-lg border border-white/10 bg-black/40 p-3 text-center text-lg italic">
+                            "{proposal.actionLabel}"
+                        </div>
+                        {isHost && onAccept && onReject && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={onAccept}
+                                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-bold text-white hover:bg-green-500 active:scale-95"
+                                >
+                                    <CheckIcon className="h-5 w-5" /> VALIDER
+                                </button>
+                                <button
+                                    onClick={onReject}
+                                    className="flex items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-bold text-white hover:bg-red-500 active:scale-95"
+                                >
+                                    <XMarkIcon className="h-5 w-5" /> REFUSER
+                                </button>
+                            </div>
+                        )}
+                        {!isHost && (
+                            <p className="animate-pulse text-center text-sm text-yellow-500/70">
+                                Validation de votre solution en cours
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-surface-highlight border-border mb-6 cursor-not-allowed rounded-xl border p-6 text-center opacity-50">
+            <div className="mb-2 flex justify-center">
+                <ClockIcon className="text-muted h-6 w-6" />
+            </div>
+            <h3 className="text-muted text-sm font-bold">Système Verrouillé</h3>
+            <p className="text-muted/70 text-xs">{proposal.playerName} propose une solution...</p>
+        </div>
+    );
+};
+
 // ============================================================================
 // COMPOSANT : INTERFACE HÔTE (MJ)
 // ============================================================================
 const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
     const { session, saveSession, isLoaded } = usePlayerSession();
-
     const [pseudo, setPseudo] = useState('Hôte');
     const [activeCode, setActiveCode] = useState<string | null>(null);
     const [hostId, setHostId] = useState('');
     const [isLeaving, setIsLeaving] = useState(false);
-
     const [generatedHostId] = useState(() => `host-${crypto.randomUUID().slice(0, 8)}`);
 
-    // SYNC SESSION
     useEffect(() => {
         if (isLoaded) {
-            // setTimeout pour sortir du cycle de rendu synchrone.
             const timer = setTimeout(() => {
                 if (session) {
-                    // On vérifie avant de set pour éviter les boucles
                     if (pseudo !== session.pseudo) setPseudo(session.pseudo);
                     if (activeCode !== session.gameCode) setActiveCode(session.gameCode);
                     if (hostId !== session.playerId) setHostId(session.playerId);
@@ -108,14 +238,11 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                     if (hostId !== generatedHostId) setHostId(generatedHostId);
                 }
             }, 0);
-
             return () => clearTimeout(timer);
         }
     }, [isLoaded, session, generatedHostId, pseudo, activeCode, hostId]);
 
-    const { gameState: rawGameState, updateState, error } = useGameSync(activeCode, true);
-    const gameState = rawGameState as GameState | null;
-
+    const { gameState, updateState, error } = useGameSync(activeCode, true);
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
 
     const handleCreateGame = useCallback(async () => {
@@ -127,7 +254,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [hostId, pseudo, saveSession]);
 
-    // INITIALISATION BDD
     useEffect(() => {
         if (activeCode && hostId && gameState && typeof gameState.step === 'undefined') {
             const now = Date.now();
@@ -146,7 +272,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [gameState, activeCode, hostId, pseudo, updateState]);
 
-    // AUTO-ENREGISTREMENT HOST
     useEffect(() => {
         if (gameState && activeCode && hostId && !isLeaving) {
             const currentPlayers = gameState.players || [];
@@ -162,32 +287,22 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         }
     }, [gameState, activeCode, hostId, isLeaving, pseudo, updateState]);
 
-    // DÉPART HÔTE
     const handleHostLogout = useCallback(async () => {
         if (!gameState) {
             onLogout();
             return;
         }
-
         setIsLeaving(true);
-
         const currentPlayers = gameState.players || [];
         const remainingPlayers = currentPlayers.filter((p) => p.id !== hostId);
-
         let nextPlayersList = remainingPlayers;
-
         if (remainingPlayers.length > 0) {
             nextPlayersList = remainingPlayers.map((p, index) => {
                 if (index === 0) return { ...p, isGM: true };
                 return p;
             });
         }
-
-        await updateState({
-            ...gameState,
-            players: nextPlayersList,
-        });
-
+        await updateState({ ...gameState, players: nextPlayersList });
         onLogout();
     }, [gameState, hostId, onLogout, updateState]);
 
@@ -196,14 +311,12 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         const now = Date.now();
         const startOfStep = toMs(gameState.lastStepTime || effectiveStartTime);
         const duration = (now - startOfStep) / 1000;
-
         const newHistoryItem: HistoryEntry = {
             step: gameState.step,
             solverName: gameState.pendingProposal.playerName,
             solvedAt: now,
             duration: duration,
         };
-
         updateState({
             ...gameState,
             step: gameState.step + 1,
@@ -260,7 +373,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                 <AlphaButton onClick={onLogout}>Retour</AlphaButton>
             </AlphaCard>
         );
-
     if (!isLoaded)
         return <div className="text-muted animate-pulse p-10 text-center">Chargement...</div>;
 
@@ -294,70 +406,20 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
 
     return (
         <AlphaCard title="Tableau de Bord Hôte" className="border-brand-purple/50">
-            <div className="border-border mb-6 grid grid-cols-3 items-start gap-4 border-b pb-4">
-                <div>
-                    <div className="text-muted text-[10px] tracking-widest uppercase">Code</div>
-                    <div className="text-brand-emerald text-4xl font-black tracking-widest select-all">
-                        {activeCode}
-                    </div>
-                </div>
+            <GameHeader
+                code={activeCode}
+                step={gameState?.step}
+                startTime={effectiveStartTime}
+                onLogout={handleHostLogout}
+                isLeaving={isLeaving}
+            />
 
-                <div className="text-center">
-                    <div className="text-muted text-[10px] tracking-widest uppercase">Étape</div>
-                    <div className="text-4xl font-black text-white">{gameState?.step ?? '-'}</div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                    <GlobalTimer startTime={effectiveStartTime} />
-                    <button
-                        onClick={handleHostLogout}
-                        disabled={isLeaving}
-                        className="text-brand-error mt-1 flex items-center gap-1 text-xs hover:text-red-300 disabled:opacity-50"
-                    >
-                        <ArrowRightEndOnRectangleIcon className="h-3 w-3" />{' '}
-                        {isLeaving ? 'Départ...' : 'Fin de session'}
-                    </button>
-                </div>
-            </div>
-
-            {gameState?.pendingProposal ? (
-                <div className="animate-in zoom-in mb-6 rounded-xl border border-yellow-500/50 bg-yellow-500/10 p-4 duration-300">
-                    <div className="flex gap-4">
-                        <BellAlertIcon className="h-8 w-8 animate-bounce text-yellow-500" />
-                        <div className="flex-1">
-                            <h3 className="font-bold text-yellow-400">Proposition en attente !</h3>
-                            <p className="mt-1 text-sm text-white">
-                                <span className="text-lg font-bold">
-                                    {gameState.pendingProposal.playerName}
-                                </span>{' '}
-                                propose :
-                            </p>
-                            <div className="my-3 rounded-lg border border-white/10 bg-black/40 p-3 text-center text-lg italic">
-                                "{gameState.pendingProposal.actionLabel}"
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={handleAccept}
-                                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-bold text-white hover:bg-green-500 active:scale-95"
-                                >
-                                    <CheckIcon className="h-5 w-5" /> VALIDER
-                                </button>
-                                <button
-                                    onClick={handleReject}
-                                    className="flex items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-bold text-white hover:bg-red-500 active:scale-95"
-                                >
-                                    <XMarkIcon className="h-5 w-5" /> REFUSER
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="border-border text-muted bg-surface/50 mb-6 rounded-xl border border-dashed p-6 text-center">
-                    <div className="animate-pulse">En attente de résolution...</div>
-                    <span className="text-xs opacity-50">Les joueurs réfléchissent</span>
-                </div>
-            )}
+            <ProposalSection
+                gameState={gameState}
+                isHost={true}
+                onAccept={handleAccept}
+                onReject={handleReject}
+            />
 
             <div className="border-border grid grid-cols-1 gap-6 border-t pt-6 md:grid-cols-2">
                 <div>
@@ -398,7 +460,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                         ))}
                     </div>
                 </div>
-
                 <div>
                     <h4 className="text-muted mb-3 flex items-center gap-2 text-sm font-bold">
                         <TrophyIcon className="h-4 w-4" /> Historique & Temps
@@ -430,7 +491,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                 </div>
             </div>
-
             <div className="border-border mt-8 border-t pt-4">
                 <button
                     onClick={handleManualSkip}
@@ -454,45 +514,32 @@ const PlayerInterface = ({
     onPromote: () => void;
 }) => {
     const { session, saveSession, promoteSession, isLoaded } = usePlayerSession();
-
     const [pseudo, setPseudo] = useState('');
     const [inputCode, setInputCode] = useState('');
     const [connectedCode, setConnectedCode] = useState<string | null>(null);
     const [playerId, setPlayerId] = useState('');
-
-    // useRef pour tracker l'état sans provoquer de re-rendu
     const hasJoinedRef = useRef(false);
-
-    // Initialisation ID Lazy
     const [generatedPlayerId] = useState(() => `player-${crypto.randomUUID().slice(0, 8)}`);
 
-    // SYNC SESSION
     useEffect(() => {
-        if (!isLoaded) return;
-
-        // setTimeout pour sortir du cycle de rendu synchrone
-        const timer = setTimeout(() => {
-            if (session) {
-                setPseudo((prev) => (prev !== session.pseudo ? session.pseudo : prev));
-                setConnectedCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
-                setInputCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
-                setPlayerId((prev) => (prev !== session.playerId ? session.playerId : prev));
-            } else {
-                setPlayerId((prev) => (prev !== generatedPlayerId ? generatedPlayerId : prev));
-            }
-        }, 0);
-
-        return () => clearTimeout(timer);
+        if (isLoaded) {
+            const timer = setTimeout(() => {
+                if (session) {
+                    setPseudo((prev) => (prev !== session.pseudo ? session.pseudo : prev));
+                    setConnectedCode((prev) =>
+                        prev !== session.gameCode ? session.gameCode : prev
+                    );
+                    setInputCode((prev) => (prev !== session.gameCode ? session.gameCode : prev));
+                    setPlayerId((prev) => (prev !== session.playerId ? session.playerId : prev));
+                } else {
+                    setPlayerId((prev) => (prev !== generatedPlayerId ? generatedPlayerId : prev));
+                }
+            }, 0);
+            return () => clearTimeout(timer);
+        }
     }, [isLoaded, session, generatedPlayerId]);
 
-    const {
-        gameState: rawGameState,
-        updateState,
-        refresh,
-        error,
-    } = useGameSync(connectedCode, false);
-    const gameState = rawGameState as GameState | null;
-
+    const { gameState, updateState, refresh, error } = useGameSync(connectedCode, false);
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
 
     const handleJoin = useCallback(() => {
@@ -501,31 +548,21 @@ const PlayerInterface = ({
         setConnectedCode(inputCode.toUpperCase());
     }, [inputCode, pseudo, playerId, saveSession]);
 
-    // JOIN/KICK avec useRef
     useEffect(() => {
         if (gameState && connectedCode && playerId) {
             const currentPlayers = gameState.players || [];
             const me = currentPlayers.find((p) => p.id === playerId);
-
             if (me) {
-                // JE SUIS DANS LA LISTE
-                // màj la ref (pas de re-rendu)
-                if (!hasJoinedRef.current) {
-                    hasJoinedRef.current = true;
-                }
-
+                if (!hasJoinedRef.current) hasJoinedRef.current = true;
                 if (me.isGM) {
                     promoteSession();
                     onPromote();
                 }
             } else {
-                // JE NE SUIS PAS DANS LA LISTE
                 if (hasJoinedRef.current) {
-                    // CAS 1 : j'y étais avant, je n'y suis plus => KICK
                     alert('Vous avez été exclu de la partie.');
                     onLogout();
                 } else {
-                    // CAS B : je viens d'arriver => JE M'AJOUTE
                     const newPlayer: Player = {
                         id: playerId,
                         name: pseudo,
@@ -562,10 +599,13 @@ const PlayerInterface = ({
         });
     }, [gameState, refresh, updateState, playerId, pseudo]);
 
-    const pendingProposal = gameState?.pendingProposal;
-    const isMyProposal = pendingProposal?.playerId === playerId;
-    const isAnyProposal = !!pendingProposal;
-
+    if (error)
+        return (
+            <AlphaCard title="Erreur" contentClassName={'flex flex-col gap-4 items-center'}>
+                <AlphaError message={error} />
+                <AlphaButton onClick={onLogout}>Retour</AlphaButton>
+            </AlphaCard>
+        );
     if (!isLoaded)
         return <div className="text-muted animate-pulse p-10 text-center">Chargement...</div>;
 
@@ -612,13 +652,6 @@ const PlayerInterface = ({
         );
     }
 
-    if (error)
-        return (
-            <AlphaCard title="Erreur" contentClassName={'flex flex-col gap-4 items-center'}>
-                <AlphaError message={error} />
-                <AlphaButton onClick={onLogout}>Retour</AlphaButton>
-            </AlphaCard>
-        );
     if (!gameState)
         return (
             <AlphaCard title="Connexion...">
@@ -630,63 +663,32 @@ const PlayerInterface = ({
 
     return (
         <AlphaCard title="Terminal Agent">
-            <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                    <span className="text-muted font-mono text-xs">EN LIGNE</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    {effectiveStartTime && <GlobalTimer startTime={effectiveStartTime} label="" />}
-                    <button
-                        onClick={onLogout}
-                        title="Quitter"
-                        className="text-muted hover:text-white"
-                    >
-                        <ArrowRightEndOnRectangleIcon className="h-5 w-5" />
-                    </button>
-                </div>
-            </div>
+            <GameHeader
+                code={connectedCode}
+                step={gameState.step}
+                startTime={effectiveStartTime}
+                onLogout={onLogout}
+                isLeaving={false}
+                showConnectionStatus={true}
+            />
 
-            <div className="space-y-2 py-8 text-center">
-                <div className="text-muted text-xs tracking-widest uppercase">Étape en cours</div>
-                <div className="text-6xl font-black text-white">{gameState.step}</div>
-                <p className="text-brand-blue text-sm italic">"{gameState.message}"</p>
-            </div>
+            <p className="text-brand-blue mb-6 text-center text-sm italic">"{gameState.message}"</p>
 
-            <div className="my-8">
-                {isAnyProposal ? (
-                    isMyProposal ? (
-                        <div className="animate-pulse rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-6 text-center">
-                            <h3 className="mb-1 text-lg font-bold text-yellow-500">
-                                En attente du MJ...
-                            </h3>
-                            <p className="text-sm text-yellow-500/70">
-                                Validation de votre solution en cours
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="bg-surface-highlight border-border cursor-not-allowed rounded-xl border p-6 text-center opacity-50">
-                            <div className="mb-2 flex justify-center">
-                                <ClockIcon className="text-muted h-6 w-6" />
-                            </div>
-                            <h3 className="text-muted text-sm font-bold">Système Verrouillé</h3>
-                            <p className="text-muted/70 text-xs">
-                                {pendingProposal?.playerName} propose une solution...
-                            </p>
-                        </div>
-                    )
-                ) : (
+            <ProposalSection gameState={gameState} isHost={false} playerId={playerId} />
+
+            {!gameState.pendingProposal && (
+                <div className="my-8">
                     <button
                         onClick={handlePropose}
                         className="group bg-brand-blue relative w-full overflow-hidden rounded-xl py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all hover:bg-blue-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] active:scale-95"
                     >
                         <div className="relative z-10 flex items-center justify-center gap-3">
-                            <PlayCircleIcon className="h-6 w-6" />
-                            J'AI TROUVÉ !
+                            <PlayCircleIcon className="h-6 w-6" /> J'AI TROUVÉ !
                         </div>
                     </button>
-                )}
-            </div>
+                </div>
+            )}
+
             <div className="border-border text-muted flex items-center justify-between border-t pt-4 text-xs">
                 <span>
                     Joueur: <strong className="text-foreground">{pseudo}</strong>
@@ -701,9 +703,7 @@ const PlayerInterface = ({
 // ============================================================================
 export default function SyncTestPage() {
     const { session, clearSession, isLoaded } = usePlayerSession();
-
     const [viewMode, setViewMode] = useState<'select' | 'host' | 'player'>('select');
-
     const activeMode = session
         ? session.playerId.startsWith('host-') || session.isPromoted
             ? 'host'
