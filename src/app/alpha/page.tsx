@@ -17,6 +17,12 @@ export default function AlphaHome() {
                     {'=>'} <Link href={'/alpha/color-game'}>Color game test</Link>
                 </li>
             </ul>
+
+            <ul>
+                <li>
+                    <Link href={'/alpha/orientation-debug'}>Orientation debug</Link>
+                </li>
+            </ul>
         </>
     );
 }
