@@ -1,38 +1,29 @@
 'use client';
-import { ReactNode } from 'react';
-
-import { motion } from 'framer-motion';
+import React from 'react';
+import Card from './Card'; // On importe le parent
 
 interface InfoCardProps {
     title: string;
     description: string;
-    icon: ReactNode;
-    accentColor?: 'purple' | 'blue';
+    icon: React.ReactNode;
+    className?: string;
 }
 
-export default function InfoCard({
-    title,
-    description,
-    icon,
-    accentColor = 'purple',
-}: InfoCardProps) {
-    const colorClasses = {
-        purple: 'text-purple-600 dark:text-purple-400',
-        blue: 'text-blue-600 dark:text-blue-400',
-    };
-
+export default function InfoCard({ title, description, icon, className }: InfoCardProps) {
     return (
-        <motion.div
-            whileHover={{ y: -5 }}
-            className="bg-background/50 border-foreground/10 rounded-xl border p-6 backdrop-blur-sm"
+        <Card
+
+            className={`bg-transparent border border-black hover:shadow-2xl hover:-translate-y-1 flex flex-col h-full ${className}`}
         >
-            <h3
-                className={`${colorClasses[accentColor]} mb-2 flex items-center gap-2 font-semibold`}
-            >
+            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
                 {icon}
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
                 {title}
             </h3>
-            <p className="text-foreground/70 text-sm">{description}</p>
-        </motion.div>
+            <p className="text-gray-600 text-sm leading-relaxed">
+                {description}
+            </p>
+        </Card>
     );
 }
