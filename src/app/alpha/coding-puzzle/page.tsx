@@ -74,6 +74,7 @@ export default function CodingPuzzle() {
     const activeBlockPosRef = useRef({ x: 0, y: 0 });
     const snapTimerRef = useRef<NodeJS.Timeout | null>(null);
     const orientationRef = useRef(orientationData);
+    const lastTimeRef = useRef<number>(0);
 
     // Refs pour accéder au state dans la boucle sans la recréer
     const blocksRef = useRef<Block[]>([]);
@@ -152,6 +153,7 @@ export default function CodingPuzzle() {
         if (requestPermission) await requestPermission();
         setActiveLinesCount(STARTING_LINES);
         setupLevel(difficulty, STARTING_LINES);
+        lastTimeRef.current = 0;
         setGameState('playing');
     };
 
@@ -167,18 +169,35 @@ export default function CodingPuzzle() {
 
     const gameLoop = useCallback(
         (time: number) => {
+            // 1. Vérifications de sécurité (Early returns)
             if (
                 gameState !== 'playing' ||
                 activeBlockIdRef.current === null ||
                 !containerRef.current
             ) {
+                // Si le jeu est censé tourner mais qu'on a perdu le focus ou la ref, on continue la boucle
                 if (gameState === 'playing') {
                     reqRef.current = requestAnimationFrame((t) => loopFunctionRef.current?.(t));
                 }
                 return;
             }
 
-            // Physique
+            // 2. Gestion du Delta Time
+            if (!lastTimeRef.current) {
+                lastTimeRef.current = time;
+            }
+
+            // Temps écoulé depuis la dernière frame
+            const deltaTime = time - lastTimeRef.current;
+            lastTimeRef.current = time;
+
+            // Facteur de normalisation (basé sur 60 FPS -> 16.66ms par frame)
+            // Si le jeu lag ou tourne à 120Hz, ce facteur ajuste la distance parcourue.
+            // On limite le deltaTime (ex: 100ms) pour éviter les "téléportations" si on change d'onglet.
+            const safeDelta = Math.min(deltaTime, 100);
+            const timeFactor = safeDelta / 16.66;
+
+            // 3. Physique (Calcul de la vitesse brute)
             const { beta, gamma } = orientationRef.current;
             const safeBeta = beta || 0;
             const safeGamma = gamma || 0;
@@ -186,6 +205,7 @@ export default function CodingPuzzle() {
             let vy = 0;
             let vx = 0;
 
+            // Calcul de la vélocité basé sur l'inclinaison
             if (Math.abs(safeBeta) > DEAD_ZONE) {
                 vy = (safeBeta - Math.sign(safeBeta) * DEAD_ZONE) * SENSITIVITY;
             }
@@ -193,34 +213,39 @@ export default function CodingPuzzle() {
                 vx = (safeGamma - Math.sign(safeGamma) * DEAD_ZONE) * SENSITIVITY;
             }
 
-            let newX = activeBlockPosRef.current.x + vx;
-            let newY = activeBlockPosRef.current.y + vy;
+            // 4. Application du mouvement (CORRECTION ICI)
+            // On multiplie la vitesse par le timeFactor pour rendre le mouvement indépendant des FPS
+            let newX = activeBlockPosRef.current.x + vx * timeFactor;
+            let newY = activeBlockPosRef.current.y + vy * timeFactor;
 
+            // 5. Bornes (Limites de l'écran)
             const containerRect = containerRef.current.getBoundingClientRect();
-            const maxW = containerRect.width - 280;
-            const maxH = containerRect.height - 40;
+            const maxW = containerRect.width - 280; // Largeur bloc approx
+            const maxH = containerRect.height - 40; // Hauteur bloc approx
 
             newX = Math.max(0, Math.min(newX, maxW));
             newY = Math.max(0, Math.min(newY, maxH));
 
+            // Mise à jour de la Ref de position
             activeBlockPosRef.current = { x: newX, y: newY };
 
+            // 6. Mise à jour du DOM (Performant via style direct)
             const blockEl = document.getElementById(`block-${activeBlockIdRef.current}`);
             if (blockEl) {
                 blockEl.style.transform = `translate(${newX}px, ${newY}px)`;
             }
 
-            // Logique de Snap (checkSnap inline pour éviter les deps)
-            const containerW = containerRef.current?.clientWidth || 0;
+            // 7. Logique de Snap (Magnétisme)
+            const containerW = containerRef.current.clientWidth || 0;
             const slotCenterX = containerW / 2 - 140;
             let closestSlotId = -1;
             let minDist = Infinity;
 
-            // On utilise la Ref des lignes pour ne pas dépendre du state qui change
             const currentLines = puzzleLinesRef.current;
 
             currentLines.forEach((_, index) => {
                 const slotY = START_Y + index * SLOT_HEIGHT;
+                // Distance euclidienne
                 const dist = Math.hypot(newX - slotCenterX, newY - slotY);
                 if (dist < minDist) {
                     minDist = dist;
@@ -229,35 +254,34 @@ export default function CodingPuzzle() {
             });
 
             if (minDist < SNAP_DISTANCE) {
-                // Si on est proche d'un slot
+                // Zone de snap détectée
                 if (snapReadySlotIdRef.current !== closestSlotId) {
-                    // On met à jour le state via le setter normal (ce qui déclenchera un re-render, c'est ok)
                     setSnapReadySlotId(closestSlotId);
 
                     if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
 
-                    // On capture l'ID actuel pour la closure du timeout
                     const currentBlockId = activeBlockIdRef.current;
 
                     snapTimerRef.current = setTimeout(() => {
-                        // On vérifie qu'on est toujours sur le même bloc et au même endroit
+                        // Vérification finale après le délai
                         if (activeBlockIdRef.current === currentBlockId) {
                             lockBlock(currentBlockId, closestSlotId);
                         }
                     }, LOCK_TIME_MS);
                 }
             } else {
-                // On est loin
+                // Hors zone de snap
                 if (snapReadySlotIdRef.current !== null) {
                     setSnapReadySlotId(null);
                     if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
                 }
             }
 
+            // 8. Appel de la frame suivante
             reqRef.current = requestAnimationFrame((t) => loopFunctionRef.current?.(t));
         },
         [gameState, lockBlock]
-    ); // Dépendances stables
+    );
 
     // Assignation de la ref pour la récursion
     useEffect(() => {
