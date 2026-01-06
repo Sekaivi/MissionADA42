@@ -116,7 +116,9 @@ export default function AlphaHome() {
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                             {/* stat 1 : version */}
                             <div className="border-border bg-background rounded border p-3 text-center">
-                                <div className="text-foreground text-2xl font-bold">v{appVersion}</div>
+                                <div className="text-foreground text-2xl font-bold">
+                                    v{appVersion}
+                                </div>
                                 <div className="text-muted text-xs">Version Alpha</div>
                             </div>
 
