@@ -75,6 +75,8 @@ const ALPHA_MODULES: ModuleGroup[] = [
 ];
 
 export default function AlphaHome() {
+    const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'DEV';
+
     const stats = useMemo(() => {
         const allItems = ALPHA_MODULES.flatMap((group) => group.items);
         return {
@@ -109,12 +111,14 @@ export default function AlphaHome() {
                     </section>
                 ))}
 
-                <div className="col-span-1 mt-8 md:col-span-2">
+                <div className="col-span-1 lg:col-span-2">
                     <AlphaCard title="État du Système">
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                             {/* stat 1 : version */}
                             <div className="border-border bg-background rounded border p-3 text-center">
-                                <div className="text-foreground text-2xl font-bold">v1.0.0</div>
+                                <div className="text-foreground text-2xl font-bold">
+                                    v{appVersion}
+                                </div>
                                 <div className="text-muted text-xs">Version Alpha</div>
                             </div>
 
