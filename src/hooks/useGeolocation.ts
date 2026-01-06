@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
+import {angleToDirection8, computeBearing, computeDistance} from "@/utils/geo";
 
 export interface GeolocationData {
     latitude: number | null;
