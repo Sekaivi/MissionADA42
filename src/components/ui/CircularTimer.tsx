@@ -29,7 +29,6 @@ export default function CircularTimer({
         setShowTimer(true);
         const startTime = Number(start);
 
-        // Fonction de calcul qui retourne true si le temps est écoulé
         const updateTimer = () => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             const remaining = Math.max(maxTime - elapsed, 0);
@@ -37,13 +36,11 @@ export default function CircularTimer({
             return remaining === 0;
         };
 
-        // Vérification immédiate (avant même de lancer l'intervalle)
         if (updateTimer()) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        // Lancement de l'intervalle avec const (Validation Linter ✅)
         const interval = setInterval(() => {
             const isFinished = updateTimer();
             if (isFinished) {
@@ -59,7 +56,9 @@ export default function CircularTimer({
 
     const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
     const seconds = String(timeLeft % 60).padStart(2, '0');
-    const progress = (timeLeft / maxTime) * circumference;
+
+    // Calcul de l'offset cible
+    const currentOffset = circumference - (timeLeft / maxTime) * circumference;
 
     return (
         <motion.div
@@ -84,6 +83,7 @@ export default function CircularTimer({
                     </filter>
                 </defs>
 
+                {/* Cercle de fond (gris) */}
                 <circle
                     cx="56"
                     cy="56"
@@ -91,10 +91,13 @@ export default function CircularTimer({
                     stroke="currentColor"
                     strokeWidth="8"
                     fill="none"
-                    className="text-foreground/20"
+                    className="text-gray-700/30" // J'ai mis un gris un peu plus visible
                 />
 
-                <circle
+                {/* CERCLE ANIMÉ (CORRECTION ICI) 
+                   On utilise motion.circle pour animer l'attribut strokeDashoffset
+                */}
+                <motion.circle
                     cx="56"
                     cy="56"
                     r={radius}
@@ -102,11 +105,13 @@ export default function CircularTimer({
                     strokeWidth="8"
                     fill="none"
                     strokeDasharray={circumference}
-                    strokeDashoffset={circumference - progress}
                     strokeLinecap="round"
                     transform="rotate(-90 56 56)"
                     filter="url(#glow)"
-                    className="transition-all duration-1000 ease-linear"
+                    // C'est ici que la magie opère :
+                    initial={{ strokeDashoffset: circumference }} // Commence vide (ou plein selon préférence)
+                    animate={{ strokeDashoffset: currentOffset }} // Va vers la nouvelle valeur
+                    transition={{ duration: 1, ease: 'linear' }} // Prend exactement 1 seconde pour y aller (fluide)
                 />
 
                 <text

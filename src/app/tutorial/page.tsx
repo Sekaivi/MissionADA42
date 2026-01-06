@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
-import CameraGame from '@/components/Tutoriel/CameraGame';
-import CodeGame from '@/components/Tutoriel/CodeGame';
-import CompassGame from '@/components/Tutoriel/CompassGame';
-import MicroGame from '@/components/Tutoriel/MicroGame';
-import NetworkGame from '@/components/Tutoriel/NetworkGame';
-import SystemCheck from '@/components/Tutoriel/systemCheck';
+// Imports des jeux
+import CameraGame from '@/components/Tutorial/CameraGame';
+import CodeGame from '@/components/Tutorial/CodeGame';
+import CompassGame from '@/components/Tutorial/CompassGame';
+import MicroGame from '@/components/Tutorial/MicroGame';
+import NetworkGame from '@/components/Tutorial/NetworkGame';
+import SystemCheck from '@/components/Tutorial/systemCheck';
+// Imports UI
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 
 export default function Tutoriel() {
     const router = useRouter();
@@ -19,30 +22,26 @@ export default function Tutoriel() {
     const [step, setStep] = useState(0);
 
     const handleNextStep = () => {
-        setStep((prevStep) => {
-            if (prevStep <= TOTAL_STEPS) {
-                return prevStep + 1;
-            }
-            return prevStep;
-        });
+        // Scroll en haut de page automatiquement quand on change d'étape
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setStep((prev) => (prev <= TOTAL_STEPS ? prev + 1 : prev));
     };
 
-    const handleFinish = () => {
-        // Redirige vers l'accueil (utilisé à la fin OU en cas d'échec)
-        router.push('/home');
-    };
+    const handleFinish = () => router.push('/home');
 
     return (
-        <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-6 font-sans">
-            {/* Background */}
-            <div className="pointer-events-none absolute inset-0 z-0 opacity-5">
+        // CORRECTION 1 : on remplace overflow-hidden par overflow-y-auto et min-h-screen
+        // On ajoute py-8 pour laisser de l'espace en haut et en bas sur mobile
+        <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-gray-50 p-6 py-12 font-sans md:p-12">
+            {/* Background (inchangé) */}
+            <div className="pointer-events-none fixed inset-0 z-0 opacity-5">
                 <div className="absolute top-10 left-10 h-64 w-64 rounded-full bg-blue-500 blur-3xl"></div>
                 <div className="absolute right-10 bottom-10 h-96 w-96 rounded-full bg-purple-500 blur-3xl"></div>
             </div>
 
-            {/* Barre de Progression (Cachée à l'étape 0) */}
+            {/* Barre de Progression (inchangée) */}
             {step > 0 && step <= TOTAL_STEPS && (
-                <div className="z-10 mb-8 h-2 w-full max-w-xl overflow-hidden rounded-full bg-gray-200">
+                <div className="z-10 mb-8 h-2 w-full max-w-xl shrink-0 overflow-hidden rounded-full bg-gray-200">
                     <motion.div
                         className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
                         initial={{ width: 0 }}
@@ -54,20 +53,17 @@ export default function Tutoriel() {
 
             {/* Zone de Contenu */}
             <AnimatePresence mode="wait">
-                <motion.div
+                <Card
                     key={step}
+                    // CORRECTION 2 : On s'assure que la card peut grandir si le contenu est long (h-auto)
+                    // On garde le centrage du texte
+                    className="z-10 flex h-auto min-h-[300px] w-full max-w-xl flex-col items-center justify-center text-center"
                     initial={{ opacity: 0, x: 50, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: -50, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
-                    className="z-10 w-full max-w-xl rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl backdrop-blur-xl"
                 >
-                    {/* MODIFICATION ICI :
-                        On passe handleFinish à onFail.
-                        Si ça rate, ça renvoie à l'accueil.
-                    */}
                     {step === 0 && <SystemCheck onSuccess={handleNextStep} onFail={handleFinish} />}
-
                     {step === 1 && <CameraGame onSuccess={handleNextStep} />}
                     {step === 2 && <MicroGame onSuccess={handleNextStep} />}
                     {step === 3 && <CompassGame onSuccess={handleNextStep} />}
@@ -76,11 +72,11 @@ export default function Tutoriel() {
 
                     {/* Écran Final */}
                     {step > TOTAL_STEPS && (
-                        <div className="py-6 text-center">
+                        <div className="flex w-full flex-col items-center">
                             <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl shadow-lg shadow-green-200"
+                                className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl shadow-lg shadow-green-200"
                             >
                                 🚀
                             </motion.div>
@@ -95,14 +91,14 @@ export default function Tutoriel() {
                             </div>
                         </div>
                     )}
-                </motion.div>
+                </Card>
             </AnimatePresence>
 
-            {/* Debug */}
+            {/* Debug (inchangé) */}
             {step <= TOTAL_STEPS && (
                 <button
                     onClick={handleNextStep}
-                    className="z-10 mt-8 text-xs text-gray-400 underline hover:text-gray-600"
+                    className="z-10 mt-8 shrink-0 text-xs text-gray-400 underline hover:text-gray-600"
                 >
                     (Debug: Passer l'étape {step})
                 </button>
