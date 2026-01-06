@@ -132,7 +132,7 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
 
         return () => {
             if (watchId.current !== null) {
-                if (typeof watchId.current === "number") {
+                if (typeof watchId.current === 'number') {
                     navigator.geolocation.clearWatch(watchId.current);
                 }
             }

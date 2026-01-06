@@ -11,14 +11,10 @@ import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useOrientation } from '@/hooks/useOrientation';
 
-export default function AlphaGeolocationDebug() {
+export default function AlphaGeolocationDebug(targetLat = 45.2031, targetLong = 5.702213) {
     const { data: orientation } = useOrientation();
 
-    const { data, error, permissionGranted, requestPermission } = useGeolocation(
-        45.2031,
-        5.702213,
-        orientation.heading
-    );
+    const { data, error, permissionGranted, requestPermission } = useGeolocation(45.2031, 5.702213);
 
     useEffect(() => {
         requestPermission();
