@@ -24,6 +24,11 @@ $router = new Router();
 
 $router->group('/game', function ($r) {
     $r->register('GET', '/create', [\App\Controllers\Game::class, 'create']);
+
+    // requiert ?code=XXXX via GET
+    $r->register('GET', '/read', [\App\Controllers\Game::class, 'read']);
+
+    $r->register('POST', '/update', [\App\Controllers\Game::class, 'update']);
 });
 
 // Lecture body
