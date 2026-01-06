@@ -100,8 +100,8 @@ export default function SpinGame() {
             <AlphaHeader title="Module Gyroscopique" subtitle="Test de rotation physique à 360°" />
 
             {!permissionGranted && !error && (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 p-10 text-center">
-                    <p className="mb-4 text-neutral-400">Accès capteurs requis.</p>
+                <div className="border-border bg-surface flex flex-col items-center justify-center rounded-lg border p-10 text-center">
+                    <p className="text-muted mb-4">Accès capteurs requis.</p>
                     <AlphaButton onClick={requestPermission}>Activer</AlphaButton>
                 </div>
             )}
@@ -114,8 +114,8 @@ export default function SpinGame() {
                         <AlphaCard title="Objectif de Rotation">
                             {gameState === 'intro' && (
                                 <div className="py-10 text-center">
-                                    <ArrowPathIcon className="mx-auto mb-4 h-16 w-16 text-neutral-500" />
-                                    <p className="mb-6 text-neutral-400">
+                                    <ArrowPathIcon className="text-muted mx-auto mb-4 h-16 w-16" />
+                                    <p className="text-muted mb-6">
                                         Vous allez devoir tourner sur vous-même physiquement.
                                         <br />
                                         Faites de la place autour de vous !
@@ -126,11 +126,11 @@ export default function SpinGame() {
 
                             {gameState === 'won' && (
                                 <div className="py-10 text-center">
-                                    <CheckCircleIcon className="mx-auto mb-4 h-16 w-16 animate-bounce text-emerald-500" />
-                                    <h3 className="mb-2 text-2xl font-bold text-white">
+                                    <CheckCircleIcon className="text-brand-emerald mx-auto mb-4 h-16 w-16 animate-bounce" />
+                                    <h3 className="text-foreground mb-2 text-2xl font-bold">
                                         CALIBRAGE TERMINÉ
                                     </h3>
-                                    <p className="mb-6 text-neutral-400">
+                                    <p className="text-muted mb-6">
                                         Vos gyroscopes sont parfaitement synchronisés.
                                     </p>
                                     <AlphaButton onClick={startGame}>Recommencer</AlphaButton>
@@ -139,10 +139,10 @@ export default function SpinGame() {
 
                             {gameState === 'playing' && (
                                 <div className="flex flex-col items-center py-6">
-                                    <h3 className="mb-2 text-xl font-bold text-white">
+                                    <h3 className="text-foreground mb-2 text-xl font-bold">
                                         Niveau {levelIndex + 1} / {LEVELS.length}
                                     </h3>
-                                    <div className="mb-8 font-mono text-2xl font-bold text-emerald-400">
+                                    <div className="text-brand-emerald mb-8 font-mono text-2xl font-bold">
                                         {LEVELS[levelIndex].label.toUpperCase()}
                                     </div>
 
@@ -157,7 +157,7 @@ export default function SpinGame() {
                                                 cy="50"
                                                 r="45"
                                                 fill="none"
-                                                stroke="#262626"
+                                                stroke="var(--color-surface-highlight)"
                                                 strokeWidth="10"
                                             />
 
@@ -170,10 +170,10 @@ export default function SpinGame() {
                                                 // couleur change si on tourne dans le mauvais sens
                                                 stroke={
                                                     !isGoodDirection && Math.abs(totalRotation) > 10
-                                                        ? '#ef4444'
+                                                        ? 'var(--color-brand-error)'
                                                         : isTargetReached
-                                                          ? '#10b981'
-                                                          : '#3b82f6'
+                                                          ? 'var(--color-brand-emerald)'
+                                                          : 'var(--color-brand-blue)'
                                                 }
                                                 strokeWidth="10"
                                                 strokeDasharray="283"
@@ -184,18 +184,22 @@ export default function SpinGame() {
 
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                                             <span
-                                                className={`text-3xl font-bold ${!isGoodDirection && Math.abs(totalRotation) > 10 ? 'text-red-500' : 'text-white'}`}
+                                                className={`text-3xl font-bold ${
+                                                    !isGoodDirection && Math.abs(totalRotation) > 10
+                                                        ? 'text-brand-error'
+                                                        : 'text-foreground'
+                                                }`}
                                             >
                                                 {Math.round(Math.abs(totalRotation))}°
                                             </span>
-                                            <span className="text-xs text-neutral-500">
+                                            <span className="text-muted text-xs">
                                                 / {Math.abs(currentTarget)}°
                                             </span>
                                         </div>
                                     </div>
 
                                     {!isGoodDirection && Math.abs(totalRotation) > 10 && (
-                                        <p className="mt-4 animate-pulse text-sm font-bold text-red-400">
+                                        <p className="text-brand-error mt-4 animate-pulse text-sm font-bold">
                                             MAUVAIS SENS !
                                         </p>
                                     )}
@@ -207,18 +211,21 @@ export default function SpinGame() {
                     <div className="space-y-6">
                         <AlphaCard title="Debug Rotation">
                             <div className="flex flex-col gap-4">
-                                <div className="rounded border border-neutral-800 bg-neutral-900 p-4 font-mono text-sm">
+                                {/* conteneur debug */}
+                                <div className="border-border bg-surface-highlight rounded border p-4 font-mono text-sm">
                                     <div className="mb-2 flex justify-between">
-                                        <span className="text-neutral-500">Alpha Brut :</span>
-                                        <span>{Math.round(data.alpha || 0)}°</span>
+                                        <span className="text-muted">Alpha Brut :</span>
+                                        <span className="text-foreground">
+                                            {Math.round(data.alpha || 0)}°
+                                        </span>
                                     </div>
-                                    <div className="flex justify-between border-t border-neutral-800 pt-2">
-                                        <span className="text-neutral-500">Cumulé :</span>
+                                    <div className="border-border flex justify-between border-t pt-2">
+                                        <span className="text-muted">Cumulé :</span>
                                         <span
                                             className={
                                                 totalRotation < 0
                                                     ? 'text-orange-400'
-                                                    : 'text-blue-400'
+                                                    : 'text-brand-blue'
                                             }
                                         >
                                             {Math.round(totalRotation)}°

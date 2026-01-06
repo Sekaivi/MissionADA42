@@ -16,13 +16,11 @@ export const AlphaCard = ({
     contentClassName = '',
 }: CardProps) => (
     <div
-        className={`flex flex-col overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/50 ${className}`}
+        className={`border-border bg-surface flex flex-col overflow-hidden rounded-lg border ${className}`}
     >
         {title && (
-            <div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-900 px-4 py-3">
-                <h3 className="text-xs font-bold tracking-wider text-neutral-400 uppercase">
-                    {title}
-                </h3>
+            <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">
+                <h3 className="text-muted text-xs font-bold tracking-wider uppercase">{title}</h3>
                 {action && <div>{action}</div>}
             </div>
         )}

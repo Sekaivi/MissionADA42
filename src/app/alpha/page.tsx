@@ -22,7 +22,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
     {
         title: 'Systèmes de Vision',
         icon: CameraIcon,
-        headerColor: 'text-blue-400',
+        headerColor: 'text-brand-blue',
         items: [
             {
                 href: '/alpha/camera-only',
@@ -48,7 +48,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
     {
         title: 'Capteurs de Mouvement',
         icon: DevicePhoneMobileIcon,
-        headerColor: 'text-purple-400',
+        headerColor: 'text-brand-purple',
         items: [
             {
                 href: '/alpha/orientation-debug',
@@ -112,17 +112,32 @@ export default function AlphaHome() {
                 <div className="col-span-1 mt-8 md:col-span-2">
                     <AlphaCard title="État du Système">
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                            <div className="rounded border border-neutral-800 bg-neutral-900 p-3 text-center">
-                                <div className="text-2xl font-bold text-blue-500">
+                            {/* stat 1 : version */}
+                            <div className="border-border bg-background rounded border p-3 text-center">
+                                <div className="text-foreground text-2xl font-bold">v1.0.0</div>
+                                <div className="text-muted text-xs">Version Alpha</div>
+                            </div>
+
+                            {/* stat 2 : tech */}
+                            <div className="border-border bg-background rounded border p-3 text-center">
+                                <div className="text-brand-emerald text-2xl font-bold">Actif</div>
+                                <div className="text-muted text-xs">Next hooks</div>
+                            </div>
+
+                            {/* stat 3 : nb jeux */}
+                            <div className="border-border bg-background rounded border p-3 text-center">
+                                <div className="text-brand-blue text-2xl font-bold">
                                     {stats.totalGames}
                                 </div>
-                                <div className="text-xs text-neutral-500">Jeux Playables</div>
+                                <div className="text-muted text-xs">Modules jouables</div>
                             </div>
-                            <div className="rounded border border-neutral-800 bg-neutral-900 p-3 text-center">
-                                <div className="text-2xl font-bold text-purple-500">
+
+                            {/* stat 4 : total */}
+                            <div className="border-border bg-background rounded border p-3 text-center">
+                                <div className="text-brand-purple text-2xl font-bold">
                                     {stats.totalModules}
                                 </div>
-                                <div className="text-xs text-neutral-500">Modules Total</div>
+                                <div className="text-muted text-xs">Modules Total</div>
                             </div>
                         </div>
                     </AlphaCard>

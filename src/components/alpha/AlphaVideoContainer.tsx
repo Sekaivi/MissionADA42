@@ -8,13 +8,13 @@ export const AlphaVideoContainer = ({
     label = 'LIVE FEED',
 }: {
     children: ReactNode;
-    scanSettings?: ScanZoneSettings; // Assure-toi d'importer le type
+    scanSettings?: ScanZoneSettings;
     label?: string;
 }) => (
-    <div className="group relative aspect-video overflow-hidden rounded-lg border-2 border-neutral-800 bg-black shadow-2xl">
+    <div className="group border-border relative aspect-video overflow-hidden rounded-lg border-2 bg-black shadow-2xl">
         {children}
 
-        <div className="absolute top-2 left-2 z-30 rounded border border-emerald-900/30 bg-black/70 px-2 py-1 text-[10px] font-bold text-emerald-500">
+        <div className="border-brand-emerald/30 text-brand-emerald absolute top-2 left-2 z-30 rounded border bg-black/70 px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
             {label}
         </div>
 

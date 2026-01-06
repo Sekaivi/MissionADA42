@@ -102,7 +102,7 @@ export default function AlphaCameraOnly() {
                 <div className="space-y-6">
                     <AlphaCard title="Métadonnées du Stream">
                         {!videoInfo ? (
-                            <div className="animate-pulse text-sm text-yellow-500">
+                            <div className="text-brand-blue animate-pulse text-sm">
                                 Synchronisation matériel...
                             </div>
                         ) : (
@@ -124,9 +124,9 @@ export default function AlphaCameraOnly() {
                                             : undefined
                                     }
                                 />
-                                <div className="mt-4 border-t border-neutral-800 pt-4">
-                                    <p className="mb-1 text-xs text-neutral-500">Hardware ID</p>
-                                    <code className="block truncate rounded bg-black p-1 text-xs text-neutral-400">
+                                <div className="pt-4">
+                                    <p className="text-muted mb-1 text-xs">Hardware ID</p>
+                                    <code className="bg-background text-muted block truncate rounded p-1 text-xs">
                                         {videoInfo.label}
                                     </code>
                                 </div>
