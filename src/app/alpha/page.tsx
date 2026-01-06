@@ -8,6 +8,7 @@ import {
     CubeTransparentIcon,
     DevicePhoneMobileIcon,
     EyeIcon,
+    PuzzlePieceIcon,
     GlobeAltIcon,
     PuzzlePieceIcon,
     SwatchIcon,
@@ -78,6 +79,13 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'Module de Rotation',
                 subtitle: 'Jeu de rotation 360° (Spin)',
                 icon: ArrowPathIcon,
+                isGame: true,
+            },
+            {
+                href: '/alpha/coding-puzzle',
+                title: 'Puzzle de code',
+                subtitle: 'Jeu de puzzle',
+                icon: PuzzlePieceIcon,
                 isGame: true,
             },
             {
