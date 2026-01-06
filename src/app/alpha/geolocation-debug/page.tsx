@@ -1,3 +1,5 @@
+// utilisation du gps vers les coordonées GPS de la salle 115
+
 'use client';
 
 import { useEffect } from 'react';
@@ -45,10 +47,22 @@ export default function AlphaGeolocationDebug() {
                     <div className="space-y-6">
                         <AlphaCard title="Données Brutes (GPS)">
                             <div className="flex flex-col gap-2">
-                                <AlphaInfoRow label="Longitude" value={`${data.longitude || 0}`} />
-                                <AlphaInfoRow label="Latitude" value={`${data.latitude || 0}`} />
-                                <AlphaInfoRow label="Altitude" value={`${data.altitude || 0}`} />
-                                <AlphaInfoRow label="Accuracy" value={`${data.accuracy || 0}`} />
+                                <AlphaInfoRow
+                                    label="Longitude"
+                                    value={`${data.longitude || 0}`}
+                                />
+                                <AlphaInfoRow
+                                    label="Latitude"
+                                    value={`${data.latitude || 0}`}
+                                />
+                                <AlphaInfoRow
+                                    label="Altitude"
+                                    value={`${data.altitude || 0}`}
+                                />
+                                <AlphaInfoRow
+                                    label="Accuracy"
+                                    value={`${data.accuracy || 0}`}
+                                />
                             </div>
                         </AlphaCard>
                     </div>
