@@ -89,12 +89,6 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: MapPinIcon,
             },
             {
-                href: '/alpha/geolocation-debug',
-                title: 'Informations GPS',
-                subtitle: 'Données GPS précises en temps réel',
-                icon: MapPinIcon,
-            },
-            {
                 href: '/alpha/gps',
                 title: 'GPS vers la salle 109',
                 subtitle: 'Indications de direction en temps réel',
