@@ -106,7 +106,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: "Jeu d'inclinaison",
                 subtitle: 'Basé sur le composant OrientationPuzzle valide',
                 icon: MapIcon,
-                isGame: true
+                isGame: true,
             },
             {
                 href: '/alpha/orientation-game',
