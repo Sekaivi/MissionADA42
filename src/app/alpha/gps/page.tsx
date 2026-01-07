@@ -8,13 +8,12 @@ import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
-
-import { useOrientation } from '@/hooks/useOrientation';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useOrientation } from '@/hooks/useOrientation';
 
 const TARGET = {
-    lat: 45.2031,
-    lon: 5.702213, // Salle 109
+    lat: 45.2029882,
+    lon: 5.7022892, // Salle 109
 };
 
 function toRad(deg: number) {
@@ -25,12 +24,7 @@ function toDeg(rad: number) {
     return (rad * 180) / Math.PI;
 }
 
-function computeBearing(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-): number {
+function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const latActuelle = toRad(lat1);
     const latCible = toRad(lat2);
     const diffLong = toRad(lon2 - lon1);
@@ -97,16 +91,11 @@ export default function AlphaGPS() {
 
     return (
         <>
-            <AlphaHeader
-                title="GPS Boussole"
-                subtitle="Navigation directionnelle vers une cible"
-            />
+            <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
 
             {!orientationGranted && (
                 <div className="border-border bg-surface rounded-lg border p-8 text-center">
-                    <p className="text-muted mb-4">
-                        Autorisation requise pour la boussole
-                    </p>
+                    <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
                     <AlphaButton onClick={requestOrientationPermission}>
                         Autoriser les capteurs
                     </AlphaButton>
