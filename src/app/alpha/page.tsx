@@ -9,9 +9,9 @@ import {
     CubeTransparentIcon,
     DevicePhoneMobileIcon,
     EyeIcon,
-    MapPinIcon,
-    MapIcon,
     GlobeAltIcon,
+    MapIcon,
+    MapPinIcon,
     LockOpenIcon,
     PencilIcon,
     PhotoIcon,
@@ -93,7 +93,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'GPS vers la salle 109',
                 subtitle: 'Indications de direction en temps réel',
                 icon: MapIcon,
-                isGame: true
+                isGame: true,
             },
             {
                 href: '/alpha/sensors/orientation-puzzle-page',

@@ -12,8 +12,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useOrientation } from '@/hooks/useOrientation';
 
 const TARGET = {
-    lat: 45.2029882,
-    lon: 5.7022892, // Salle 109
+    lat: 45.2031,
+    lon: 5.702213, // Salle 109
 };
 
 function toRad(deg: number) {
