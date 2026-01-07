@@ -91,7 +91,6 @@ export default function MicroGame({ onSuccess }: { onSuccess: () => void }) {
 
                 updateVolume();
             } catch (err) {
-                 
                 console.error(err);
                 setError('Micro indisponible.');
             }

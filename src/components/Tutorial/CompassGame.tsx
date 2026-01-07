@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { motion } from 'framer-motion';
 
-
 interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
     webkitCompassHeading?: number;
     requestPermission?: () => Promise<'granted' | 'denied'>;
