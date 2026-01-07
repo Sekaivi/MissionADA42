@@ -8,7 +8,6 @@ import {
     CubeTransparentIcon,
     DevicePhoneMobileIcon,
     EyeIcon,
-    PuzzlePieceIcon,
     GlobeAltIcon,
     PuzzlePieceIcon,
     SwatchIcon,
