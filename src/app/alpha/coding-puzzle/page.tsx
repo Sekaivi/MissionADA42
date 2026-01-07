@@ -23,7 +23,7 @@ interface Block {
 // --- DATA ---
 const PUZZLE_DATA: Record<Difficulty, string[]> = {
     easy: [
-        '\x3Chtml>',      // \x3C sera interprété comme '<' à l'exécution
+        '\x3Chtml>', // \x3C sera interprété comme '<' à l'exécution
         '\x3Cbody>',
         '\x3Ch1>HACKED',
         '\x3C/h1>',
