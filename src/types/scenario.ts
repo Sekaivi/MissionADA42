@@ -8,6 +8,6 @@ export interface GameScripts {
 
 export type ScenarioState =
     | 'intro_dialogue' // Le joueur lit l'intro
-    | 'playing'        // Le joueur joue
-    | 'end_dialogue'   // Le joueur lit la conclusion
-    | 'finished';      // Le jeu est fini (écran de score/restart)
+    | 'playing' // Le joueur joue
+    | 'end_dialogue' // Le joueur lit la conclusion
+    | 'finished'; // Le jeu est fini (écran de score/restart)

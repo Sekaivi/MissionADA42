@@ -9,20 +9,17 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { useOrientation } from '@/hooks/useOrientation';
 import { DialogueBox } from '@/components/dialogueBox';
 import { useGameScenario } from '@/hooks/useGameScenario';
+import { useOrientation } from '@/hooks/useOrientation';
 import { DialogueLine } from '@/types/dialogue';
 
 const SCRIPTS = {
     intro: [
         { id: '1', speaker: 'Harry', text: 'Bienvenue dans mon énigme. Essaie de la résoudre.' },
-        { id: '2', speaker: 'Fabien Romanens', text: 'Oh non !' }
+        { id: '2', speaker: 'Fabien Romanens', text: 'Oh non !' },
     ] as DialogueLine[],
-    success: [
-        { id: '3', speaker: 'Fabien Romanens', text: 'Bravo !' }
-    ] as DialogueLine[],
-    // failure: [] // (Optionnel)
+    success: [{ id: '3', speaker: 'Fabien Romanens', text: 'Bravo !' }] as DialogueLine[],
 };
 
 // séquence à valider
@@ -33,14 +30,11 @@ const LEVELS = [
 ];
 
 export default function SpinGame() {
-
     const {
-        scenarioState,       // État actuel ('intro_dialogue', 'playing', 'finished'...)
-        currentScript,       // Le texte à afficher
-        onDialogueComplete,  // Fonction à passer à la Box
-        triggerWin,          // Fonction pour gagner
-        triggerFailure,      // Fonction pour perdre (optionnel)
-        resetGame            // Fonction pour tout remettre à zéro
+        scenarioState, // État actuel ('intro_dialogue', 'playing', 'finished'...)
+        currentScript, // Le texte à afficher
+        onDialogueComplete, // Fonction à passer à la Box
+        triggerWin, // Fonction pour gagner
     } = useGameScenario(SCRIPTS);
 
     const { data, error, permissionGranted, requestPermission } = useOrientation();
@@ -69,7 +63,7 @@ export default function SpinGame() {
             setGameState('won');
             triggerWin();
         }
-    }, [levelIndex]);
+    }, [levelIndex, triggerWin]);
 
     useEffect(() => {
         if (scenarioState !== 'playing') return;
@@ -84,7 +78,7 @@ export default function SpinGame() {
             // rotation anti-horaire (gauche) = négatif
             let delta = lastAlpha - currentAlpha;
 
-            // Correction du passage (0° <-> 360°)
+            // Correction du passage (0° ↔ 360°)
             if (delta > 180) {
                 delta -= 360;
             } else if (delta < -180) {
@@ -95,7 +89,7 @@ export default function SpinGame() {
         }
 
         lastAlphaRef.current = currentAlpha;
-    }, [data.alpha, gameState]);
+    }, [data.alpha, gameState, scenarioState]);
 
     // validation
     const currentTarget = LEVELS[levelIndex].target;
@@ -120,20 +114,15 @@ export default function SpinGame() {
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [isTargetReached, gameState, nextLevel]);
+    }, [isTargetReached, gameState, nextLevel, scenarioState]);
 
     return (
         <>
-
             <DialogueBox
                 isOpen={scenarioState === 'intro_dialogue' || scenarioState === 'end_dialogue'}
                 script={currentScript}
                 onComplete={onDialogueComplete}
             />
-
-            <div className={`transition-all duration-500 ${
-                scenarioState === 'playing' ? 'opacity-100 blur-0' : 'opacity-40 blur-sm grayscale'
-            }`}>
 
             <AlphaHeader title="Module Gyroscopique" subtitle="Test de rotation physique à 360°" />
 
@@ -210,8 +199,8 @@ export default function SpinGame() {
                                                     !isGoodDirection && Math.abs(totalRotation) > 10
                                                         ? 'var(--color-brand-error)'
                                                         : isTargetReached
-                                                            ? 'var(--color-brand-emerald)'
-                                                            : 'var(--color-brand-blue)'
+                                                          ? 'var(--color-brand-emerald)'
+                                                          : 'var(--color-brand-blue)'
                                                 }
                                                 strokeWidth="10"
                                                 strokeDasharray="283"
@@ -275,7 +264,6 @@ export default function SpinGame() {
                     </div>
                 </AlphaGrid>
             )}
-            </div>
         </>
     );
 }

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+
 import { DialogueLine } from '@/types/dialogue';
 import { GameScripts, ScenarioState } from '@/types/scenario';
 
@@ -47,12 +48,12 @@ export const useGameScenario = (scripts: GameScripts) => {
     }, [scripts.intro]);
 
     return {
-        scenarioState,      // 'intro_dialogue' | 'playing' | ...
-        currentScript,      // Le tableau de dialogue à passer à la Box
+        scenarioState, // 'intro_dialogue' | 'playing' | ...
+        currentScript, // Le tableau de dialogue à passer à la Box
         onDialogueComplete, // À passer à la Box
-        triggerWin,         // À appeler quand le jeu est gagné
-        triggerFailure,     // À appeler quand le jeu est perdu
-        resetGame,          // Pour le bouton "Recommencer"
-        isWin               // Utile pour afficher un écran de fin spécifique
+        triggerWin, // À appeler quand le jeu est gagné
+        triggerFailure, // À appeler quand le jeu est perdu
+        resetGame, // Pour le bouton "Recommencer"
+        isWin, // Utile pour afficher un écran de fin spécifique
     };
 };

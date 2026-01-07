@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+
 import { DialogueBox } from '@/components/dialogueBox';
 import { DialogueLine } from '@/types/dialogue';
 
@@ -20,10 +21,10 @@ const introScript: DialogueLine[] = [
     {
         id: '3',
         speaker: 'Capitaine',
-        text: "Bon sang ! Le système ne nous reconnait plus. On doit pirater le terminal !",
+        text: 'Bon sang ! Le système ne nous reconnait plus. On doit pirater le terminal !',
         avatar: '/images/captain.png',
-        side: 'right'
-    }
+        side: 'right',
+    },
 ];
 
 export default function GamePage() {
@@ -31,15 +32,15 @@ export default function GamePage() {
 
     const handleDialogueEnd = () => {
         setIsDialogueOpen(false);
-        console.log("Dialogue terminé, le jeu commence !");
+        console.log('Dialogue terminé, le jeu commence !');
         // Ici, tu déclenches la logique suivante de ton jeu
     };
 
     return (
-        <main className="min-h-screen bg-black text-white relative">
+        <main className="relative min-h-screen bg-black text-white">
             {/* Contenu du jeu en arrière-plan */}
             <div className="p-10">
-                <h1 className="text-4xl font-bold mb-4">Escape Room: Sector 7</h1>
+                <h1 className="mb-4 text-4xl font-bold">Escape Room: Sector 7</h1>
                 <p>Recherche d'indices en cours...</p>
                 {/* ... Reste de ton interface de jeu ... */}
             </div>

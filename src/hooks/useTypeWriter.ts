@@ -1,5 +1,5 @@
 // hooks/useTypewriter.ts
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const useTypewriter = (text: string, speed: number = 30) => {
     const [displayedText, setDisplayedText] = useState('');
