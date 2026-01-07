@@ -57,14 +57,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 subtitle: 'Basé sur le composant ChromaticPuzzle valide',
                 icon: SwatchIcon,
                 isGame: true,
-            },
-            {
-                href: '/alpha/password-game',
-                title: 'Jeu du mot de passe',
-                subtitle: 'Devine le mot de passe',
-                icon: EyeIcon,
-                isGame: true,
-            },
+            }
         ],
     },
     {

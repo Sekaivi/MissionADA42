@@ -1,6 +1,18 @@
 'use client';
-import CameraGame from '@/components/Tutorial/CameraGame';
+import { FaceDetectionModule } from '@/components/Tutorial/FaceDetectionModule';
+import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 
 export default function Home() {
-    return <CameraGame onSuccess={() => console.log('success')} />;
+    return (
+        <>
+            <AlphaHeader title={'Module de reconnaissance faciale'} />
+            <FaceDetectionModule
+                onSolve={() =>
+                    window.alert(
+                        "Bravo, vous avez validé le module ! On peut passer à l'étape suivante !"
+                    )
+                }
+            />
+        </>
+    );
 }
