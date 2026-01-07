@@ -10,7 +10,7 @@ export default function ChromaticPuzzlePage() {
             <ChromaticPuzzle
                 onSolve={() =>
                     window.alert(
-                        "Bravo, vous avez réussi le module ! Lors de l'escape game, on passerait à l'étape suivante."
+                        "Bravo, vous avez réussi le module de jeu ! Lors de l'escape game, on passerait à l'étape suivante."
                     )
                 }
             />

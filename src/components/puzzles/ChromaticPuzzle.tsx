@@ -1,33 +1,35 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
 import { CheckCircleIcon, CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
-
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
+import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { PRESETS } from '@/utils/colorPresets';
-
 import { PuzzleProps } from './PuzzleRegistry';
 
-const GAME_PRESETS = [PRESETS.BLEU, PRESETS.VERT, PRESETS.ROUGE, PRESETS.ORANGE];
+const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
 
 export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const { videoRef, error } = useCamera();
-    const scanConfig = useMemo(() => ({ size: 180, xOffset: 0, yOffset: 0 }), []);
 
+    const scanConfig = useMemo(() => ({ size: 180, xOffset: 0, yOffset: 0 }), []);
     const activePresets = useMemo(() => GAME_PRESETS, []);
 
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);
     const [phase, setPhase] = useState<'init' | 'memory' | 'scan' | 'win'>('init');
-    const [timeLeft, setTimeLeft] = useState(8);
+
+    const [, setTimeLeft] = useState(MEMO_TIME);
+
     const [feedbackMsg, setFeedbackMsg] = useState('Initialisation...');
+    const [isValidating, setIsValidating] = useState(false);
 
     const processingRef = useRef(false);
 
@@ -45,10 +47,12 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
     const startGame = useCallback(() => {
         generateSequence();
         setStep(0);
-        setTimeLeft(MEMO_TIME);
         setPhase('memory');
-        setFeedbackMsg('Mémorisez la séquence...');
+        setTimeLeft(MEMO_TIME);
+        setFeedbackMsg(`Mémorisez la séquence : ${MEMO_TIME}s`);
+
         processingRef.current = false;
+        setIsValidating(false);
     }, [generateSequence]);
 
     // timer
@@ -58,9 +62,10 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     setPhase('scan');
-                    setFeedbackMsg('À vous de jouer !');
+                    setFeedbackMsg("SCANNEZ LES OBJETS DANS L'ORDRE");
                     return 0;
                 }
+                setFeedbackMsg(`Mémorisez la séquence : ${prev - 1}s`);
                 return prev - 1;
             });
         }, 1000);
@@ -71,52 +76,46 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
     useEffect(() => {
         let timer: NodeJS.Timeout;
 
-        // on vérifie qu'on est en phase scan, qu'on a une couleur, et que ce n'est pas déjà verrouillé
         if (phase === 'scan' && detectedId && !processingRef.current) {
             const expectedId = sequence[step];
 
             if (detectedId === expectedId) {
-                // vérrouillage
+                // verrouillage logique
                 processingRef.current = true;
 
-                // feedback visuel asynchrone
-                // requestAnimationFrame pour que l'update se fasse à la prochaine frame
                 requestAnimationFrame(() => {
-                    if (processingRef.current) {
-                        setFeedbackMsg(`Analyse en cours... Maintenez !`);
-                    }
+                    setIsValidating(true);
+                    setFeedbackMsg(`Analyse en cours...`);
                 });
 
-                // timer de validation
                 timer = setTimeout(() => {
                     const colorName = GAME_PRESETS.find((p) => p.id === detectedId)?.name;
-                    setFeedbackMsg(`CORRECT ! ${colorName} validé.`);
 
+                    // update state après succès
+                    setFeedbackMsg(`CORRECT ! ${colorName} validé.`);
                     const nextStep = step + 1;
                     setStep(nextStep);
 
-                    // déverrouillage avant le re-render du step suivant
+                    // déverrouillage
                     processingRef.current = false;
+                    setIsValidating(false);
 
                     if (nextStep >= sequence.length) {
                         setPhase('win');
-                        setFeedbackMsg('Séquence Complète. Accès Autorisé.');
-                        setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+                        setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
                     }
                 }, 800);
             }
         }
 
-        // cleanup
         return () => {
             clearTimeout(timer);
-            // si on démonte l'effet alors qu'on était en train de processer (ex: perte de tracking)
             if (processingRef.current) {
-                // on ne set le message que si on est toujours en phase de scan (pas si on vient de gagner)
                 if (phase === 'scan') {
                     setFeedbackMsg('Analyse interrompue (mouvement détecté)');
                 }
                 processingRef.current = false;
+                setIsValidating(false);
             }
         };
     }, [detectedId, phase, sequence, step, onSolve]);
@@ -188,17 +187,11 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                     })}
                 </div>
 
-                <div className="text-muted text-center font-mono text-sm">
-                    {phase === 'memory' && (
-                        <span className="text-brand-blue animate-pulse font-bold">
-                            MÉMORISEZ : {timeLeft}s
-                        </span>
-                    )}
-                    {phase === 'scan' && "SCANNEZ LES OBJETS DANS L'ORDRE"}
-                    {phase === 'win' && (
-                        <span className="text-brand-emerald font-bold">SYSTÈME DÉVERROUILLÉ</span>
-                    )}
-                </div>
+                <AlphaFeedbackPill
+                    message={feedbackMsg}
+                    type={phase === 'win' ? 'success' : 'info'}
+                    isLoading={phase === 'init' || isValidating}
+                />
             </AlphaCard>
 
             {phase !== 'win' && (
@@ -234,15 +227,13 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 </AlphaCard>
             )}
 
-            <div
-                className={`mt-2 min-h-[40px] w-full rounded border p-2 text-center text-sm font-bold transition-colors ${
-                    phase === 'win'
-                        ? 'border-brand-emerald bg-brand-emerald/10 text-brand-emerald'
-                        : 'border-border bg-surface text-foreground'
-                }`}
-            >
-                {feedbackMsg}
-            </div>
+            <AlphaModal
+                isOpen={phase === 'win'}
+                message={feedbackMsg}
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+                onAutoClose={onSolve}
+            />
 
             {(phase === 'scan' || phase === 'win') && (
                 <div className="flex justify-center">
