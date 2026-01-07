@@ -24,12 +24,12 @@ export default function Debogage() {
                         initial={{ opacity: 0 }}
                         animate={{
                             opacity: [0, 1, 0],
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
                         }}
                         transition={{
                             duration: 0.6,
                             times: [0, 0.2, 1],
-                            ease: "easeOut"
+                            ease: 'easeOut',
                         }}
                         className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay"
                     />

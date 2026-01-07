@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
+import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
@@ -102,9 +103,11 @@ export default function AlphaCameraOnly() {
                 <div className="space-y-6">
                     <AlphaCard title="Métadonnées du Stream">
                         {!videoInfo ? (
-                            <div className="text-brand-blue animate-pulse text-sm">
-                                Synchronisation matériel...
-                            </div>
+                            <AlphaFeedbackPill
+                                message={'Synchronisation matériel...'}
+                                type={'info'}
+                                isLoading
+                            />
                         ) : (
                             <div className="flex flex-col">
                                 <AlphaInfoRow label="Statut" value="ACTIF" active />
@@ -124,12 +127,7 @@ export default function AlphaCameraOnly() {
                                             : undefined
                                     }
                                 />
-                                <div className="pt-4">
-                                    <p className="text-muted mb-1 text-xs">Hardware ID</p>
-                                    <code className="bg-background text-muted block truncate rounded p-1 text-xs">
-                                        {videoInfo.label}
-                                    </code>
-                                </div>
+                                <AlphaInfoRow label={'Hardware ID'} value={videoInfo.label} />
                             </div>
                         )}
                     </AlphaCard>

@@ -23,34 +23,33 @@ import { ModuleGroup } from '@/types/alpha/module';
 
 const ALPHA_MODULES: ModuleGroup[] = [
     {
-        title: 'Systèmes de Vision',
+        title: 'Caméra',
         icon: CameraIcon,
         headerColor: 'text-brand-blue',
         items: [
             {
-                href: '/alpha/camera-only',
-                title: 'Flux Vidéo Brut',
-                subtitle: "Test d'accès matériel & snapshot",
+                href: '/alpha/camera/camera-only',
+                title: 'Accès au flux vidéo brut',
+                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
                 icon: VideoCameraIcon,
             },
             {
-                href: '/alpha/color-camera-test',
-                title: 'Analyse Colorimétrique',
-                subtitle: 'Algorithme de détection RGB',
+                href: '/alpha/camera/color-camera-test',
+                title: 'Analyse colorimétrique RGB',
+                subtitle: 'Interface de debug valide',
                 icon: EyeIcon,
             },
             {
-                href: '/alpha/chromatic-puzzle-page',
-                title: 'Protocole Chromatique',
-                subtitle: 'Jeu de mémorisation visuelle',
-                icon: SwatchIcon,
-                isGame: true,
-            },
-            {
-                href: '/alpha/camera-face-detector',
+                href: '/alpha/camera/face-detector',
                 title: 'Module de reconnaissance faciale',
-                subtitle: 'Modèle IA, composant validé (réutilisable)',
+                subtitle: 'Basé sur le composant FaceDetectionModule valide',
                 icon: EyeIcon,
+            },
+            {
+                href: '/alpha/camera/chromatic-puzzle-page',
+                title: 'Jeu de mémorisation de couleurs',
+                subtitle: 'Basé sur le composant ChromaticPuzzle valide',
+                icon: SwatchIcon,
                 isGame: true,
             },
         ],

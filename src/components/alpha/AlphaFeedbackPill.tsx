@@ -24,7 +24,7 @@ const FeedbackPill: React.FC<FeedbackPillProps> = ({
     };
 
     const baseStyles =
-        'rounded-full border px-3 py-1 font-mono text-xs font-bold tracking-widest uppercase';
+        'whitespace-nowrap rounded-full border px-3 py-1 font-mono text-xs font-bold tracking-widest uppercase';
 
     // si isLoading est vrai, on force le style 'info' et l'animation
     const activeStyle = isLoading ? `${variants.info} animate-pulse` : variants[type];

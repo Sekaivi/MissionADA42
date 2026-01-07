@@ -2,10 +2,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { CheckCircleIcon, ExclamationTriangleIcon, UserIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, UserIcon } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
 
 import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaError } from '@/components/alpha/AlphaError';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
@@ -96,21 +97,11 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
         );
     }
 
-    if (cameraError || detectionError) {
-        return (
-            <AlphaCard title="Erreur Système">
-                <div className="flex flex-col items-center gap-4 rounded-lg border border-red-500/30 bg-red-950/20 p-6 text-red-500">
-                    <ExclamationTriangleIcon className="h-12 w-12 animate-pulse" />
-                    <p className="text-center font-mono font-bold">
-                        {cameraError || detectionError}
-                    </p>
-                </div>
-            </AlphaCard>
-        );
-    }
+    if (cameraError || detectionError)
+        return <AlphaError message={cameraError || detectionError} />;
 
     return (
-        <div className="animate-in fade-in space-y-6 duration-500">
+        <div className="space-y-6">
             <AlphaModal
                 isOpen={isValidating}
                 variant="success"

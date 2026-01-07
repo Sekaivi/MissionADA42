@@ -1,20 +1,101 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircleIcon, CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+
+import { CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import clsx from 'clsx';
+
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaError } from '@/components/alpha/AlphaError';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
+import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { PRESETS } from '@/utils/colorPresets';
+
 import { PuzzleProps } from './PuzzleRegistry';
 
 const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
+
+// composant interne pour afficher la séquence de couleurs
+interface ColorPreset {
+    id: string;
+    displayHex: string;
+    name?: string;
+}
+
+interface AlphaSequenceDisplayProps {
+    sequence: string[];
+    presets: ColorPreset[];
+    phase: 'init' | 'memory' | 'scan' | 'win';
+    step: number;
+    className?: string;
+}
+
+export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
+    sequence,
+    presets,
+    phase,
+    step,
+    className,
+}) => {
+    return (
+        <div className={clsx('flex flex-wrap justify-center gap-4', className)}>
+            {sequence.map((colorId, index) => {
+                const preset = presets.find((p) => p.id === colorId);
+                if (!preset) return null;
+
+                const isMemory = phase === 'memory';
+                const isCompleted = index < step && !isMemory;
+                const isActive = index === step && phase === 'scan';
+                const isPending = !isMemory && !isCompleted && !isActive;
+
+                const dynamicStyle: React.CSSProperties =
+                    isMemory || isCompleted
+                        ? { backgroundColor: preset.displayHex, borderColor: preset.displayHex }
+                        : {};
+
+                return (
+                    <div
+                        key={index}
+                        style={dynamicStyle}
+                        className={clsx(
+                            // base
+                            'flex h-12 w-12 items-center justify-center rounded-full border-2 font-bold transition-all duration-300',
+
+                            // phase de mémorisation
+                            isMemory && 'scale-110 text-white shadow-lg',
+
+                            // couleur validée
+                            isCompleted && 'text-white opacity-50',
+
+                            // current
+                            isActive && 'scale-110 animate-pulse border-current bg-transparent',
+
+                            // next
+                            isPending && 'bg-surface-highlight border-border text-muted opacity-30'
+                        )}
+                    >
+                        {!isMemory && (
+                            <>
+                                {isCompleted ? (
+                                    <CheckIcon className="h-6 w-6" />
+                                ) : (
+                                    <QuestionMarkCircleIcon className="h-6 w-6" />
+                                )}
+                            </>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
 
 export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const { videoRef, error } = useCamera();
@@ -126,66 +207,19 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
         return () => clearTimeout(t);
     }, [startGame]);
 
-    if (isSolved) {
-        return (
-            <div className="rounded-xl border border-green-500 bg-green-900/20 p-6 text-center">
-                <CheckCircleIcon className="mx-auto mb-4 h-16 w-16 text-green-500" />
-                <h2 className="text-xl font-bold text-green-400">SÉQUENCE CHROMATIQUE VALIDÉE</h2>
-            </div>
-        );
-    }
-
-    if (error)
-        return (
-            <div className="rounded border border-red-500 p-4 text-red-500">Erreur : {error}</div>
-        );
+    if (isSolved) return <AlphaSuccess message={'SÉQUENCE CHROMATIQUE VALIDÉE'} />;
+    if (error) return <AlphaError message={error} />;
 
     return (
-        <div className="animate-in fade-in space-y-6 duration-500">
+        <div className="space-y-6">
             <AlphaCard title="Module de Sécurité Chromatique">
-                <div className={'mb-6 flex flex-wrap justify-center gap-4'}>
-                    {sequence.map((colorId, index) => {
-                        const preset = GAME_PRESETS.find((p) => p.id === colorId);
-                        if (!preset) return null;
-
-                        let dynamicStyle: React.CSSProperties = {};
-                        let classes =
-                            'w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ';
-
-                        if (phase === 'memory') {
-                            classes += 'text-white shadow-lg scale-110';
-                            dynamicStyle = {
-                                backgroundColor: preset.displayHex,
-                                borderColor: preset.displayHex,
-                            };
-                        } else {
-                            if (index < step) {
-                                classes += 'opacity-50 text-white';
-                                dynamicStyle = {
-                                    backgroundColor: preset.displayHex,
-                                    borderColor: preset.displayHex,
-                                };
-                            } else if (index === step && phase === 'scan') {
-                                classes += 'bg-transparent animate-pulse scale-110';
-                            } else {
-                                classes +=
-                                    'bg-surface-highlight border-border text-muted opacity-30';
-                            }
-                        }
-
-                        return (
-                            <div key={index} className={classes} style={dynamicStyle}>
-                                {phase === 'memory' ? (
-                                    ''
-                                ) : index < step ? (
-                                    <CheckIcon className="h-6 w-6" />
-                                ) : (
-                                    <QuestionMarkCircleIcon className="h-6 w-6" />
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                <AlphaSequenceDisplay
+                    sequence={sequence}
+                    presets={GAME_PRESETS}
+                    phase={phase}
+                    step={step}
+                    className="mb-6"
+                />
 
                 <AlphaFeedbackPill
                     message={feedbackMsg}

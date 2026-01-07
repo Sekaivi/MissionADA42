@@ -9,9 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <ClientLayout variant="light">
-            {children}
-        </ClientLayout>
-    );
+    return <ClientLayout variant="light">{children}</ClientLayout>;
 }

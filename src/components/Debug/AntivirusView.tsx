@@ -52,11 +52,7 @@ export default function AntivirusView() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1.3 }}
             >
-                <Button
-                    onClick={() => (window.location.href = '/home')}
-                >
-                    RETOURNER AU QG
-                </Button>
+                <Button onClick={() => (window.location.href = '/home')}>RETOURNER AU QG</Button>
             </motion.div>
         </motion.div>
     );
