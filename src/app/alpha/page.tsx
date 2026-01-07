@@ -8,7 +8,9 @@ import {
     CubeTransparentIcon,
     DevicePhoneMobileIcon,
     EyeIcon,
+    GlobeAltIcon,
     SwatchIcon,
+    UserGroupIcon,
     VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
@@ -43,6 +45,13 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: SwatchIcon,
                 isGame: true,
             },
+            {
+                href: '/alpha/camera-face-detector',
+                title: 'Détection de Visage',
+                subtitle: 'Jeu de reconnaissance faciale',
+                icon: EyeIcon,
+                isGame: true,
+            },
         ],
     },
     {
@@ -69,6 +78,19 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 subtitle: 'Jeu de rotation 360° (Spin)',
                 icon: ArrowPathIcon,
                 isGame: true,
+            },
+        ],
+    },
+    {
+        title: 'Partie et synchronisation',
+        icon: GlobeAltIcon,
+        headerColor: 'text-brand-error',
+        items: [
+            {
+                href: '/alpha/game-sync-test',
+                title: 'Lancer une partie',
+                subtitle: "Test pour créer et modifier les informations d'une partie",
+                icon: UserGroupIcon,
             },
         ],
     },
