@@ -79,6 +79,13 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: ArrowPathIcon,
                 isGame: true,
             },
+            {
+                href: '/alpha/spin-game-test',
+                title: 'Module de Rotation Dialogué',
+                subtitle: 'Jeu de rotation 360° (Spin)',
+                icon: ArrowPathIcon,
+                isGame: true,
+            },
         ],
     },
     {

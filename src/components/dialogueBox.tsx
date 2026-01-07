@@ -13,22 +13,23 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
     const [currentIndex, setCurrentIndex] = useState(0);
     const currentLine = script[currentIndex];
 
-    // Utilisation de notre hook custom
-    const { displayedText, isTyping, completeText } = useTypewriter(currentLine?.text || '', 30);
+    // Le hook corrigé est utilisé ici
+    const { displayedText, isTyping, completeText } = useTypewriter(currentLine?.text || '', 20);
 
-    // Gestion du clic pour avancer
     const handleInteraction = () => {
+        if (!isOpen) return;
+
         if (isTyping) {
-            // Si ça tape encore, on affiche tout d'un coup
+            // Si l'animation court, on la force à finir
             completeText();
         } else {
-            // Sinon, on passe à la phrase suivante
+            // Si l'animation est finie, on passe à la suite
             if (currentIndex < script.length - 1) {
                 setCurrentIndex((prev) => prev + 1);
             } else {
-                // Fin du dialogue
                 onComplete();
-                setCurrentIndex(0); // Reset pour la prochaine fois (optionnel)
+                // Petit délai avant de reset l'index pour éviter un flash visuel
+                setTimeout(() => setCurrentIndex(0), 100);
             }
         }
     };
@@ -56,7 +57,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
             >
 
                 {/* En-tête avec Nom */}
-                <div className="absolute -top-5 left-6 bg-blue-600 text-white px-4 py-1 rounded text-sm font-bold tracking-wider uppercase shadow-md border border-blue-400">
+                <div className="absolute -top-5 left-6 bg-brand-emerald text-white px-4 py-1 rounded text-sm font-bold tracking-wider uppercase shadow-md border border-brand-emerald">
                     {currentLine.speaker}
                 </div>
 
@@ -77,14 +78,14 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                         <p className="text-lg text-slate-100 font-mono leading-relaxed min-h-[4rem]">
                             {displayedText}
                             {/* Curseur clignotant pendant la frappe */}
-                            {isTyping && <span className="animate-pulse inline-block w-2 h-5 bg-blue-500 ml-1 align-middle"/>}
+                            {isTyping && <span className="animate-pulse inline-block w-2 h-5 bg-brand-emerald ml-1 align-middle"/>}
                         </p>
                     </div>
                 </div>
 
                 {/* Indicateur "Suivant" (clignote quand le texte est fini) */}
                 {!isTyping && (
-                    <div className="absolute bottom-4 right-4 animate-bounce text-blue-400">
+                    <div className="absolute bottom-4 right-4 animate-bounce text-brand-emerald">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
