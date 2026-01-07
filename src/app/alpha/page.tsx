@@ -58,6 +58,20 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: SwatchIcon,
                 isGame: true,
             },
+            {
+                href: '/alpha/camera-face-detector',
+                title: 'Détection de Visage',
+                subtitle: 'Jeu de reconnaissance faciale',
+                icon: EyeIcon,
+                isGame: true,
+            },
+            {
+                href: '/alpha/password-game',
+                title: 'Jeu du mot de passe',
+                subtitle: 'Devine le mot de passe',
+                icon: EyeIcon,
+                isGame: true,
+            },
         ],
     },
     {
