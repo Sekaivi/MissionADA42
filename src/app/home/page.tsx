@@ -14,7 +14,7 @@ export default function Home() {
     const startDebug = () => {
         if (typeof window === 'undefined') return;
         localStorage.setItem('debugStartTime', Date.now().toString());
-        router.push('/Debug');
+        router.push('/debug');
     };
 
     const features = [
@@ -64,7 +64,7 @@ export default function Home() {
                             <CTAButton href="/tutorial" variant="secondary">
                                 Tester le Tutoriel
                             </CTAButton>
-                            <CTAButton href="/Debug" variant="primary" onClick={startDebug}>
+                            <CTAButton href="/debug" variant="primary" onClick={startDebug}>
                                 Commencer la Mission
                             </CTAButton>
                         </div>
