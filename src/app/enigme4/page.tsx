@@ -166,7 +166,7 @@ export default function Enigme4() {
                     <div className="mt-6 w-48 sm:w-64 md:w-72">
                         <Button
                             onClick={checkCombination}
-                            className={`w-full text-sm md:text-base ${status === 'success' ? '!bg-green-600' : status === 'error' ? '!bg-red-600' : ''}`}
+                            // className={`w-full text-sm md:text-base ${status === 'success' ? '!bg-green-600' : status === 'error' ? '!bg-red-600' : ''}`}
                             disabled={slots.some((s) => s === null) || status === 'success'}
                         >
                             {status === 'success'

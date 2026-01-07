@@ -54,7 +54,6 @@ export default function AntivirusView() {
             >
                 <Button
                     onClick={() => (window.location.href = '/home')}
-                    className="rounded-lg bg-blue-600 px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:bg-blue-700 hover:shadow-blue-900/50"
                 >
                     RETOURNER AU QG
                 </Button>

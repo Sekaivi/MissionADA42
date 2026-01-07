@@ -22,10 +22,15 @@ export default function Debogage() {
                 {isSuccess && (
                     <motion.div
                         initial={{ opacity: 0 }}
-                        animate={[
-                            { opacity: 1, backgroundColor: '#ffffff', duration: 0.1 },
-                            { opacity: 0, duration: 0.5 },
-                        ]}
+                        animate={{
+                            opacity: [0, 1, 0],
+                            backgroundColor: '#ffffff'
+                        }}
+                        transition={{
+                            duration: 0.6,
+                            times: [0, 0.2, 1],
+                            ease: "easeOut"
+                        }}
                         className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay"
                     />
                 )}
