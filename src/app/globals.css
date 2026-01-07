@@ -2,7 +2,7 @@
 
 @theme {
     /* brand colors fixes */
-    /* accessibles via : bg-brand-blue, text-brand-blue, border-brand-blue, etc. */
+    /* accessibles via : bg-brand-blue, text-brand-blue, border-brand-blue, etc... */
     --color-brand-blue: #51a2ff;
     --color-brand-purple: #c27aff;
     --color-brand-emerald: #00d492;
