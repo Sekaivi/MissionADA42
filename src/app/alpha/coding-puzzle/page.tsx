@@ -22,7 +22,14 @@ interface Block {
 
 // --- DATA ---
 const PUZZLE_DATA: Record<Difficulty, string[]> = {
-    easy: ['<html>', '<body>', '<h1>HACKED</h1>', '</body>', '</html>', ''],
+    easy: [
+        '\x3Chtml>',      // \x3C sera interprété comme '<' à l'exécution
+        '\x3Cbody>',
+        '\x3Ch1>HACKED',
+        '\x3C/h1>',
+        '\x3C/body>',
+        '\x3C/html>',
+    ],
     medium: [
         'function bypass() {',
         '  let firewall = false;',
