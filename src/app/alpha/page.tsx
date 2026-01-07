@@ -21,7 +21,6 @@ import {
     QuestionMarkCircleIcon,
     ShieldCheckIcon,
     SquaresPlusIcon,
-    MapPinIcon,
     SwatchIcon,
     UserGroupIcon,
     VideoCameraIcon,
