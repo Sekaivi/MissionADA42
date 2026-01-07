@@ -1,4 +1,5 @@
 import { PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
+import { DialogueLine } from '@/types/dialogue';
 
 export interface GameHint {
     id: string;
@@ -25,6 +26,12 @@ export type ScenarioState =
     | 'playing' // Le joueur joue
     | 'end_dialogue' // Le joueur lit la conclusion
     | 'finished'; // Le jeu est fini (écran de score/restart)
+
+export interface GameScripts {
+    intro: DialogueLine[]; // dialogues d'intro
+    success: DialogueLine[]; // dialogues de victoire
+    failure?: DialogueLine[]; // dialogues d'échec
+}
 
 export interface GameScenario {
     id: string;
