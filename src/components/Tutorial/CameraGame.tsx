@@ -22,7 +22,6 @@ export default function CameraGame({ onSuccess }: CameraGameProps) {
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 setIsModelLoaded(true);
             } catch {
-                // CORRECTION : Plus de variable inutilisée ici
                 setError('Erreur chargement IA');
             }
         };
