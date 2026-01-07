@@ -54,7 +54,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                 className="animate-in fade-in slide-in-from-bottom-4 pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 border-slate-600 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-sm duration-300"
                 onClick={handleInteraction}
             >
-                <div className="absolute -top-5 left-6 rounded border border-brand-emerald bg-brand-emerald px-4 py-1 text-sm font-bold tracking-wider text-white uppercase shadow-md">
+                <div className="border-brand-emerald bg-brand-emerald absolute -top-5 left-6 rounded border px-4 py-1 text-sm font-bold tracking-wider text-white uppercase shadow-md">
                     {currentLine.speaker}
                 </div>
 
@@ -81,14 +81,14 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                         <p className="min-h-[4rem] font-mono text-lg leading-relaxed text-slate-100">
                             {displayedText}
                             {isTyping && (
-                                <span className="ml-1 inline-block h-5 w-2 animate-pulse bg-brand-emerald align-middle" />
+                                <span className="bg-brand-emerald ml-1 inline-block h-5 w-2 animate-pulse align-middle" />
                             )}
                         </p>
                     </div>
                 </div>
 
                 {!isTyping && (
-                    <div className="absolute right-4 bottom-4 animate-bounce text-brand-emerald">
+                    <div className="text-brand-emerald absolute right-4 bottom-4 animate-bounce">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-6 w-6"
