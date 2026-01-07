@@ -9,6 +9,7 @@ import {
     DevicePhoneMobileIcon,
     EyeIcon,
     GlobeAltIcon,
+    PuzzlePieceIcon,
     SwatchIcon,
     UserGroupIcon,
     VideoCameraIcon,
@@ -39,7 +40,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: EyeIcon,
             },
             {
-                href: '/alpha/color-game',
+                href: '/alpha/chromatic-puzzle-page',
                 title: 'Protocole Chromatique',
                 subtitle: 'Jeu de mémorisation visuelle',
                 icon: SwatchIcon,
@@ -95,9 +96,16 @@ const ALPHA_MODULES: ModuleGroup[] = [
         items: [
             {
                 href: '/alpha/game-sync-test',
-                title: 'Lancer une partie',
+                title: 'Lancer une partie synchronisée',
                 subtitle: "Test pour créer et modifier les informations d'une partie",
                 icon: UserGroupIcon,
+            },
+            {
+                href: '/alpha/escape-game-test',
+                title: 'Lancer un escape game',
+                subtitle: "Tester une configuration d'escape game réel",
+                icon: PuzzlePieceIcon,
+                isGame: true,
             },
         ],
     },
