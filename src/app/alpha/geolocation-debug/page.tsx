@@ -1,5 +1,3 @@
-// utilisation du gps vers les coordonées GPS de la salle 115
-
 'use client';
 
 import { useEffect } from 'react';

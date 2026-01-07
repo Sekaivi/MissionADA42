@@ -105,6 +105,13 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 href: '/alpha/sensors/orientation-puzzle-page',
                 title: "Jeu d'inclinaison",
                 subtitle: 'Basé sur le composant OrientationPuzzle valide',
+                icon: MapIcon,
+                isGame: true
+            },
+            {
+                href: '/alpha/orientation-game',
+                title: "Séquenceur d'Orientation",
+                subtitle: "Jeu d'inclinaison (Tilt)",
                 icon: DevicePhoneMobileIcon,
                 isGame: true,
             },
