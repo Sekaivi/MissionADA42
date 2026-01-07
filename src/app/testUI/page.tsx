@@ -8,7 +8,6 @@ import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { AlphaPage } from '@/components/alpha/AlphaPage';
 
 import { useState, useEffect } from 'react';
 
