@@ -42,3 +42,5 @@ next-env.d.ts
 
 .idea
 /api/vendor/
+pnpm-lock.yaml
+package-lock.json
