@@ -1,12 +1,4 @@
-import { DialogueLine } from './dialogue';
-
-export interface GameScripts {
-    intro: DialogueLine[];
-    success: DialogueLine[];
-    failure?: DialogueLine[];
-}
-
-export type PuzzleComponentId = 'tutorial-code' | 'logic-circuit' | 'victory-screen';
+import { PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
 
 export interface GameHint {
     id: string;
@@ -22,11 +14,10 @@ export interface GameDialogue {
 export interface GameStep {
     id: string;
     title: string;
-    description: string; // Visible par le MJ
-    componentId: PuzzleComponentId; // Clé pour charger le composant
+    description: string; // visible par le MJ
+    componentId: PuzzleComponentId; // clef pour charger le composant
     hints: GameHint[];
-    dialogues: GameDialogue[];
-    solution: string; // Visible par le MJ
+    solution: string; // visible par le MJ
 }
 
 export type ScenarioState =
@@ -40,5 +31,6 @@ export interface GameScenario {
     name: string;
     description: string;
     defaultDuration: number; // en secondes
+    defaultTimeBeforeNextStep: number;
     steps: GameStep[];
 }

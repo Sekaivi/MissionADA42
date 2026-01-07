@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 
-import {
-    BoltIcon,
-    CheckCircleIcon,
-    StarIcon,
-    TrophyIcon,
-    XCircleIcon,
-} from '@heroicons/react/24/solid';
+import { BoltIcon, StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
+import { ChromaticPuzzle } from '@/components/puzzles/ChromaticPuzzle';
+import { SCENARIO } from '@/data/alphaScenario';
 import { GameState, HistoryEntry } from '@/types/game';
-import { PuzzleComponentId } from '@/types/scenario';
 
 export interface PuzzleProps {
     onSolve: () => void;
@@ -25,57 +20,17 @@ const formatDuration = (ms: number) => {
     return `${m}m ${s}s`;
 };
 
-// --- PUZZLE 1 ---
-const TutorialCodePuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
-    const [input, setInput] = useState('');
-    const [error, setError] = useState(false);
-    const checkCode = () => {
-        if (input === '1234') onSolve();
-        else {
-            setError(true);
-            setTimeout(() => setError(false), 1000);
-        }
-    };
-    if (isSolved)
-        return (
-            <div className="rounded-xl border border-green-500 bg-green-900/20 p-6 text-center">
-                <CheckCircleIcon className="mx-auto mb-4 h-16 w-16 text-green-500" />
-                <h2 className="text-xl font-bold text-green-400">ACCÈS AUTORISÉ</h2>
-            </div>
-        );
-    return (
-        <div className="border-brand-blue rounded-xl border bg-blue-900/20 p-6 text-center">
-            <h2 className="text-brand-blue mb-4 text-xl font-bold">PUZZLE 1 : Calibration</h2>
-            <p className="mb-4 text-sm text-gray-300">Entrez le code de sécurité (Indice: 1234)</p>
-            <div className="mx-auto flex max-w-xs justify-center gap-2">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className={`border bg-black/50 ${error ? 'animate-shake border-red-500' : 'border-brand-blue'} w-full rounded px-4 py-2 text-center tracking-widest text-white transition-colors outline-none`}
-                    placeholder="____"
-                    maxLength={4}
-                />
-                <button
-                    onClick={checkCode}
-                    className="bg-brand-blue rounded px-4 py-2 font-bold text-white hover:bg-blue-500"
-                >
-                    OK
-                </button>
-            </div>
-            {error && <p className="mt-2 text-xs font-bold text-red-500">CODE INCORRECT</p>}
-        </div>
-    );
-};
-
-// --- PUZZLE 2 ---
-const LogicCircuitPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
+// Puzzle test
+const TestPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const [charging, setCharging] = useState(false);
+    const [isValid, setIsValid] = useState(false);
     const handleConnect = () => {
         setCharging(true);
         setTimeout(() => {
             setCharging(false);
-            onSolve();
+            setIsValid(true);
+
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         }, 1500);
     };
     if (isSolved)
@@ -86,26 +41,39 @@ const LogicCircuitPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         );
     return (
         <div className="border-brand-purple rounded-xl border bg-purple-900/20 p-6 text-center">
-            <h2 className="text-brand-purple mb-4 text-xl font-bold">PUZZLE 2 : Surcharge</h2>
-            <p className="mb-6 text-sm">Le noyau est instable. Redirigez l'énergie manuellement.</p>
-            <button
-                onClick={handleConnect}
-                disabled={charging}
-                className={`relative w-full overflow-hidden rounded-lg py-4 font-bold transition-all ${charging ? 'cursor-wait bg-purple-900 text-purple-300' : 'bg-brand-purple text-white hover:bg-purple-500'}`}
-            >
-                <div className="relative z-10 flex items-center justify-center gap-2">
-                    <BoltIcon className={`h-5 w-5 ${charging ? 'animate-pulse' : ''}`} />
-                    {charging ? 'REDIRECTION EN COURS...' : 'REDIRIGER LE FLUX'}
-                </div>
-                <div
-                    className={`absolute top-0 left-0 h-full bg-white/20 transition-all duration-[1500ms] ease-out ${charging ? 'w-full' : 'w-0'}`}
-                />
-            </button>
+            <h2 className="text-brand-purple mb-4 text-xl font-bold">PUZZLE TEST : Surcharge</h2>
+
+            {isValid ? (
+                <>
+                    <p className="mb-6 text-sm">
+                        Le noyau est stabilisé. Bravo ! Vous allez être redirigé...
+                    </p>
+                </>
+            ) : (
+                <>
+                    <p className="mb-6 text-sm">
+                        Le noyau est instable. Redirigez l'énergie manuellement.
+                    </p>
+                    <button
+                        onClick={handleConnect}
+                        disabled={charging}
+                        className={`relative w-full overflow-hidden rounded-lg py-4 font-bold transition-all ${charging ? 'cursor-wait bg-purple-900 text-purple-300' : 'bg-brand-purple text-white hover:bg-purple-500'}`}
+                    >
+                        <div className="relative z-10 flex items-center justify-center gap-2">
+                            <BoltIcon className={`h-5 w-5 ${charging ? 'animate-pulse' : ''}`} />
+                            {charging ? 'REDIRECTION EN COURS...' : 'REDIRIGER LE FLUX'}
+                        </div>
+                        <div
+                            className={`absolute top-0 left-0 h-full bg-white/20 transition-all duration-[1500ms] ease-out ${charging ? 'w-full' : 'w-0'}`}
+                        />
+                    </button>
+                </>
+            )}
         </div>
     );
 };
 
-// --- VICTOIRE (MVP Absolu) ---
+// écran de victoire (fin de l'escape game)
 const VictoryScreen: React.FC<PuzzleProps> = ({ data }) => {
     const history: HistoryEntry[] = data?.history || [];
 
@@ -192,7 +160,7 @@ const VictoryScreen: React.FC<PuzzleProps> = ({ data }) => {
     );
 };
 
-// --- DÉFAITE ---
+// écran de défaite (fin de l'escape game)
 export const DefeatScreen = () => (
     <div className="animate-in fade-in rounded-xl border border-red-900 bg-red-950/30 p-10 text-center duration-1000">
         <XCircleIcon className="mx-auto mb-4 h-24 w-24 text-red-600" />
@@ -201,8 +169,9 @@ export const DefeatScreen = () => (
     </div>
 );
 
-export const PUZZLE_COMPONENTS: Record<PuzzleComponentId, React.FC<PuzzleProps>> = {
-    'tutorial-code': TutorialCodePuzzle,
-    'logic-circuit': LogicCircuitPuzzle,
+export const PUZZLE_COMPONENTS = {
+    'test-puzzle': TestPuzzle,
+    'chromatic-puzzle': ChromaticPuzzle,
     'victory-screen': VictoryScreen,
 };
+export type PuzzleComponentId = keyof typeof PUZZLE_COMPONENTS;

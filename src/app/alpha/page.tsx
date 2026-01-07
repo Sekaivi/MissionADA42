@@ -40,7 +40,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: EyeIcon,
             },
             {
-                href: '/alpha/color-game',
+                href: '/alpha/chromatic-puzzle-page',
                 title: 'Protocole Chromatique',
                 subtitle: 'Jeu de mémorisation visuelle',
                 icon: SwatchIcon,

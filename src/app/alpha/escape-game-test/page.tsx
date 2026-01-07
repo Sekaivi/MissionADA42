@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ArrowRightEndOnRectangleIcon,
     BellAlertIcon,
-    ChatBubbleLeftRightIcon,
     CheckIcon,
     ClockIcon,
     ComputerDesktopIcon,
@@ -23,7 +22,7 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { DefeatScreen, PUZZLE_COMPONENTS } from '@/components/puzzles/PuzzleRegistry';
-import { ALPHA_SCENARIO } from '@/data/alphaScenario';
+import { SCENARIO } from '@/data/alphaScenario';
 import { createGame, useGameSync } from '@/hooks/useGameSync';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { GameState } from '@/types/game';
@@ -50,14 +49,11 @@ const formatTime = (seconds: number) => {
 // HOOKS PARTAGÉS (DRY)
 // ============================================================================
 
-// Définition de l'interface des setters pour éviter le 'any'
 interface SessionSetters {
     setPseudo: (v: string) => void;
     setCode: (v: string | null) => void;
     setId: (v: string) => void;
     setInputCode?: (v: string) => void;
-    // On passe aussi les valeurs actuelles pour éviter de les mettre dans les dépendances du useEffect
-    // ce qui causerait des boucles infinies.
     currentValues: {
         pseudo: string;
         code: string | null;
@@ -78,8 +74,6 @@ const useSessionSync = (
     generatedId: string,
     setters: SessionSetters
 ) => {
-    // On utilise une ref pour les setters afin de toujours avoir accès aux dernières fonctions
-    // sans déclencher le useEffect quand elles changent (ce qui n'arrive pas en théorie, mais apaise le linter)
     const settersRef = useRef(setters);
 
     // Met à jour la ref à chaque rendu
@@ -109,14 +103,13 @@ const useSessionSync = (
         }, 0);
 
         return () => clearTimeout(timer);
-    }, [isLoaded, session, generatedId]); // Plus besoin de passer les props individuelles
+    }, [isLoaded, session, generatedId]);
 };
 
 const useGameLogic = (
     gameState: GameState | null,
     effectiveStartTime: number | string | undefined
 ) => {
-    // CORRECTION ICI : () => Date.now()
     const [currentTime, setCurrentTime] = useState(() => Date.now());
 
     useEffect(() => {
@@ -125,12 +118,12 @@ const useGameLogic = (
     }, []);
 
     const safeStep = Math.max(1, gameState?.step || 1);
-    const currentStepIndex = Math.min(safeStep - 1, ALPHA_SCENARIO.steps.length - 1);
-    const currentScenarioStep = ALPHA_SCENARIO.steps[currentStepIndex];
+    const currentStepIndex = Math.min(safeStep - 1, SCENARIO.steps.length - 1);
+    const currentScenarioStep = SCENARIO.steps[currentStepIndex];
 
     const isGameWon = currentScenarioStep.componentId === 'victory-screen';
     const elapsedTime = effectiveStartTime ? (currentTime - toMs(effectiveStartTime)) / 1000 : 0;
-    const isTimeUp = !isGameWon && elapsedTime > ALPHA_SCENARIO.defaultDuration;
+    const isTimeUp = !isGameWon && elapsedTime > SCENARIO.defaultDuration;
 
     return {
         safeStep,
@@ -247,7 +240,7 @@ const GameHeader = ({
                 {scenarioTitle || 'Chargement...'}
             </div>
             <div className="text-muted text-xs">
-                Étape {step ?? '-'} / {ALPHA_SCENARIO.steps.length}
+                Étape {step ?? '-'} / {SCENARIO.steps.length}
             </div>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -255,7 +248,7 @@ const GameHeader = ({
                 startTime={startTime}
                 isStopped={isTimerStopped}
                 endTime={timerEndTime}
-                totalDuration={ALPHA_SCENARIO.defaultDuration}
+                totalDuration={SCENARIO.defaultDuration}
             />
             <button
                 onClick={onLogout}
@@ -352,8 +345,8 @@ const ConnectionScreen = ({
     mode: 'host' | 'player';
     pseudo: string;
     setPseudo: (value: string) => void;
-    code?: string; // Optionnel car l'hôte ne l'utilise pas pour se connecter
-    setCode?: (value: string) => void; // Optionnel
+    code?: string; // optionnel car l'hôte ne l'utilise pas pour se connecter
+    setCode?: (value: string) => void; // optionnel
     onAction: () => void;
     onBack: () => void;
 }) => (
@@ -496,10 +489,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         const now = Date.now();
         const startOfStep = toMs(gameState.lastStepTime || effectiveStartTime);
         const solverName = gameState.pendingProposal?.playerName || pseudo;
-        const nextStep = Math.min(
-            Math.max(1, gameState.step || 1) + 1,
-            ALPHA_SCENARIO.steps.length
-        );
+        const nextStep = Math.min(Math.max(1, gameState.step || 1) + 1, SCENARIO.steps.length);
 
         updateState({
             ...gameState,
@@ -529,10 +519,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         if (!gameState || isTimeUp) return;
         const now = Date.now();
         const startOfStep = toMs(gameState.lastStepTime || effectiveStartTime);
-        const nextStep = Math.min(
-            Math.max(1, gameState.step || 1) + 1,
-            ALPHA_SCENARIO.steps.length
-        );
+        const nextStep = Math.min(Math.max(1, gameState.step || 1) + 1, SCENARIO.steps.length);
 
         updateState({
             ...gameState,
@@ -595,7 +582,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                     isLeaving={isLeaving}
                     scenarioTitle={currentScenarioStep.title}
                     isTimerStopped={true}
-                    timerEndTime={toMs(effectiveStartTime) + ALPHA_SCENARIO.defaultDuration * 1000}
+                    timerEndTime={toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000}
                 />
                 <DefeatScreen />
             </AlphaCard>
@@ -614,7 +601,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                 timerEndTime={
                     isGameWon
                         ? gameState?.lastUpdate
-                        : toMs(effectiveStartTime) + ALPHA_SCENARIO.defaultDuration * 1000
+                        : toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000
                 }
             />
             <ProposalSection
@@ -881,7 +868,7 @@ const PlayerInterface = ({
                     showConnectionStatus={true}
                     scenarioTitle={currentScenarioStep.title}
                     isTimerStopped={true}
-                    timerEndTime={toMs(effectiveStartTime) + ALPHA_SCENARIO.defaultDuration * 1000}
+                    timerEndTime={toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000}
                 />
                 <DefeatScreen />
             </AlphaCard>
@@ -922,7 +909,6 @@ const PlayerInterface = ({
     );
 };
 
-// ... (Export default inchangé) ...
 export default function EscapeGamePage() {
     const { session, clearSession, isLoaded } = usePlayerSession();
     const [viewMode, setViewMode] = useState<'select' | 'host' | 'player'>('select');
