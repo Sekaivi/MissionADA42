@@ -48,8 +48,8 @@ const ALPHA_MODULES: ModuleGroup[] = [
             },
             {
                 href: '/alpha/camera-face-detector',
-                title: 'Détection de Visage',
-                subtitle: 'Jeu de reconnaissance faciale',
+                title: 'Module de reconnaissance faciale',
+                subtitle: 'Modèle IA, composant validé (réutilisable)',
                 icon: EyeIcon,
                 isGame: true,
             },

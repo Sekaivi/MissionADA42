@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Imports des jeux
-import CameraGame from '@/components/Tutorial/CameraGame';
 import CodeGame from '@/components/Tutorial/CodeGame';
 import CompassGame from '@/components/Tutorial/CompassGame';
+import { FaceDetectionModule } from '@/components/Tutorial/FaceDetectionModule';
 import MicroGame from '@/components/Tutorial/MicroGame';
 import NetworkGame from '@/components/Tutorial/NetworkGame';
 import SystemCheck from '@/components/Tutorial/systemCheck';
@@ -64,7 +64,7 @@ export default function Tutoriel() {
                     transition={{ duration: 0.3 }}
                 >
                     {step === 0 && <SystemCheck onSuccess={handleNextStep} onFail={handleFinish} />}
-                    {step === 1 && <CameraGame onSuccess={handleNextStep} />}
+                    {step === 1 && <FaceDetectionModule onSolve={handleNextStep} />}
                     {step === 2 && <MicroGame onSuccess={handleNextStep} />}
                     {step === 3 && <CompassGame onSuccess={handleNextStep} />}
                     {step === 4 && <CodeGame onSuccess={handleNextStep} />}
