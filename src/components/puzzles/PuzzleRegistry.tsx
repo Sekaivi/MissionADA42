@@ -7,12 +7,14 @@ import { CodingPuzzle } from '@/components/puzzles/CodingPuzzle';
 import { OrientationPuzzle } from '@/components/puzzles/OrientationPuzzle';
 import { SpinPuzzle } from '@/components/puzzles/SpinPuzzle';
 import { SCENARIO } from '@/data/alphaScenario';
+import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 
-export interface PuzzleProps {
+export interface PuzzleProps<T extends string = string> {
     onSolve: () => void;
     isSolved?: boolean;
     data?: GameState;
+    scripts?: Partial<Record<T, DialogueLine[]>>;
 }
 
 const formatDuration = (ms: number) => {
