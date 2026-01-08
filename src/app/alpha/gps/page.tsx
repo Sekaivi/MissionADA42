@@ -59,16 +59,16 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import {useEffect} from 'react';
 
-import { AlphaButton } from '@/components/alpha/AlphaButton';
-import { AlphaCard } from '@/components/alpha/AlphaCard';
-import { AlphaError } from '@/components/alpha/AlphaError';
-import { AlphaGrid } from '@/components/alpha/AlphaGrid';
-import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
-import { useGeolocation } from '@/hooks/useGeolocation';
-import { useOrientation } from '@/hooks/useOrientation';
+import {AlphaButton} from '@/components/alpha/AlphaButton';
+import {AlphaCard} from '@/components/alpha/AlphaCard';
+import {AlphaError} from '@/components/alpha/AlphaError';
+import {AlphaGrid} from '@/components/alpha/AlphaGrid';
+import {AlphaHeader} from '@/components/alpha/AlphaHeader';
+import {AlphaInfoRow} from '@/components/alpha/AlphaInfoRow';
+import {useGeolocation} from '@/hooks/useGeolocation';
+import {useOrientation} from '@/hooks/useOrientation';
 
 export default function AlphaGPS() {
     const {
@@ -95,7 +95,7 @@ export default function AlphaGPS() {
         <>
             <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
 
-            {!orientationGranted && !locationGranted && !locationError && !orientationError && (
+            {!orientationGranted && (
                 <div className="border-border bg-surface rounded-lg border p-8 text-center">
                     <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
                     <AlphaButton onClick={requestOrientationPermission}>
@@ -106,7 +106,7 @@ export default function AlphaGPS() {
 
             <AlphaError message={orientationError || locationError} />
 
-            {locationGranted && (
+            {locationGranted && orientationGranted && (
                 <AlphaGrid>
                     {/* VISU */}
                     <AlphaCard title="Direction">
@@ -146,3 +146,111 @@ export default function AlphaGPS() {
         </>
     );
 }
+
+/*
+const TARGET = {
+    lat: 45.2029882,
+    lon: 5.7022892, // Salle 109
+};
+
+export default function AlphaGPS() {
+    const {
+        data: orientation,
+        permissionGranted: orientationGranted,
+        requestPermission: requestOrientationPermission,
+        error: orientationError,
+    } = useOrientation();
+
+    const {
+        data: location,
+        permissionGranted: locationGranted,
+        requestPermission: requestLocationPermission,
+        error: locationError,
+    } = useGeolocation();
+
+    useEffect(() => {
+        if (!locationGranted) requestLocationPermission();
+    }, [locationGranted, requestLocationPermission]);
+
+    const compass = useMemo(() => {
+        if (
+            !location.latitude ||
+            !location.longitude ||
+            orientation.heading === null ||
+            location.accuracy === null ||
+            location.accuracy > 50
+        ) {
+            return null;
+        }
+
+        const bearing = computeBearing(
+            location.latitude,
+            location.longitude,
+            TARGET.lat,
+            TARGET.lon
+        );
+
+        const relativeAngle = (bearing - orientation.heading + 360) % 360;
+        const arrow = angleToDirection8(relativeAngle);
+
+        return {
+            bearing,
+            relativeAngle,
+            arrow,
+        };
+    }, [location, orientation.heading]);
+
+    return (
+        <>
+            <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
+
+            {!orientationGranted && (
+                <div className="border-border bg-surface rounded-lg border p-8 text-center">
+                    <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
+                    <AlphaButton onClick={requestOrientationPermission}>
+                        Autoriser les capteurs
+                    </AlphaButton>
+                </div>
+            )}
+
+            <AlphaError message={orientationError || locationError} />
+
+            {orientationGranted && locationGranted && (
+                <AlphaGrid>
+<AlphaCard title="Direction">
+    <div className="flex h-64 items-center justify-center">
+        <div className="text-[96px] font-black">
+            {compass ? compass.arrow : '•'}
+        </div>
+    </div>
+    <p className="text-muted text-center text-xs">
+        La flèche indique la direction à suivre
+    </p>
+</AlphaCard>
+
+<AlphaCard title="Données GPS & Cap">
+    <div className="space-y-2">
+        <AlphaInfoRow
+            label="Heading"
+            value={`${Math.round(orientation.heading ?? 0)}°`}
+        />
+        <AlphaInfoRow
+            label="Bearing cible"
+            value={`${Math.round(compass?.bearing ?? 0)}°`}
+        />
+        <AlphaInfoRow
+            label="Angle relatif"
+            value={`${Math.round(compass?.relativeAngle ?? 0)}°`}
+        />
+        <AlphaInfoRow
+            label="Accuracy GPS"
+            value={`${Math.round(location.accuracy ?? 0)} m`}
+        />
+    </div>
+</AlphaCard>
+</AlphaGrid>
+)}
+</>
+);
+}
+*/
