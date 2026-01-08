@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
     ArrowRightEndOnRectangleIcon,
@@ -22,6 +22,7 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { DialogueBox } from '@/components/dialogueBox';
+import { EmergencyOverlay } from '@/components/overlays/EmergencyOverlay';
 import { DefeatScreen, PUZZLE_COMPONENTS } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { CHARACTERS } from '@/data/characters';
@@ -31,7 +32,7 @@ import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState } from '@/types/game';
 import { say } from '@/utils/dialogueUtils';
-import {EmergencyOverlay} from "@/components/overlays/EmergencyOverlay";
+import {AnimatePresence} from "framer-motion";
 
 // ============================================================================
 // UTILITAIRES
@@ -114,7 +115,8 @@ const useSessionSync = (
 
 const useGameLogic = (
     gameState: GameState | null,
-    effectiveStartTime: number | string | undefined
+    effectiveStartTime: number | string | undefined,
+    dynamicDuration: number
 ) => {
     const [currentTime, setCurrentTime] = useState(() => Date.now());
 
@@ -129,7 +131,7 @@ const useGameLogic = (
 
     const isGameWon = currentScenarioStep.componentId === 'victory-screen';
     const elapsedTime = effectiveStartTime ? (currentTime - toMs(effectiveStartTime)) / 1000 : 0;
-    const isTimeUp = !isGameWon && elapsedTime > SCENARIO.defaultDuration;
+    const isTimeUp = !isGameWon && elapsedTime > dynamicDuration;
 
     return {
         safeStep,
@@ -210,6 +212,7 @@ const GameHeader = ({
     scenarioTitle,
     isTimerStopped,
     timerEndTime,
+    totalDuration
 }: {
     code: string | null;
     step?: number;
@@ -221,6 +224,7 @@ const GameHeader = ({
     scenarioTitle?: string;
     isTimerStopped?: boolean;
     timerEndTime?: number;
+    totalDuration: number;
 }) => (
     <div className="border-border mb-6 grid grid-cols-3 items-start gap-4 border-b pb-4">
         <div>
@@ -254,7 +258,7 @@ const GameHeader = ({
                 startTime={startTime}
                 isStopped={isTimerStopped}
                 endTime={timerEndTime}
-                totalDuration={SCENARIO.defaultDuration}
+                totalDuration={totalDuration}
             />
             <button
                 onClick={onLogout}
@@ -428,36 +432,56 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
 
     const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
     const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
-    const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ type: string; id: number } | null>(
+        null
+    );
 
     const handleMessage = useCallback((text: string) => {
         setAdminScript([say(CHARACTERS.system, text)]);
         setAdminDialogueOpen(true);
+        console.log('Message:', text);
     }, []);
 
-    const handleChallenge = useCallback((type: string) => {
-        console.log("Activation du challenge :", type);
-        setActiveChallenge(type);
+    const handleChallenge = useCallback((type: string, id: number) => {
+        console.log('Activation du challenge :', type, id);
+        setActiveChallenge({ type, id });
     }, []);
+
+    const handleChallengeClear = useCallback(() => {
+        // On ferme l'overlay si le serveur dit qu'il n'y a plus rien
+        setActiveChallenge(null);
+    }, []);
+
+    const callbacks = useMemo(
+        () => ({
+            onMessage: handleMessage,
+            onChallenge: handleChallenge,
+            onChallengeClear: handleChallengeClear,
+        }),
+        [handleMessage, handleChallenge, handleChallengeClear]
+    );
+
+    const { resolveChallenge } = useGameEffects(gameState, callbacks);
 
     const handleChallengeResolved = useCallback(() => {
-        setActiveChallenge(null);
-        // Optionnel : Un petit message de l'IA pour dire "Merci"
-        handleMessage("Stabilisation confirmée. Reprise du protocole.");
-    }, [handleMessage]);
+        if (activeChallenge) {
+            // 1. C'est ICI qu'on sauvegarde la victoire dans le téléphone du joueur
+            resolveChallenge(activeChallenge.id);
 
-    // --- EFFETS ---
-    // On utilise useMemo pour l'objet callbacks afin d'éviter de déclencher le useEffect du hook en boucle
-    const callbacks = useMemo(() => ({
-        onMessage: handleMessage,
-        onChallenge: handleChallenge
-    }), [handleMessage, handleChallenge]);
+            // 2. On retire l'interface
+            setActiveChallenge(null);
 
-    useGameEffects(gameState, callbacks);
+            // Optionnel : Feedback
+            // handleMessage("Stabilisation confirmée.");
+        }
+    }, [activeChallenge, resolveChallenge]);
 
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
+    const bonusSeconds = (gameState?.bonusTime || 0) * 60;
+    const currentTotalDuration = SCENARIO.defaultDuration + bonusSeconds;
+
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
-        useGameLogic(gameState, effectiveStartTime);
+        useGameLogic(gameState, effectiveStartTime, currentTotalDuration);
 
     const handleCreateGame = useCallback(async () => {
         if (!hostId) return;
@@ -619,6 +643,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                     scenarioTitle={currentScenarioStep.title}
                     isTimerStopped={true}
                     timerEndTime={toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000}
+                    totalDuration={currentTotalDuration}
                 />
                 <DefeatScreen />
             </AlphaCard>
@@ -626,17 +651,22 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
 
     return (
         <AlphaCard title="Tableau de Bord Hôte" className="border-brand-purple/50">
-            <div className={"relative z-[51]"}>
+            <div className={'relative z-[51]'}>
                 <DialogueBox
                     script={adminScript}
                     onComplete={() => setAdminDialogueOpen(false)}
                     isOpen={adminDialogueOpen}
                 />
 
-                <EmergencyOverlay
-                    type={activeChallenge}
-                    onResolve={handleChallengeResolved}
-                />
+                <AnimatePresence>
+                    {activeChallenge && (
+                        <EmergencyOverlay
+                            key={activeChallenge.id}
+                            type={activeChallenge.type}
+                            onResolve={handleChallengeResolved}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
             <GameHeader
                 code={activeCode}
@@ -651,6 +681,7 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                         ? gameState?.lastUpdate
                         : toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000
                 }
+                totalDuration={currentTotalDuration}
             />
             <ProposalSection
                 gameState={gameState}
@@ -816,35 +847,56 @@ const PlayerInterface = ({
     // --- GESTION DU DIALOGUE ADMIN ---
     const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
     const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
-    const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ type: string; id: number } | null>(
+        null
+    );
 
     const handleMessage = useCallback((text: string) => {
         setAdminScript([say(CHARACTERS.system, text)]);
         setAdminDialogueOpen(true);
+        console.log('Message:', text);
     }, []);
 
-    const handleChallenge = useCallback((type: string) => {
-        console.log("Activation du challenge :", type);
-        setActiveChallenge(type);
+    const handleChallenge = useCallback((type: string, id: number) => {
+        console.log('Activation du challenge :', type, id);
+        setActiveChallenge({ type, id });
     }, []);
+
+    const handleChallengeClear = useCallback(() => {
+        // On ferme l'overlay si le serveur dit qu'il n'y a plus rien
+        setActiveChallenge(null);
+    }, []);
+
+    const callbacks = useMemo(
+        () => ({
+            onMessage: handleMessage,
+            onChallenge: handleChallenge,
+            onChallengeClear: handleChallengeClear,
+        }),
+        [handleMessage, handleChallenge, handleChallengeClear]
+    );
+
+    const { resolveChallenge } = useGameEffects(gameState, callbacks);
 
     const handleChallengeResolved = useCallback(() => {
-        setActiveChallenge(null);
-        handleMessage("Stabilisation confirmée. Reprise du protocole.");
-    }, [handleMessage]);
+        if (activeChallenge) {
+            // 1. C'est ICI qu'on sauvegarde la victoire dans le téléphone du joueur
+            resolveChallenge(activeChallenge.id);
 
-    // --- EFFETS ---
-    // On utilise useMemo pour l'objet callbacks afin d'éviter de déclencher le useEffect du hook en boucle
-    const callbacks = useMemo(() => ({
-        onMessage: handleMessage,
-        onChallenge: handleChallenge
-    }), [handleMessage, handleChallenge]);
+            // 2. On retire l'interface
+            setActiveChallenge(null);
 
-    useGameEffects(gameState, callbacks);
+            // Optionnel : Feedback
+            // handleMessage("Stabilisation confirmée.");
+        }
+    }, [activeChallenge, resolveChallenge]);
 
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
+    const bonusSeconds = (gameState?.bonusTime || 0) * 60;
+    const currentTotalDuration = SCENARIO.defaultDuration + bonusSeconds;
+
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
-        useGameLogic(gameState, effectiveStartTime);
+        useGameLogic(gameState, effectiveStartTime, currentTotalDuration);
 
     const handleJoin = useCallback(() => {
         if (inputCode.length !== 4 || !pseudo) return;
@@ -947,6 +999,7 @@ const PlayerInterface = ({
                     scenarioTitle={currentScenarioStep.title}
                     isTimerStopped={true}
                     timerEndTime={toMs(effectiveStartTime) + SCENARIO.defaultDuration * 1000}
+                    totalDuration={currentTotalDuration}
                 />
                 <DefeatScreen />
             </AlphaCard>
@@ -954,17 +1007,22 @@ const PlayerInterface = ({
 
     return (
         <AlphaCard title="Terminal Agent">
-            <div className={"relative z-[51]"}>
+            <div className={'relative z-[51]'}>
                 <DialogueBox
                     script={adminScript}
                     onComplete={() => setAdminDialogueOpen(false)}
                     isOpen={adminDialogueOpen}
                 />
 
-                <EmergencyOverlay
-                    type={activeChallenge}
-                    onResolve={handleChallengeResolved}
-                />
+                <AnimatePresence>
+                    {activeChallenge && (
+                        <EmergencyOverlay
+                            key={activeChallenge.id}
+                            type={activeChallenge.type}
+                            onResolve={handleChallengeResolved}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
 
             <GameHeader
@@ -977,6 +1035,7 @@ const PlayerInterface = ({
                 scenarioTitle={currentScenarioStep.title}
                 isTimerStopped={isGameWon}
                 timerEndTime={isGameWon ? gameState.lastUpdate : undefined}
+                totalDuration={currentTotalDuration}
             />
 
             <div className="mb-8">

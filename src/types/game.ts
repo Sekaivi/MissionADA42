@@ -37,13 +37,22 @@ export interface GameState {
     lastStepTime?: number;
     timestamp?: number;
 
-    admin_command?: AdminCommand;
+    admin_command?: AdminCommand; // canal 1 : flash info / effets
+    active_challenge?: ChallengeCommand; // canal 2 : défis bloquants persistants
+    bonusTime?: number; // temps ajouté/retiré en MINUTES (ex: 5, -2)
 }
 
-export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'GYRO' | 'INVERT' | 'SKIP';
+export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'INVERT' | 'SKIP' | 'ADD_TIME'; // commandes éphémères
+export type ChallengeType = 'GYRO' | 'CODE_RED'; // types bloquants
 
 export interface AdminCommand {
-    id: number; // timestamp unique pour identifier une nouvelle commande
+    id: number;
     type: AdminCommandType;
     payload?: string | number;
+}
+
+export interface ChallengeCommand {
+    id: number;
+    type: ChallengeType;
+    payload?: any;
 }
