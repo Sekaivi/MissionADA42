@@ -386,7 +386,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                 <div className="flex h-full flex-1 flex-col gap-6">
                     <div
                         ref={containerRef}
-                        className="mx-auto border-brand-emerald relative h-full w-full max-w-4xl flex-1 overflow-hidden rounded-lg border-2 bg-black/80 shadow-[0_0_20px_rgba(0,212,146,0.2)]"
+                        className="border-brand-emerald relative mx-auto h-full w-full max-w-4xl flex-1 overflow-hidden rounded-lg border-2 bg-black/80 shadow-[0_0_20px_rgba(0,212,146,0.2)]"
                     >
                         {puzzleLines.map((_, index) => (
                             <TargetSlot

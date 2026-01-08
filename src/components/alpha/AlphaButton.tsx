@@ -29,7 +29,8 @@ export const AlphaButton = ({
     const variants = {
         primary:
             'border-brand-emerald text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald hover:text-black',
-        secondary: 'border-white/20 text-muted hover:border-white hover:text-white bg-transparent',
+        secondary:
+            'border-border text-muted hover:border-foreground-highlight hover:text-foreground-highlight bg-transparent',
         danger: 'border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white',
         ghost: 'border-transparent text-muted hover:text-brand-emerald hover:bg-white/5',
     };
@@ -50,7 +51,7 @@ export const AlphaButton = ({
             disabled={disabled || isLoading}
             className={clsx(
                 // base
-                'relative flex w-max items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
+                'relative flex items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
                 // focus accessibility
                 'focus-visible:ring-brand-emerald/50 focus-visible:ring-2 focus-visible:outline-none',
                 // animation de clic (seulement si actif)
@@ -60,7 +61,7 @@ export const AlphaButton = ({
                 // props dynamiques
                 variants[variant],
                 sizes[size],
-                fullWidth && 'w-full',
+                fullWidth ? 'w-full' : 'w-max',
                 activeStyles,
                 className // pour surcharger si besoin
             )}

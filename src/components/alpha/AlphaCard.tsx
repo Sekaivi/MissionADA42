@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
 import React, { ReactNode } from 'react';
+
+import { motion } from 'framer-motion';
 
 interface CardProps {
     children: ReactNode;
@@ -16,10 +17,10 @@ export const AlphaCard = ({
     action,
     className = '',
     contentClassName = '',
-    progress
+    progress,
 }: CardProps) => (
     <div
-        className={`relative border-border bg-surface flex h-max flex-col overflow-hidden rounded-lg border ${className}`}
+        className={`border-border bg-surface relative flex h-max flex-col overflow-hidden rounded-lg border ${className}`}
     >
         {title && (
             <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">
@@ -29,7 +30,7 @@ export const AlphaCard = ({
         )}
         <div className={`flex-1 p-4 ${contentClassName}`}>{children}</div>
 
-        {progress &&
+        {progress && (
             <div className="bg-surface-highlight absolute bottom-0 left-0 h-1 w-full">
                 <motion.div
                     className="bg-brand-emerald h-full"
@@ -38,6 +39,6 @@ export const AlphaCard = ({
                     transition={{ duration: 0.5 }}
                 />
             </div>
-        }
+        )}
     </div>
 );
