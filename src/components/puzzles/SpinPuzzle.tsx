@@ -84,7 +84,10 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
             const timer = setTimeout(nextLevel, 500);
             return () => clearTimeout(timer);
         }
-    }, [isTargetReached, gameState, nextLevel]);
+        if (gameState === 'won') {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        }
+    }, [isTargetReached, gameState, nextLevel, onSolve]);
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
@@ -121,7 +124,6 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                                 message={'Protocole complété avec succès.'}
                                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                                 durationUnit={'ms'}
-                                onAutoClose={onSolve}
                             />
 
                             {gameState === 'won' && (

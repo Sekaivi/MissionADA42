@@ -7,12 +7,14 @@ interface FeedbackPillProps {
     type?: FeedbackType;
     isLoading?: boolean;
     className?: string;
+    pulse?: boolean;
 }
 
 const FeedbackPill: React.FC<FeedbackPillProps> = ({
     message,
     type = 'info',
     isLoading = false,
+    pulse = false,
     className,
 }) => {
     if (!message) return null;
@@ -27,7 +29,7 @@ const FeedbackPill: React.FC<FeedbackPillProps> = ({
         'whitespace-nowrap rounded-full border px-3 py-1 font-mono text-xs font-bold tracking-widest uppercase';
 
     // si isLoading est vrai, on force le style 'info' et l'animation
-    const activeStyle = isLoading ? `${variants.info} animate-pulse` : variants[type];
+    const activeStyle = isLoading ? `${variants.info} animate-pulse` : pulse ? `${variants[type]} animate-pulse` : variants[type];
 
     return (
         <div className={`mb-4 text-center ${className}`}>
