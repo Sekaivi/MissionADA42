@@ -247,7 +247,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const selectBlock = (id: number) => {
         // 1. Récupérer le bloc ciblé
         const targetBlock = blocks.find((b) => b.id === id);
-        if (!targetBlock || targetBlock.isLocked) return;
+        if (!targetBlock) return;
 
         // 2. Sauvegarder l'état du bloc précédent s'il y en a un
         if (activeBlockId !== null && activeBlockId !== id) {
@@ -256,6 +256,16 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
 
             setBlocks((prev) =>
                 prev.map((b) => (b.id === activeBlockId ? { ...b, x: finalX, y: finalY } : b))
+            );
+        }
+
+        if (targetBlock.isLocked) {
+            setBlocks((prev) =>
+                prev.map((b) =>
+                    b.id === id
+                        ? { ...b, isLocked: false, placedSlotId: undefined }
+                        : b
+                )
             );
         }
 
