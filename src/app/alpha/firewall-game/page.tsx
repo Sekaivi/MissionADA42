@@ -63,18 +63,16 @@ export default function FirewallGame() {
     // --- LOGIQUE STABILITÉ ---
     const threshold = 2;
     const requiredTime = 3000;
-    const { isStable, progress } = useStability(orientationData, {
-        threshold: threshold,
-        requiredTime: requiredTime,
-        enabled: gameState === GAME_STATES.PLAYING,
-    });
+    
+    
+    
 
     // --- LOGIQUE JEU ---
-    const { temp } = useFirewallLogic({
+    const { temp, stabilityProgress, isStable } = useFirewallLogic({
         isActive: gameState === GAME_STATES.PLAYING,
-        isStable: isStable,
+        orientation: orientationData,
         isBlowing: mic.isBlowing,
-        onWin: () => setGameState(GAME_STATES.WIN),
+        onWin: () => setGameState(GAME_STATES.WIN)
     });
 
     const onStart = async () => {
@@ -271,21 +269,21 @@ export default function FirewallGame() {
                                                 : 'text-green-500'
                                         }
                                     >
-                                        {Math.floor(progress)}%
+                                        {Math.floor(stabilityProgress)}%
                                     </span>
                                 </div>
                                 <div className="relative h-2 w-full overflow-hidden border border-neutral-800 bg-neutral-900">
                                     <div
                                         className={`absolute inset-y-0 left-0 transition-all duration-300 ease-out ${isStable ? 'bg-cyan-500' : 'bg-red-900'}`}
-                                        style={{ width: `${progress}%` }}
+                                        style={{ width: `${stabilityProgress}%` }}
                                     />
                                     {/* Effet de scanline si en cours */}
-                                    {progress > 0 && progress < 100 && (
+                                    {stabilityProgress > 0 && stabilityProgress < 100 && (
                                         <div className="absolute inset-0 animate-[pulse_0.5s_infinite] bg-white/20" />
                                     )}
                                 </div>
                                 <p
-                                    className={`text-center font-mono text-[9px] ${progress > 0 && progress < 100 ? 'animate-pulse text-cyan-500' : 'text-neutral-600'}`}
+                                    className={`text-center font-mono text-[9px] ${stabilityProgress > 0 && stabilityProgress < 100 ? 'animate-pulse text-cyan-500' : 'text-neutral-600'}`}
                                 >
                                     {isStable
                                         ? "MAINTENEZ LA POSITION DE L'APPAREIL"
