@@ -1,4 +1,5 @@
 // src/types/game.ts
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Player {
     id: string;

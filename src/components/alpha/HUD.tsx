@@ -1,19 +1,5 @@
 import React from 'react';
 
-interface GameHudProps {
-    levelCount: number;
-    gyroActive: boolean;
-}
-
-export const GameHud = ({ levelCount, gyroActive }: GameHudProps) => (
-    <div className="border-muted mb-2 flex w-[90%] justify-between border-b pb-1 text-sm">
-        <span>SEC_LEVEL: {levelCount}</span>
-        <span className={`${gyroActive ? 'text-brand-emerald font-bold' : 'text-muted'}`}>
-            GYRO: {gyroActive ? 'ON' : 'OFF'}
-        </span>
-    </div>
-);
-
 // --- 4. TARGET SLOT & 5. CODE BLOCK ---
 // (Ces composants restent identiques à la version précédente)
 interface TargetSlotProps {

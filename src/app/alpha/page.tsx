@@ -5,6 +5,7 @@ import React, { useMemo } from 'react';
 import {
     ArrowPathIcon,
     CameraIcon,
+    ChatBubbleLeftIcon,
     CubeTransparentIcon,
     DevicePhoneMobileIcon,
     EyeIcon,
@@ -55,27 +56,27 @@ const ALPHA_MODULES: ModuleGroup[] = [
         ],
     },
     {
-        title: 'Capteurs de Mouvement',
+        title: 'Capteurs de mouvement',
         icon: DevicePhoneMobileIcon,
         headerColor: 'text-brand-purple',
         items: [
             {
-                href: '/alpha/orientation-debug',
-                title: 'Calibrage Gyroscopique',
-                subtitle: 'Visualisation 3D temps réel',
+                href: '/alpha/sensors/orientation',
+                title: 'Calibrage gyroscopique',
+                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
                 icon: CubeTransparentIcon,
             },
             {
-                href: '/alpha/orientation-game',
-                title: "Séquenceur d'Orientation",
-                subtitle: "Jeu d'inclinaison (Tilt)",
+                href: '/alpha/sensors/orientation-game',
+                title: "Jeu d'inclinaison",
+                subtitle: 'Basé sur le composant OrientationPuzzle valide',
                 icon: DevicePhoneMobileIcon,
                 isGame: true,
             },
             {
-                href: '/alpha/spin-game',
-                title: 'Module de Rotation',
-                subtitle: 'Jeu de rotation 360° (Spin)',
+                href: '/alpha/sensors/spin-game',
+                title: 'Jeu de rotation',
+                subtitle: 'Basé sur le composant SpinPuzzle valide',
                 icon: ArrowPathIcon,
                 isGame: true,
             },
@@ -86,13 +87,6 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: PuzzlePieceIcon,
                 isGame: true,
             },
-            {
-                href: '/alpha/spin-game-test',
-                title: 'Module de Rotation Dialogué',
-                subtitle: 'Jeu de rotation 360° (Spin)',
-                icon: ArrowPathIcon,
-                isGame: true,
-            },
         ],
     },
     {
@@ -100,6 +94,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
         icon: GlobeAltIcon,
         headerColor: 'text-brand-error',
         items: [
+            {
+                href: '/alpha/dialogue-test',
+                title: 'Dialogues',
+                subtitle: 'Test du hook de dialogues',
+                icon: ChatBubbleLeftIcon,
+            },
             {
                 href: '/alpha/game-sync-test',
                 title: 'Lancer une partie synchronisée',

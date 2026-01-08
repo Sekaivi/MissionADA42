@@ -16,7 +16,7 @@ export const AlphaCard = ({
     contentClassName = '',
 }: CardProps) => (
     <div
-        className={`border-border bg-surface flex flex-col overflow-hidden rounded-lg border ${className}`}
+        className={`border-border bg-surface flex h-max flex-col overflow-hidden rounded-lg border ${className}`}
     >
         {title && (
             <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">

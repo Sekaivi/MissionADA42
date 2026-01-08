@@ -5,8 +5,8 @@ export const AlphaInfoRow = ({
     value,
     active = false,
 }: {
-    label: string;
-    value: string | number | undefined;
+    label: React.ReactNode;
+    value: React.ReactNode;
     active?: boolean;
 }) => (
     <div className="border-border flex items-center justify-between border-b py-2 last:border-0">

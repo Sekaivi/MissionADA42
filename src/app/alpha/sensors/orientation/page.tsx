@@ -40,14 +40,12 @@ export default function AlphaOrientationDebug() {
 
             {/* cas iOS demande la permission */}
             {!permissionGranted && !error && (
-                <div className="border-border bg-surface flex flex-col items-center justify-center rounded-lg border p-10">
-                    <p className="text-muted mb-4">
-                        L'accès aux capteurs nécessite une validation.
-                    </p>
+                <AlphaCard title={'Permissions requises'}>
+                    <p className="mb-4">L'accès aux capteurs nécessite une validation.</p>
                     <AlphaButton onClick={requestPermission}>
                         Autoriser l'accès aux capteurs
                     </AlphaButton>
-                </div>
+                </AlphaCard>
             )}
 
             <AlphaError message={error} />
@@ -62,7 +60,7 @@ export default function AlphaOrientationDebug() {
                     {/* col 1 : preview de l'inclinaison */}
                     <div className="space-y-6">
                         <AlphaCard title="Visualisation Temps Réel">
-                            <div className="flex h-64 items-center justify-center perspective-[800px]">
+                            <div className="mb-4 flex h-64 items-center justify-center perspective-[800px]">
                                 {/* téléphone 2D */}
                                 <div
                                     className="border-foreground bg-surface relative flex h-64 w-32 items-center justify-center rounded-3xl border-4 shadow-2xl transition-transform duration-100 ease-out"
@@ -113,10 +111,8 @@ export default function AlphaOrientationDebug() {
                                 </div>
                             </div>
 
-                            <p className="text-muted mt-4 text-center text-xs">
-                                Rouge : Nord Magnétique (Heading) <br />
-                                Vert : Rotation Relative (Alpha)
-                            </p>
+                            <AlphaInfoRow label={'Rouge'} value={'Nord Magnétique (Heading)'} />
+                            <AlphaInfoRow label={'Vert'} value={'Rotation Relative (Alpha)'} />
                         </AlphaCard>
                     </div>
 
@@ -146,34 +142,15 @@ export default function AlphaOrientationDebug() {
                         <AlphaCard title="Interprétation Gestuelle">
                             <div className="space-y-4">
                                 {/* bloc instant */}
-                                <div className="border-border bg-surface-highlight flex items-center justify-between rounded border p-3">
-                                    <span className="text-muted text-sm">Instantanné</span>
-                                    <span
-                                        className={`font-mono font-bold ${
-                                            instantDirection !== 'Stable'
-                                                ? 'text-brand-blue'
-                                                : 'text-muted'
-                                        }`}
-                                    >
-                                        {instantDirection.toUpperCase()}
-                                    </span>
-                                </div>
-
-                                {/* bloc validé */}
-                                <div className="border-border bg-surface-highlight flex items-center justify-between rounded border p-3">
-                                    <span className="text-muted text-sm">
-                                        Validé (Stable {'>'} 500ms)
-                                    </span>
-                                    <span
-                                        className={`font-mono text-xl font-bold ${
-                                            validatedDirection !== 'Stable'
-                                                ? 'text-brand-emerald'
-                                                : 'text-muted/50'
-                                        }`}
-                                    >
-                                        {validatedDirection.toUpperCase()}
-                                    </span>
-                                </div>
+                                <AlphaInfoRow
+                                    label="Instantanné"
+                                    value={instantDirection.toUpperCase()}
+                                />
+                                <AlphaInfoRow
+                                    label="Validé (Stable > 500ms)"
+                                    value={validatedDirection.toUpperCase()}
+                                    active
+                                />
 
                                 <p className="text-muted text-xs">
                                     Maintenez une position pour valider. <br />
