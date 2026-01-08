@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
@@ -11,36 +11,36 @@ import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useOrientation } from '@/hooks/useOrientation';
 
-const TARGET = {
-    lat: 45.2031,
-    lon: 5.702213, // Salle 109
-};
-
-function toRad(deg: number) {
-    return (deg * Math.PI) / 180;
-}
-
-function toDeg(rad: number) {
-    return (rad * 180) / Math.PI;
-}
-
-function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const latActuelle = toRad(lat1);
-    const latCible = toRad(lat2);
-    const diffLong = toRad(lon2 - lon1);
-
-    const y = Math.sin(diffLong) * Math.cos(latCible);
-    const x =
-        Math.cos(latActuelle) * Math.sin(latCible) -
-        Math.sin(latActuelle) * Math.cos(latCible) * Math.cos(diffLong);
-
-    return (toDeg(Math.atan2(y, x)) + 360) % 360;
-}
-
-function angleToDirection8(angle: number) {
-    const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
-    return directions[Math.round(angle / 45) % 8];
-}
+// const TARGET = {
+//     lat: 45.2031,
+//     lon: 5.702213, // Salle 109
+// };
+//
+// function toRad(deg: number) {
+//     return (deg * Math.PI) / 180;
+// }
+//
+// function toDeg(rad: number) {
+//     return (rad * 180) / Math.PI;
+// }
+//
+// function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+//     const latActuelle = toRad(lat1);
+//     const latCible = toRad(lat2);
+//     const diffLong = toRad(lon2 - lon1);
+//
+//     const y = Math.sin(diffLong) * Math.cos(latCible);
+//     const x =
+//         Math.cos(latActuelle) * Math.sin(latCible) -
+//         Math.sin(latActuelle) * Math.cos(latCible) * Math.cos(diffLong);
+//
+//     return (toDeg(Math.atan2(y, x)) + 360) % 360;
+// }
+//
+// function angleToDirection8(angle: number) {
+//     const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+//     return directions[Math.round(angle / 45) % 8];
+// }
 
 export default function AlphaGPS() {
     const {
@@ -51,7 +51,8 @@ export default function AlphaGPS() {
     } = useOrientation();
 
     const {
-        data: location,
+        compass,
+        data: geolocation,
         permissionGranted: locationGranted,
         requestPermission: requestLocationPermission,
         error: locationError,
@@ -61,33 +62,33 @@ export default function AlphaGPS() {
         if (!locationGranted) requestLocationPermission();
     }, [locationGranted, requestLocationPermission]);
 
-    const compass = useMemo(() => {
-        if (
-            !location.latitude ||
-            !location.longitude ||
-            orientation.heading === null ||
-            location.accuracy === null ||
-            location.accuracy > 50
-        ) {
-            return null;
-        }
-
-        const bearing = computeBearing(
-            location.latitude,
-            location.longitude,
-            TARGET.lat,
-            TARGET.lon
-        );
-
-        const relativeAngle = (bearing - orientation.heading + 360) % 360;
-        const arrow = angleToDirection8(relativeAngle);
-
-        return {
-            bearing,
-            relativeAngle,
-            arrow,
-        };
-    }, [location, orientation.heading]);
+    // const compass = useMemo(() => {
+    //     if (
+    //         !geolocation.latitude ||
+    //         !geolocation.longitude ||
+    //         geolocation.heading === null ||
+    //         geolocation.accuracy === null ||
+    //         geolocation.accuracy > 50
+    //     ) {
+    //         return null;
+    //     }
+    //
+    //     const bearing = computeBearing(
+    //         geolocation.latitude,
+    //         geolocation.longitude,
+    //         targetLat,
+    //         targetLong,
+    //     );
+    //
+    //     const relativeAngle = (bearing - geolocation.heading + 360) % 360;
+    //     const arrow = angleToDirection8(relativeAngle);
+    //
+    //     return {
+    //         bearing,
+    //         relativeAngle,
+    //         arrow,
+    //     };
+    // }, [geolocation, orientation.heading]);
 
     return (
         <>
@@ -114,7 +115,7 @@ export default function AlphaGPS() {
                             </div>
                         </div>
                         <p className="text-muted text-center text-xs">
-                            La flèche indique la direction à suivre
+                            {geolocation.distance}m jusqu'à la cible.
                         </p>
                     </AlphaCard>
 
@@ -135,7 +136,7 @@ export default function AlphaGPS() {
                             />
                             <AlphaInfoRow
                                 label="Accuracy GPS"
-                                value={`${Math.round(location.accuracy ?? 0)} m`}
+                                value={`${Math.round(geolocation.accuracy ?? 0)} m`}
                             />
                         </div>
                     </AlphaCard>
