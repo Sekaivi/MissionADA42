@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import {
     ArrowRightEndOnRectangleIcon,
@@ -31,6 +31,7 @@ import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState } from '@/types/game';
 import { say } from '@/utils/dialogueUtils';
+import {EmergencyOverlay} from "@/components/overlays/EmergencyOverlay";
 
 // ============================================================================
 // UTILITAIRES
@@ -427,21 +428,32 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
 
     const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
     const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
+    const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
 
-    // Cette fonction sera appelée par le hook quand un message arrive
-    const handleAdminMessage = useCallback((text: string) => {
-        // 1. On crée le script à la volée
-        // Tu peux créer un CHARACTERS.SYSTEM s'il n'existe pas encore
-        const newScript = [say(CHARACTERS.system, text)];
-
-        // 2. On met à jour l'état pour afficher le dialogue
-        setAdminScript(newScript);
+    const handleMessage = useCallback((text: string) => {
+        setAdminScript([say(CHARACTERS.system, text)]);
         setAdminDialogueOpen(true);
     }, []);
 
-    // --- BRANCHEMENT DU HOOK ---
-    // On passe handleAdminMessage en 2ème argument
-    useGameEffects(gameState, handleAdminMessage);
+    const handleChallenge = useCallback((type: string) => {
+        console.log("Activation du challenge :", type);
+        setActiveChallenge(type);
+    }, []);
+
+    const handleChallengeResolved = useCallback(() => {
+        setActiveChallenge(null);
+        // Optionnel : Un petit message de l'IA pour dire "Merci"
+        handleMessage("Stabilisation confirmée. Reprise du protocole.");
+    }, [handleMessage]);
+
+    // --- EFFETS ---
+    // On utilise useMemo pour l'objet callbacks afin d'éviter de déclencher le useEffect du hook en boucle
+    const callbacks = useMemo(() => ({
+        onMessage: handleMessage,
+        onChallenge: handleChallenge
+    }), [handleMessage, handleChallenge]);
+
+    useGameEffects(gameState, callbacks);
 
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
@@ -619,6 +631,11 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                     script={adminScript}
                     onComplete={() => setAdminDialogueOpen(false)}
                     isOpen={adminDialogueOpen}
+                />
+
+                <EmergencyOverlay
+                    type={activeChallenge}
+                    onResolve={handleChallengeResolved}
                 />
             </div>
             <GameHeader
@@ -799,18 +816,31 @@ const PlayerInterface = ({
     // --- GESTION DU DIALOGUE ADMIN ---
     const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
     const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
+    const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
 
-    const handleAdminMessage = useCallback((text: string) => {
-        // 1. On crée le script à la volée
-        // Tu peux créer un CHARACTERS.SYSTEM s'il n'existe pas encore
-        const newScript = [say(CHARACTERS.system, text)];
-
-        // 2. On met à jour l'état pour afficher le dialogue
-        setAdminScript(newScript);
+    const handleMessage = useCallback((text: string) => {
+        setAdminScript([say(CHARACTERS.system, text)]);
         setAdminDialogueOpen(true);
     }, []);
 
-    useGameEffects(gameState, handleAdminMessage);
+    const handleChallenge = useCallback((type: string) => {
+        console.log("Activation du challenge :", type);
+        setActiveChallenge(type);
+    }, []);
+
+    const handleChallengeResolved = useCallback(() => {
+        setActiveChallenge(null);
+        handleMessage("Stabilisation confirmée. Reprise du protocole.");
+    }, [handleMessage]);
+
+    // --- EFFETS ---
+    // On utilise useMemo pour l'objet callbacks afin d'éviter de déclencher le useEffect du hook en boucle
+    const callbacks = useMemo(() => ({
+        onMessage: handleMessage,
+        onChallenge: handleChallenge
+    }), [handleMessage, handleChallenge]);
+
+    useGameEffects(gameState, callbacks);
 
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
@@ -929,6 +959,11 @@ const PlayerInterface = ({
                     script={adminScript}
                     onComplete={() => setAdminDialogueOpen(false)}
                     isOpen={adminDialogueOpen}
+                />
+
+                <EmergencyOverlay
+                    type={activeChallenge}
+                    onResolve={handleChallengeResolved}
                 />
             </div>
 

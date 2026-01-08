@@ -8,8 +8,11 @@ const STORAGE_KEY = 'escape_game_last_command_id';
 // Ajout du paramètre onMessage
 export function useGameEffects(
     gameState: GameState | null,
-    onMessage: (text: string) => void // <--- Callback pour le parent
-) {
+    callbacks: {
+        onMessage: (text: string) => void;
+        onChallenge: (type: string) => void;
+    }
+    ) {
     const lastCommandIdRef = useRef<number>(0);
 
     useEffect(() => {
@@ -35,7 +38,7 @@ export function useGameEffects(
                     break;
 
                 case 'GYRO':
-                    alert('⚠️ STABILISATION REQUISE !');
+                    callbacks.onChallenge('GYRO');
                     break;
 
                 case 'INVERT':
@@ -46,7 +49,7 @@ export function useGameEffects(
                 case 'MESSAGE':
                     // AU LIEU DE L'ALERT : On appelle le callback du parent
                     if (typeof command.payload === 'string') {
-                        onMessage(command.payload);
+                        callbacks.onMessage(command.payload);
                     }
                     break;
             }
@@ -54,5 +57,5 @@ export function useGameEffects(
             lastCommandIdRef.current = command.id;
             localStorage.setItem(STORAGE_KEY, command.id.toString());
         }
-    }, [gameState, onMessage]); // on ajoute onMessage aux dépendances
+    }, [gameState, callbacks]);
 }
