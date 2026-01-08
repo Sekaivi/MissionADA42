@@ -124,12 +124,13 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
 
                 if (nextIndex >= sequence.length) {
                     setGameState('won');
+                    setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
                 }
             }, 200);
 
             return () => clearTimeout(timer);
         }
-    }, [validatedDirection, currentIndex, gameState, sequence]);
+    }, [validatedDirection, currentIndex, gameState, sequence, onSolve]);
 
     // helpers pour l'affichage
     const currentDir = sequence[currentIndex];
@@ -182,7 +183,6 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
                             message={'Protocole complété avec succès.'}
                             autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                             durationUnit={'ms'}
-                            onAutoClose={onSolve}
                         />
 
                         {gameState === 'won' && (

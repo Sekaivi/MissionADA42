@@ -184,6 +184,9 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                     if (nextStep >= sequence.length) {
                         setPhase('win');
                         setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
+                        setTimeout(() => {
+                            onSolve();
+                        }, SCENARIO.defaultTimeBeforeNextStep);
                     }
                 }, 800);
             }
@@ -266,7 +269,6 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 message={feedbackMsg}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
-                onAutoClose={onSolve}
             />
 
             {(phase === 'scan' || phase === 'win') && (
