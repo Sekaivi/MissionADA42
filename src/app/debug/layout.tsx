@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function DebugLayout({ children }: { children: React.ReactNode }) {
-    return <ClientLayout variant="light">{children}</ClientLayout>;
+    return <ClientLayout variant="dark">{children}</ClientLayout>;
 }
