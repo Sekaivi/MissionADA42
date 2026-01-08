@@ -106,7 +106,7 @@ export default function AlphaGPS() {
 
             <AlphaError message={orientationError || locationError} />
 
-            {locationGranted && orientationGranted && (
+            {locationGranted && (
                 <AlphaGrid>
                     {/* VISU */}
                     <AlphaCard title="Direction">
@@ -116,7 +116,7 @@ export default function AlphaGPS() {
                             </div>
                         </div>
                         <p className="text-muted text-center text-xs">
-                            {geolocation.distance}m jusqu'à la cible.
+                            { Math.round(geolocation.distance | 0) }m jusqu'à la cible.
                         </p>
                     </AlphaCard>
 

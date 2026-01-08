@@ -36,7 +36,9 @@ export function useGeolocation(targetLat: number,targetLong: number,orientationH
     heading: number | null;
     error: string | null;
     permissionGranted: boolean
-} {
+}
+
+{
     const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
