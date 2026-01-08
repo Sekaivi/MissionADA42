@@ -217,40 +217,40 @@ export default function AlphaGPS() {
 
             {orientationGranted && locationGranted && (
                 <AlphaGrid>
-<AlphaCard title="Direction">
-    <div className="flex h-64 items-center justify-center">
-        <div className="text-[96px] font-black">
-            {compass ? compass.arrow : '•'}
-        </div>
-    </div>
-    <p className="text-muted text-center text-xs">
-        La flèche indique la direction à suivre
-    </p>
-</AlphaCard>
+                    <AlphaCard title="Direction">
+                        <div className="flex h-64 items-center justify-center">
+                            <div className="text-[96px] font-black">
+                                {compass ? compass.arrow : '•'}
+                            </div>
+                        </div>
+                        <p className="text-muted text-center text-xs">
+                            La flèche indique la direction à suivre
+                        </p>
+                    </AlphaCard>
 
-<AlphaCard title="Données GPS & Cap">
-    <div className="space-y-2">
-        <AlphaInfoRow
-            label="Heading"
-            value={`${Math.round(orientation.heading ?? 0)}°`}
-        />
-        <AlphaInfoRow
-            label="Bearing cible"
-            value={`${Math.round(compass?.bearing ?? 0)}°`}
-        />
-        <AlphaInfoRow
-            label="Angle relatif"
-            value={`${Math.round(compass?.relativeAngle ?? 0)}°`}
-        />
-        <AlphaInfoRow
-            label="Accuracy GPS"
-            value={`${Math.round(location.accuracy ?? 0)} m`}
-        />
-    </div>
-</AlphaCard>
-</AlphaGrid>
-)}
-</>
-);
+                    <AlphaCard title="Données GPS & Cap">
+                        <div className="space-y-2">
+                            <AlphaInfoRow
+                                label="Heading"
+                                value={`${Math.round(orientation.heading ?? 0)}°`}
+                            />
+                            <AlphaInfoRow
+                                label="Bearing cible"
+                                value={`${Math.round(compass?.bearing ?? 0)}°`}
+                            />
+                            <AlphaInfoRow
+                                label="Angle relatif"
+                                value={`${Math.round(compass?.relativeAngle ?? 0)}°`}
+                            />
+                            <AlphaInfoRow
+                                label="Accuracy GPS"
+                                value={`${Math.round(location.accuracy ?? 0)} m`}
+                            />
+                        </div>
+                    </AlphaCard>
+                </AlphaGrid>
+            )}
+        </>
+    );
 }
 */
