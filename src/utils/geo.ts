@@ -12,9 +12,7 @@ function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number):
     const Δλ = toRad(lon2 - lon1);
 
     const y = Math.sin(Δλ) * Math.cos(φ2);
-    const x =
-        Math.cos(φ1) * Math.sin(φ2) -
-        Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
 
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
@@ -27,9 +25,7 @@ function computeDistance(lat1: number, lon1: number, lat2: number, lon2: number)
     const Δφ = toRad(lat2 - lat1);
     const Δλ = toRad(lon2 - lon1);
 
-    const a =
-        Math.sin(Δφ / 2) ** 2 +
-        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
 
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

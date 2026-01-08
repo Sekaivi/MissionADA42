@@ -1,6 +1,8 @@
+// targetLat = 45.2031, targetLong = 5.702213
+
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface GeolocationData {
     latitude: number | null;
@@ -8,45 +10,78 @@ export interface GeolocationData {
     accuracy: number | null;
     altitude: number | null;
     altitudeAccuracy: number | null;
-    heading: number | null;
     speed: number | null;
+    gpsHeading: number | null;
+    distance: number | null;
 }
 
-export interface GeolocationState {
-    data: GeolocationData;
-    error: string | null;
-    permissionGranted: boolean;
-    requestPermission: () => void;
+export interface CompassData {
+    bearing: number;
+    relativeAngle: number;
+    arrow: string;
 }
 
-export function useGeolocation(): GeolocationState {
+export function useGeolocation(
+    targetLat: number,
+    targetLong: number,
+    orientationHeading: number | null
+) {
     const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
         accuracy: null,
         altitude: null,
         altitudeAccuracy: null,
-        heading: null,
         speed: null,
+        gpsHeading: null,
+        distance: null,
     });
 
     const [error, setError] = useState<string | null>(null);
     const [permissionGranted, setPermissionGranted] = useState(false);
     const watchId = useRef<number | null>(null);
 
-    const onSuccess = useCallback((position: GeolocationPosition) => {
-        const { coords } = position;
+    const heading = useMemo(() => {
+        if (data.speed !== null && data.speed > 1 && data.gpsHeading !== null) {
+            return data.gpsHeading; // fiable en mouvement
+        }
+        return orientationHeading; // sinon boussole
+    }, [data.speed, data.gpsHeading, orientationHeading]);
 
-        setData({
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            accuracy: coords.accuracy,
-            altitude: coords.altitude,
-            altitudeAccuracy: coords.altitudeAccuracy,
-            heading: coords.heading,
-            speed: coords.speed,
-        });
-    }, []);
+    const compass: CompassData | null = useMemo(() => {
+        if (data.latitude === null || data.longitude === null || heading === null) {
+            return null;
+        }
+
+        const bearing = computeBearing(data.latitude, data.longitude, targetLat, targetLong);
+
+        const relativeAngle = (bearing - heading + 360) % 360;
+
+        return {
+            bearing,
+            relativeAngle,
+            arrow: angleToDirection8(relativeAngle),
+        };
+    }, [data.latitude, data.longitude, heading, targetLat, targetLong]);
+
+    const onSuccess = useCallback(
+        (position: GeolocationPosition) => {
+            const { coords } = position;
+
+            setData((prev) => ({
+                ...prev,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                accuracy: coords.accuracy,
+                altitude: coords.altitude,
+                altitudeAccuracy: coords.altitudeAccuracy,
+                speed: coords.speed,
+                gpsHeading: coords.heading,
+                distance: computeDistance(coords.latitude, coords.longitude, targetLat, targetLong),
+            }));
+        },
+        [targetLat, targetLong]
+    );
 
     const onError = useCallback((err: GeolocationPositionError) => {
         switch (err.code) {
@@ -70,13 +105,9 @@ export function useGeolocation(): GeolocationState {
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            () => {
-                setPermissionGranted(true);
-            },
-            onError,
-            { enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition(() => setPermissionGranted(true), onError, {
+            enableHighAccuracy: true,
+        });
     }, [onError]);
 
     useEffect(() => {
@@ -97,5 +128,12 @@ export function useGeolocation(): GeolocationState {
         };
     }, [permissionGranted, onSuccess, onError]);
 
-    return { data, error, permissionGranted, requestPermission };
+    return {
+        data,
+        compass,
+        heading,
+        error,
+        permissionGranted,
+        requestPermission,
+    };
 }
