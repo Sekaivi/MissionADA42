@@ -11,6 +11,7 @@ import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 
 export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
@@ -79,6 +80,7 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
                     setIsValidating(true);
                     setFeedbackMsg('Visage identifié avec succès !');
                     clearInterval(interval);
+                    setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
                 }
             } catch {
                 // erreurs silencieuses
@@ -86,7 +88,7 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
         }, 500);
 
         return () => clearInterval(interval);
-    }, [isModelLoaded, videoRef, isValidating]);
+    }, [isModelLoaded, videoRef, isValidating, onSolve]);
 
     if (isSolved) {
         return (
@@ -109,8 +111,8 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
                 message="Identité Confirmée"
                 subMessage="Le module a été validé ! On peut passer à la suite !"
                 Icon={UserIcon}
-                autoCloseDuration={2.5}
-                onAutoClose={onSolve}
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
             />
 
             <AlphaCard title="Identification Biométrique">

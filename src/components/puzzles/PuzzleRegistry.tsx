@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { BoltIcon, StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
 import { ChromaticPuzzle } from '@/components/puzzles/ChromaticPuzzle';
+import { CodingPuzzle } from '@/components/puzzles/CodingPuzzle';
+import { OrientationPuzzle } from '@/components/puzzles/OrientationPuzzle';
+import { SpinPuzzle } from '@/components/puzzles/SpinPuzzle';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState, HistoryEntry } from '@/types/game';
 
@@ -172,6 +175,9 @@ export const DefeatScreen = () => (
 export const PUZZLE_COMPONENTS = {
     'test-puzzle': TestPuzzle,
     'chromatic-puzzle': ChromaticPuzzle,
+    'orientation-puzzle': OrientationPuzzle,
+    'spin-puzzle': SpinPuzzle,
+    'coding-puzzle': CodingPuzzle,
     'victory-screen': VictoryScreen,
 };
 export type PuzzleComponentId = keyof typeof PUZZLE_COMPONENTS;
