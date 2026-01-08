@@ -262,9 +262,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         if (targetBlock.isLocked) {
             setBlocks((prev) =>
                 prev.map((b) =>
-                    b.id === id
-                        ? { ...b, isLocked: false, placedSlotId: undefined }
-                        : b
+                    b.id === id ? { ...b, isLocked: false, placedSlotId: undefined } : b
                 )
             );
         }
