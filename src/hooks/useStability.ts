@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import { OrientationData } from '@/types/orientation';
 
 interface StabilityConfig {
@@ -13,43 +14,53 @@ export function useStability(
     data: OrientationData,
     config: StabilityConfig = { threshold: 1.5, requiredTime: 3000, enabled: true }
 ) {
-    // On utilise des Refs pour mémoriser les états entre les rendus SANS déclencher de cycles
+    const [progress, setProgress] = useState(0);
+
+    // Les Refs ne sont modifiées que dans le useEffect
     const lastPos = useRef({ beta: 0, gamma: 0 });
     const stabilityStartTime = useRef<number | null>(null);
 
-    // 1. EXTRACTION DES DONNÉES
+    // Extraction pour éviter de mettre 'data' entier en dépendance si on veut être précis
     const { beta, gamma } = data;
 
-    // 2. LOGIQUE DE CALCUL DU MOUVEMENT (Directement dans le corps du hook)
-    let currentProgress = 0;
+    useEffect(() => {
+        // 1. Si désactivé ou données incomplètes, on reset
+        if (!config.enabled || beta === null || gamma === null) {
+            stabilityStartTime.current = null;
+            setProgress(0);
+            return;
+        }
 
-    if (!config.enabled || beta === null || gamma === null) {
-        stabilityStartTime.current = null;
-    } else {
-        // Calcul du delta par rapport au dernier rendu
-        const delta = Math.abs(beta - lastPos.current.beta) + Math.abs(gamma - lastPos.current.gamma);
-        
-        // Mise à jour de la position de référence pour le prochain passage
+        // 2. Calcul du mouvement (Delta)
+        const delta =
+            Math.abs(beta - lastPos.current.beta) + Math.abs(gamma - lastPos.current.gamma);
+
+        // Mise à jour de la position de référence (Side-effect légal ici)
         lastPos.current = { beta, gamma };
 
         if (delta > config.threshold) {
-            // Trop de mouvement : on reset le chrono
+            // Trop de mouvement : Reset
             stabilityStartTime.current = null;
+            setProgress(0);
         } else {
-            // C'est stable : on initialise le chrono si besoin
-            if (stabilityStartTime.current === null) {
-                stabilityStartTime.current = Date.now();
-            }
-            
-            // On calcule la progression basée sur le temps écoulé depuis le début de la stabilité
-            const elapsed = Date.now() - stabilityStartTime.current;
-            currentProgress = Math.floor(Math.min((elapsed / config.requiredTime) * 100, 100));
-        }
-    }
+            // C'est stable : on gère le chrono
+            const now = Date.now(); // Date.now() est légal dans un useEffect
 
-    // 3. RÉSULTATS DÉRIVÉS
-    // Pas besoin de state : 'progress' est recalculé à chaque fois que 'data' change
-    const progress = currentProgress;
+            if (stabilityStartTime.current === null) {
+                stabilityStartTime.current = now;
+            }
+
+            const elapsed = now - stabilityStartTime.current;
+            const newProgress = Math.floor(Math.min((elapsed / config.requiredTime) * 100, 100));
+
+            // On ne met à jour le state que si la valeur entière a changé
+            setProgress(newProgress);
+        }
+
+        // On dépend de beta/gamma pour recalculer à chaque mouvement du capteur
+    }, [beta, gamma, config.enabled, config.threshold, config.requiredTime]);
+
+    // 3. RÉSULTATS DÉRIVÉS (Calculés pendant le rendu, mais basés sur le state stable)
     const isStable = progress === 100;
 
     return { isStable, progress };
