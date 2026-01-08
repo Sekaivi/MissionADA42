@@ -145,6 +145,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const activeBlockPosRef = useRef({ x: 0, y: 0 });
     const snapTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTimeRef = useRef<number>(0);
+    const blocksRef = useRef<Block[]>([]);
 
     // Sync Refs
     const orientationRef = useRef(orientationData);
@@ -164,6 +165,9 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     useEffect(() => {
         snapReadySlotIdRef.current = snapReadySlotId;
     }, [snapReadySlotId]);
+    useEffect(() => {
+        blocksRef.current = blocks;
+    }, [blocks]);
 
     // --- LOGIQUE MÉTIER ---
 
@@ -237,11 +241,36 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         }
     };
 
-    const selectBlock = (id: number, x: number, y: number) => {
-        const blk = blocks.find((b) => b.id === id);
-        if (blk?.isLocked) return;
+    const selectBlock = (id: number) => {
+        const targetBlock = blocks.find((b) => b.id === id);
+        if (!targetBlock || targetBlock.isLocked) return;
+
+        if (activeBlockId !== null && activeBlockId !== id) {
+            const finalX = activeBlockPosRef.current.x;
+            const finalY = activeBlockPosRef.current.y;
+
+            setBlocks((prev) =>
+                prev.map((b) =>
+                    b.id === activeBlockId
+                        ? { ...b, x: finalX, y: finalY }
+                        : b
+                )
+            );
+
+            const prevEl = document.getElementById(`block-${activeBlockId}`);
+            if (prevEl) {
+                prevEl.style.transform = 'none';
+                prevEl.style.left = `${finalX}px`;
+                prevEl.style.top = `${finalY}px`;
+            }
+        }
+
         setActiveBlockId(id);
-        activeBlockPosRef.current = { x, y };
+
+        activeBlockIdRef.current = id;
+
+        activeBlockPosRef.current = { x: targetBlock.x, y: targetBlock.y };
+
         setSnapReadySlotId(null);
         if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
     };
@@ -283,7 +312,9 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         activeBlockPosRef.current = { x: newX, y: newY };
 
         const blockEl = document.getElementById(`block-${activeBlockIdRef.current}`);
-        if (blockEl) blockEl.style.transform = `translate(${newX}px, ${newY}px)`;
+        if (blockEl) {
+            blockEl.style.transform = `translate(${newX}px, ${newY}px)`;
+        }
 
         const slotCenterX = width / 2 - 140;
         let closestSlotId = -1;
@@ -298,7 +329,11 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
             }
         });
 
-        if (minDist < PUZZLE_CONSTANTS.SNAP_DISTANCE) {
+        const isSlotOccupied = blocksRef.current.some(
+            (b) => b.isLocked && b.placedSlotId === closestSlotId
+        );
+
+        if (minDist < PUZZLE_CONSTANTS.SNAP_DISTANCE && !isSlotOccupied) {
             if (snapReadySlotIdRef.current !== closestSlotId) {
                 setSnapReadySlotId(closestSlotId);
                 if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
@@ -399,14 +434,19 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                             />
                         ))}
 
-                        {blocks.map((block) => (
-                            <CodeBlock
-                                key={block.id}
-                                {...block}
-                                isActive={activeBlockId === block.id}
-                                onSelect={() => selectBlock(block.id, block.x, block.y)}
-                            />
-                        ))}
+                        {blocks.map((block) => {
+                            const isActive = activeBlockId === block.id;
+                            return (
+                                <CodeBlock
+                                    key={block.id}
+                                    {...block}
+                                    x={isActive ? 0 : block.x}
+                                    y={isActive ? 0 : block.y}
+                                    isActive={isActive}
+                                    onSelect={() => selectBlock(block.id)}
+                                />
+                            );
+                        })}
                     </div>
 
                     <AlphaButton onClick={verifyCode} className="mx-auto">
