@@ -15,7 +15,7 @@ export interface DialogueLine {
     speaker: string;
     text: string;
     avatar: string;
-    side: 'left' | 'right';
+    side?: 'left' | 'right';
 }
 
 // clefs possibles pour les scénarios (extensible)

@@ -21,11 +21,16 @@ import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
+import { DialogueBox } from '@/components/dialogueBox';
 import { DefeatScreen, PUZZLE_COMPONENTS } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { CHARACTERS } from '@/data/characters';
+import { useGameEffects } from '@/hooks/useGameEffects';
 import { createGame, useGameSync } from '@/hooks/useGameSync';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
+import { DialogueLine } from '@/types/dialogue';
 import { GameState } from '@/types/game';
+import { say } from '@/utils/dialogueUtils';
 
 // ============================================================================
 // UTILITAIRES
@@ -419,6 +424,25 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
     });
 
     const { gameState, updateState, error } = useGameSync(activeCode, true);
+
+    const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
+    const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
+
+    // Cette fonction sera appelée par le hook quand un message arrive
+    const handleAdminMessage = useCallback((text: string) => {
+        // 1. On crée le script à la volée
+        // Tu peux créer un CHARACTERS.SYSTEM s'il n'existe pas encore
+        const newScript = [say(CHARACTERS.system, text)];
+
+        // 2. On met à jour l'état pour afficher le dialogue
+        setAdminScript(newScript);
+        setAdminDialogueOpen(true);
+    }, []);
+
+    // --- BRANCHEMENT DU HOOK ---
+    // On passe handleAdminMessage en 2ème argument
+    useGameEffects(gameState, handleAdminMessage);
+
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
         useGameLogic(gameState, effectiveStartTime);
@@ -590,6 +614,13 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
 
     return (
         <AlphaCard title="Tableau de Bord Hôte" className="border-brand-purple/50">
+            <div className={"relative z-[51]"}>
+                <DialogueBox
+                    script={adminScript}
+                    onComplete={() => setAdminDialogueOpen(false)}
+                    isOpen={adminDialogueOpen}
+                />
+            </div>
             <GameHeader
                 code={activeCode}
                 step={safeStep}
@@ -764,6 +795,23 @@ const PlayerInterface = ({
     });
 
     const { gameState, updateState, refresh, error } = useGameSync(connectedCode, false);
+
+    // --- GESTION DU DIALOGUE ADMIN ---
+    const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
+    const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
+
+    const handleAdminMessage = useCallback((text: string) => {
+        // 1. On crée le script à la volée
+        // Tu peux créer un CHARACTERS.SYSTEM s'il n'existe pas encore
+        const newScript = [say(CHARACTERS.system, text)];
+
+        // 2. On met à jour l'état pour afficher le dialogue
+        setAdminScript(newScript);
+        setAdminDialogueOpen(true);
+    }, []);
+
+    useGameEffects(gameState, handleAdminMessage);
+
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
     const { safeStep, currentScenarioStep, isGameWon, isTimeUp, ActivePuzzleComponent } =
         useGameLogic(gameState, effectiveStartTime);
@@ -876,6 +924,14 @@ const PlayerInterface = ({
 
     return (
         <AlphaCard title="Terminal Agent">
+            <div className={"relative z-[51]"}>
+                <DialogueBox
+                    script={adminScript}
+                    onComplete={() => setAdminDialogueOpen(false)}
+                    isOpen={adminDialogueOpen}
+                />
+            </div>
+
             <GameHeader
                 code={connectedCode}
                 step={safeStep}

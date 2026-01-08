@@ -5,7 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Config\Config;
 use App\Core\Cors;
-use App\Controllers\Auth;
 use App\Core\Router;
 
 // Init config
@@ -23,6 +22,7 @@ require_once __DIR__ . '/Config/error_handler.php';
 $router = new Router();
 
 $router->group('/game', function ($r) {
+    $r->register('GET', '/list', [\App\Controllers\Game::class, 'list']);
     $r->register('GET', '/create', [\App\Controllers\Game::class, 'create']);
 
     // requiert ?code=XXXX via GET

@@ -72,7 +72,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: CubeTransparentIcon,
             },
             {
-                href: '/alpha/sensors/orientation-game',
+                href: '/alpha/sensors/orientation-puzzle-page',
                 title: "Jeu d'inclinaison",
                 subtitle: 'Basé sur le composant OrientationPuzzle valide',
                 icon: DevicePhoneMobileIcon,

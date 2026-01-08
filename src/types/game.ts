@@ -36,4 +36,14 @@ export interface GameState {
     lastUpdate: number;
     lastStepTime?: number;
     timestamp?: number;
+
+    admin_command?: AdminCommand;
+}
+
+export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'GYRO' | 'INVERT' | 'SKIP';
+
+export interface AdminCommand {
+    id: number; // timestamp unique pour identifier une nouvelle commande
+    type: AdminCommandType;
+    payload?: string | number;
 }
