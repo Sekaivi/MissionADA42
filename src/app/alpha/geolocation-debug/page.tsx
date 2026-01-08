@@ -11,9 +11,12 @@ import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import {useOrientation} from "@/hooks/useOrientation";
 
 export default function AlphaGeolocationDebug() {
-    const { data, error, permissionGranted, requestPermission } = useGeolocation();
+    const { data: orientation } = useOrientation();
+
+    const { data, error, permissionGranted, requestPermission } = useGeolocation(45.2031, 5.702213, orientation.heading);
 
     useEffect(() => {
         requestPermission();
