@@ -12,6 +12,9 @@ const SCRIPTS = {
         { id: '1', speaker: 'Harry', text: 'Bienvenue dans mon énigme. Essaie de la résoudre.' },
         { id: '2', speaker: 'Fabien Romanens', text: "Oh non ! C'est peut-être trop simple..." },
     ] as DialogueLine[],
+    someState: [
+        { id: '1', speaker: 'Harry', text: 'Bienvenue dans mon énigme. Essaie de la résoudre.' },
+    ],
     success: [
         {
             id: '3',
@@ -25,11 +28,15 @@ export default function DialogueTest() {
     const { scenarioState, currentScript, onDialogueComplete, triggerWin } =
         useGameScenario(SCRIPTS);
 
+    console.log(currentScript)
+
     return (
         <>
             <AlphaHeader title="Dialogue" subtitle="Test du hook de dialogues" />
             <AlphaCard title={"En effet ce n'est pas très compliqué... "}>
                 <AlphaButton onClick={triggerWin}>Simuler une validation</AlphaButton>
+                <AlphaButton variant={'secondary'}>Aide-moi</AlphaButton>
+                <AlphaButton variant={'secondary'}>Je fais action quelconque</AlphaButton>
             </AlphaCard>
 
             <DialogueBox

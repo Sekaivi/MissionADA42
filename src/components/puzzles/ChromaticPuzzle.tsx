@@ -19,7 +19,7 @@ import { PRESETS } from '@/utils/colorPresets';
 
 import { PuzzleProps } from './PuzzleRegistry';
 
-const GAME_PRESETS = [PRESETS.ROUGE];
+const GAME_PRESETS = [PRESETS.ROUGE, PRESETS.BLEU, PRESETS.ORANGE, PRESETS.VERT];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
 
 // composant interne pour afficher la séquence de couleurs

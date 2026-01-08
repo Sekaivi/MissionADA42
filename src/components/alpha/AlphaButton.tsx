@@ -50,7 +50,7 @@ export const AlphaButton = ({
             disabled={disabled || isLoading}
             className={clsx(
                 // base
-                'relative flex w-max items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
+                'relative flex items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
                 // focus accessibility
                 'focus-visible:ring-brand-emerald/50 focus-visible:ring-2 focus-visible:outline-none',
                 // animation de clic (seulement si actif)
@@ -60,7 +60,7 @@ export const AlphaButton = ({
                 // props dynamiques
                 variants[variant],
                 sizes[size],
-                fullWidth && 'w-full',
+                fullWidth ? 'w-full' : 'w-max',
                 activeStyles,
                 className // pour surcharger si besoin
             )}

@@ -1,23 +1,24 @@
 'use client';
-/* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from 'react';
 
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { AnimatePresence, motion } from 'framer-motion';
 
-import Button from '@/components/ui/Button';
+import { AlphaButton, AlphaButtonVariants } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaHeader } from '@/components/alpha/AlphaHeader';
+import { AlphaSuccess } from "@/components/alpha/AlphaSuccess";
+import { AlphaError } from "@/components/alpha/AlphaError";
+import { CheckIcon } from '@heroicons/react/24/solid';
+import clsx from "clsx";
 
-// --- CONFIGURATION ---
 type Piece = {
     id: string;
     src: string;
 };
 
-// Ordre correct attendu (ID des images)
 const CORRECT_ORDER = ['p1', 'p2', 'p3', 'p4', 'p5'];
 
-// Liste de toutes les pièces (Vraies + Fausses)
 const ALL_PIECES: Piece[] = [
     { id: 'p1', src: '/images/fingerprint-150159_1920-2.png' },
     { id: 'p2', src: '/images/fingerprint-150159_1920-3.png' },
@@ -32,29 +33,20 @@ const ALL_PIECES: Piece[] = [
 export default function Enigme4() {
     const router = useRouter();
 
-    // --- ÉTATS ---
     const [pool, setPool] = useState<Piece[]>([]);
     const [slots, setSlots] = useState<(Piece | null)[]>([null, null, null, null, null]);
     const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [isMounted, setIsMounted] = useState(false);
 
-    // --- INITIALISATION (Mélange Côté Client) ---
     useEffect(() => {
-        // On force le linter à ignorer ces lignes car c'est nécessaire pour Next.js
-        // eslint-disable-next-line
         setIsMounted(true);
-
         const shuffled = [...ALL_PIECES].sort(() => Math.random() - 0.5);
-
         setPool(shuffled);
     }, []);
 
-    // --- LOGIQUE DU JEU ---
-
     const handlePoolPieceClick = (piece: Piece) => {
         if (status === 'success') return;
-
         if (selectedPiece?.id === piece.id) {
             setSelectedPiece(null);
         } else {
@@ -67,22 +59,22 @@ export default function Enigme4() {
 
         const currentSlotPiece = slots[index];
 
-        // CAS A : Une pièce est sélectionnée dans la main -> On la pose
         if (selectedPiece) {
-            setPool((prev) => prev.filter((p) => p.id !== selectedPiece.id));
-
-            if (currentSlotPiece) {
-                setPool((prev) => [...prev, currentSlotPiece]);
-            }
-
             const newSlots = [...slots];
             newSlots[index] = selectedPiece;
             setSlots(newSlots);
 
+            setPool((prevPool) => {
+                const filteredPool = prevPool.filter((p) => p.id !== selectedPiece.id);
+                if (currentSlotPiece) {
+                    return [...filteredPool, currentSlotPiece];
+                }
+                return filteredPool;
+            });
+
             setSelectedPiece(null);
             setStatus('idle');
         }
-        // CAS B : Pas de pièce en main, mais slot occupé -> On retire la pièce
         else if (currentSlotPiece) {
             const newSlots = [...slots];
             newSlots[index] = null;
@@ -115,108 +107,131 @@ export default function Enigme4() {
 
     if (!isMounted) return null;
 
+    let buttonVariant: AlphaButtonVariants = 'primary';
+    let buttonText = 'ANALYSER';
+
+    if (status === 'success') {
+        buttonVariant = 'primary';
+        buttonText = 'ACCÈS AUTORISÉ';
+    } else if (status === 'error') {
+        buttonVariant = 'danger';
+        buttonText = 'ERREUR DE RECONSTITUTION';
+    }
+
     return (
-        <main className="flex min-h-screen w-full flex-col items-center bg-gray-50 px-4 py-6 md:py-10">
-            <div className="mb-8 max-w-xl text-center">
-                <h1 className="mb-2 text-2xl font-bold text-gray-800 md:text-3xl">
-                    Reconstitution Biométrique
-                </h1>
-                <p className="text-sm text-gray-600 md:text-base">
-                    Sélectionnez un fragment, puis cliquez sur une zone pour reconstruire
-                    l&apos;empreinte.
-                </p>
-            </div>
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+            <AlphaHeader
+                title="Reconstitution Biométrique"
+                subtitle="Sélectionnez un fragment à droite, puis cliquez sur une zone à gauche pour reconstruire l'empreinte."
+            />
 
-            <div className="flex w-full max-w-5xl flex-col items-start justify-center gap-8 lg:flex-row lg:gap-16">
-                {/* ZONE D'ASSEMBLAGE (SLOTS) */}
-                <div className="flex w-full flex-col items-center lg:w-auto">
-                    <div
-                        className={`relative w-48 overflow-hidden rounded-xl border-4 border-dashed bg-white shadow-xl transition-colors duration-300 sm:w-64 md:w-72 ${
-                            status === 'success'
-                                ? 'border-green-500 shadow-green-200'
-                                : status === 'error'
-                                  ? 'border-red-500 shadow-red-200'
-                                  : 'border-gray-300'
-                        } `}
-                    >
-                        {slots.map((piece, index) => (
-                            <div
-                                key={index}
-                                onClick={() => handleSlotClick(index)}
-                                className={`relative flex h-12 w-full cursor-pointer items-center justify-center overflow-hidden border-b border-gray-200 transition-colors last:border-b-0 sm:h-16 md:h-20 ${!piece && selectedPiece ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50'} ${!piece && !selectedPiece ? 'hover:bg-gray-100' : ''} `}
-                            >
-                                {!piece && (
-                                    <span className="pointer-events-none text-xs font-bold text-gray-300 select-none md:text-sm">
-                                        ZONE {index + 1}
-                                    </span>
-                                )}
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
 
-                                {piece && (
-                                    <motion.img
-                                        layoutId={piece.id}
-                                        src={piece.src}
-                                        alt="Empreinte"
-                                        className="pointer-events-none block h-full w-full object-cover select-none"
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-6 w-48 sm:w-64 md:w-72">
-                        <Button
-                            onClick={checkCombination}
-                            // className={`w-full text-sm md:text-base ${status === 'success' ? '!bg-green-600' : status === 'error' ? '!bg-red-600' : ''}`}
-                            disabled={slots.some((s) => s === null) || status === 'success'}
+                {/* COLONNE GAUCHE : Zone d'assemblage */}
+                <div className="lg:w-1/3 w-full">
+                    <AlphaCard contentClassName="flex flex-col items-center space-y-6" title={'Zone d\'assemblage'}>
+                        <div
+                            className={`relative w-56 overflow-hidden rounded border-2 transition-all duration-300 ${
+                                status === 'success'
+                                    ? 'border-brand-emerald shadow-[0_0_15px_rgba(0,212,146,0.3)]'
+                                    : status === 'error'
+                                        ? 'border-brand-error shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                                        : 'border-white/20 bg-black/40'
+                            }`}
                         >
-                            {status === 'success'
-                                ? 'ACCÈS AUTORISÉ'
-                                : status === 'error'
-                                  ? 'ERREUR'
-                                  : 'ANALYSER'}
-                        </Button>
-                    </div>
+                            {slots.map((piece, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => handleSlotClick(index)}
+                                    className={`relative flex h-16 w-full cursor-pointer items-center justify-center border-b border-white/10 transition-colors last:border-b-0
+                                        ${!piece && selectedPiece ? 'bg-brand-emerald/10 hover:bg-brand-emerald/20' : ''} 
+                                        ${!piece && !selectedPiece ? 'hover:bg-white/5' : ''}
+                                    `}
+                                >
+                                    {!piece ? (
+                                        <span className="pointer-events-none text-[10px] font-bold tracking-widest text-muted uppercase select-none">
+                                            ZONE {index + 1}
+                                        </span>
+                                    ) : (
+                                        <motion.img
+                                            key={piece.id}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.2 }}
+                                            src={piece.src}
+                                            alt="Empreinte"
+                                            className="pointer-events-none block h-full w-full object-cover select-none"
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {status === 'success' && <AlphaSuccess message={'Séquence validée !'} />}
+                        {status === 'error' && <AlphaError message={'Séquence incorrecte !'} />}
+
+                        {status !== 'error' && status !== 'success' && (
+                            <AlphaButton
+                                onClick={checkCombination}
+                                // disabled={slots.some((s) => s === null) || status === 'success'}
+                                variant={buttonVariant}
+                                fullWidth
+                            >
+                                {buttonText}
+                            </AlphaButton>
+                        )}
+                    </AlphaCard>
                 </div>
 
-                {/* RÉSERVE DE PIÈCES (POOL) */}
-                <div className="w-full flex-1 rounded-2xl border border-gray-100 bg-white p-4 shadow-lg md:p-6">
-                    <h3 className="mb-4 text-center text-xs font-bold tracking-wider text-gray-400 uppercase md:text-sm">
-                        Fragments disponibles
-                    </h3>
-
-                    <div className="grid grid-cols-3 place-items-center gap-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                        <AnimatePresence>
-                            {pool.map((piece) => (
-                                <motion.div
-                                    key={piece.id}
-                                    layoutId={piece.id}
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.5 }}
-                                    onClick={() => handlePoolPieceClick(piece)}
-                                    className={`relative aspect-[3/1] w-full cursor-pointer overflow-hidden rounded-lg border-2 shadow-sm transition-all duration-200 ${
-                                        selectedPiece?.id === piece.id
-                                            ? 'scale-105 border-blue-500 shadow-md ring-2 ring-blue-200'
-                                            : 'border-gray-200 hover:border-gray-400'
-                                    } `}
-                                >
-                                    <img
-                                        src={piece.src}
-                                        alt="Fragment"
-                                        className="pointer-events-none h-full w-full object-cover select-none"
-                                    />
-                                </motion.div>
-                            ))}
+                {/* COLONNE DROITE : Réserve (Pool) */}
+                <AlphaCard title="Fragments Disponibles" className="flex-1">
+                    <motion.div
+                        className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-2 p-1"
+                        layout
+                    >
+                        {/* CORRECTION ANIMATION :
+                            mode='popLayout' est essentiel ici. Il permet aux éléments restants
+                            de glisser instantanément à leur nouvelle place pendant que
+                            l'élément supprimé joue son animation de sortie par-dessus.
+                        */}
+                        <AnimatePresence mode="popLayout">
+                            {pool.map((piece) => {
+                                const isSelected = selectedPiece?.id === piece.id;
+                                return (
+                                    <motion.div
+                                        key={piece.id}
+                                        layout // Active l'animation de position
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+                                        transition={{ type: "spring", damping: 25, stiffness: 300 }} // Mouvement fluide
+                                        onClick={() => handlePoolPieceClick(piece)}
+                                        className={clsx(
+                                            "relative w-full cursor-pointer overflow-hidden rounded-lg border-2 transition-colors duration-200",
+                                            isSelected
+                                                ? "border-brand-emerald ring-2 ring-brand-emerald/50 shadow-[0_0_15px_rgba(0,212,146,0.3)] bg-brand-emerald/5"
+                                                : "border-white/10 hover:border-white/30 bg-black/20"
+                                        )}
+                                    >
+                                        <img
+                                            src={piece.src}
+                                            alt="Fragment"
+                                            className="block w-full h-auto object-contain p-2 pointer-events-none select-none"
+                                        />
+                                    </motion.div>
+                                );
+                            })}
                         </AnimatePresence>
-                    </div>
+                    </motion.div>
 
                     {pool.length === 0 && (
-                        <p className="mt-10 text-center text-sm text-gray-400 italic">
-                            Tous les fragments sont placés.
-                        </p>
+                        <div className="mt-8 flex flex-col items-center justify-center text-muted text-sm italic">
+                            <CheckIcon className="mb-2 h-5 w-5 opacity-50" />
+                            <p>Tous les fragments sont placés.</p>
+                        </div>
                     )}
-                </div>
+                </AlphaCard>
             </div>
-        </main>
+        </div>
     );
 }

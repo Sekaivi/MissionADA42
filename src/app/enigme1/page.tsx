@@ -57,13 +57,11 @@ export default function Enigme1() {
     };
 
     return (
-        <main className="flex min-h-screen w-full items-center justify-center bg-gray-50 p-4">
-            <QuizGame
-                title="Échauffement MMI"
-                description="Répondez correctement pour débloquer l'accès au système."
-                questions={QUESTIONS_MMI}
-                onComplete={handleComplete}
-            />
-        </main>
+        <QuizGame
+            title="Échauffement MMI"
+            description="Répondez correctement pour débloquer l'accès au système."
+            questions={QUESTIONS_MMI}
+            onComplete={handleComplete}
+        />
     );
 }

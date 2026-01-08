@@ -1,10 +1,13 @@
 'use client';
-/* eslint-disable @next/next/no-img-element */
-import { useState } from 'react';
 
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AlphaButton, AlphaButtonVariants } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
+import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
+import { AlphaHeader } from '@/components/alpha/AlphaHeader';
+import { AlphaInput } from '@/components/alpha/AlphaInput';
 
-// --- DEFINITION DES TYPES ---
 export interface Question {
     question: string;
     image?: string;
@@ -20,65 +23,210 @@ interface QuizGameProps {
     onComplete: () => void;
 }
 
+const QuizImage = ({ src }: { src: string }) => (
+    <div className="mb-6 flex justify-center overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-sm">
+        <img src={src} alt="Indice visuel" className="max-h-64 w-auto object-contain" />
+    </div>
+);
+
+const QuizOptions = ({
+                         options,
+                         selectedId,
+                         status,
+                         onSelect,
+                     }: {
+    options: { id: string | number; text: string }[];
+    selectedId: string | number | null;
+    status: 'idle' | 'correct' | 'incorrect';
+    onSelect: (id: string | number) => void;
+}) => {
+    // si une des réponses dépasse 30 caractères, on force l'affichage en liste (colonne).
+    // sinon, on affiche en grille (2 colonnes).
+    const hasLongText = options.some((o) => o.text.length > 30);
+
+    return (
+        <div
+            className={
+                hasLongText
+                    ? "flex flex-col space-y-3"
+                    : "grid grid-cols-2 gap-3"
+            }
+        >
+            {options.map((option) => {
+                let variant: AlphaButtonVariants = 'secondary';
+                const isSelected = selectedId === option.id;
+
+                if (isSelected) {
+                    if (status === 'correct') {
+                        variant = 'primary';
+                    } else if (status === 'incorrect') {
+                        variant = 'danger';
+                    } else {
+                        variant = 'primary';
+                    }
+                }
+
+                return (
+                    <AlphaButton
+                        key={option.id}
+                        onClick={() => onSelect(option.id)}
+                        variant={variant}
+                        disabled={selectedId !== null && !isSelected}
+                        fullWidth
+                        className={`py-6 !text-lg !font-bold ${hasLongText ? 'justify-between text-left' : 'justify-center text-center'}`}
+                    >
+                        {option.text}
+                    </AlphaButton>
+                );
+            })}
+        </div>
+    );
+};
+
+const QuizBoolean = ({
+                         selectedId,
+                         status,
+                         onSelect,
+                     }: {
+    selectedId: string | number | null;
+    status: 'idle' | 'correct' | 'incorrect';
+    onSelect: (id: string | number) => void;
+}) => {
+
+    return (
+        <QuizOptions
+            options={[
+                { id: 'Vrai', text: 'VRAI' },
+                { id: 'Faux', text: 'FAUX' },
+
+            ]}
+            selectedId={selectedId}
+            status={status}
+            onSelect={(id) => onSelect(id)}
+        />
+    );
+};
+
+const QuizSortableList = ({
+                              items,
+                              onMove,
+                              onValidate,
+                              status,
+                          }: {
+    items: string[];
+    onMove: (index: number, direction: -1 | 1) => void;
+    onValidate: () => void;
+    status: 'idle' | 'correct' | 'incorrect';
+}) => {
+    let buttonVariant: AlphaButtonVariants = 'primary';
+    if (status === 'correct') buttonVariant = 'primary';
+    else if (status === 'incorrect') buttonVariant = 'danger';
+
+    return (
+        <div className="space-y-3">
+            <p className="mb-2 text-center text-xs italic text-muted">
+                Utilisez les flèches pour ordonner la liste
+            </p>
+            {items.map((item, index) => (
+                <motion.div
+                    layout
+                    key={item}
+                    className={`flex items-center justify-between rounded border p-3 transition-colors ${
+                        status === 'correct'
+                            ? 'border-brand-emerald bg-brand-emerald/10'
+                            : status === 'incorrect'
+                                ? 'border-brand-error bg-brand-error/10'
+                                : 'border-white/10 bg-surface'
+                    }`}
+                >
+                    <span className="font-mono text-sm">
+                        <span className="mr-3 text-muted">{index + 1}.</span>
+                        {item}
+                    </span>
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => onMove(index, -1)}
+                            disabled={index === 0 || status !== 'idle'}
+                            className="rounded p-1 text-muted hover:bg-white/10 disabled:opacity-30"
+                        >
+                            ⬆️
+                        </button>
+                        <button
+                            onClick={() => onMove(index, 1)}
+                            disabled={index === items.length - 1 || status !== 'idle'}
+                            className="rounded p-1 text-muted hover:bg-white/10 disabled:opacity-30"
+                        >
+                            ⬇️
+                        </button>
+                    </div>
+                </motion.div>
+            ))}
+            <AlphaButton
+                onClick={onValidate}
+                disabled={status !== 'idle'}
+                variant={buttonVariant}
+                fullWidth
+                className="mt-4"
+            >
+                {status === 'correct'
+                    ? 'ORDRE CORRECT'
+                    : status === 'incorrect'
+                        ? 'ORDRE INCORRECT'
+                        : "VALIDER L'ORDRE"}
+            </AlphaButton>
+        </div>
+    );
+};
+
+// --- COMPOSANT PRINCIPAL ---
+
 export default function QuizGame({ title, description, questions, onComplete }: QuizGameProps) {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-
     const [selectedOptionId, setSelectedOptionId] = useState<string | number | null>(null);
     const [textInput, setTextInput] = useState('');
 
-    // CORRECTION : Initialisation directe et paresseuse (Lazy State)
-    const [currentOrder, setCurrentOrder] = useState<string[]>(() => {
-        const firstQ = questions[0];
-        // On initialise directement avec les textes des options si c'est un tri
-        if (firstQ.type === 'sort' && firstQ.options) {
-            return firstQ.options.map((o) => o.text);
+    // Gestion de l'ordre pour les questions de type "sort"
+    const [currentOrder, setCurrentOrder] = useState<string[]>([]);
+
+    // Effet pour initialiser l'ordre quand la question change
+    useEffect(() => {
+        const q = questions[currentQuestion];
+        if (q.type === 'sort' && q.options) {
+            setCurrentOrder(q.options.map((o) => o.text));
+        } else {
+            setCurrentOrder([]);
         }
-        return [];
-    });
+    }, [currentQuestion, questions]);
 
     const currentQ = questions[currentQuestion];
+    const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-    // --- LOGIQUE DE VALIDATION ---
     const validateAnswer = (userAnswer: string | number | string[]) => {
         let isCorrect = false;
 
-        // Validation Tri (Sort)
         if (
             currentQ.type === 'sort' &&
             Array.isArray(userAnswer) &&
             Array.isArray(currentQ.answer)
         ) {
             isCorrect = JSON.stringify(userAnswer) === JSON.stringify(currentQ.answer);
-        }
-        // Validation Standard (MCQ / Text / Bool)
-        else if (currentQ.type !== 'sort') {
+        } else if (currentQ.type !== 'sort') {
             isCorrect = String(userAnswer).toLowerCase() === String(currentQ.answer).toLowerCase();
         }
 
         if (isCorrect) {
             setStatus('correct');
             setTimeout(() => {
-                setStatus('idle');
-                setSelectedOptionId(null);
-                setTextInput('');
-
-                // Passage à la question suivante
                 if (currentQuestion + 1 < questions.length) {
-                    const nextIndex = currentQuestion + 1;
-                    setCurrentQuestion(nextIndex);
-
-                    // CORRECTION : Mise à jour manuelle de l'ordre pour la prochaine question
-                    const nextQ = questions[nextIndex];
-                    if (nextQ.type === 'sort' && nextQ.options) {
-                        setCurrentOrder(nextQ.options.map((o) => o.text));
-                    } else {
-                        setCurrentOrder([]);
-                    }
+                    setStatus('idle');
+                    setSelectedOptionId(null);
+                    setTextInput('');
+                    setCurrentQuestion((prev) => prev + 1);
                 } else {
                     onComplete();
                 }
-            }, 1000);
+            }, 1200);
         } else {
             setStatus('incorrect');
             setTimeout(() => {
@@ -88,7 +236,7 @@ export default function QuizGame({ title, description, questions, onComplete }: 
         }
     };
 
-    // --- HANDLERS ---
+    // Handlers spécifiques
     const handleMCQClick = (id: string | number) => {
         if (selectedOptionId !== null || status !== 'idle') return;
         setSelectedOptionId(id);
@@ -101,43 +249,26 @@ export default function QuizGame({ title, description, questions, onComplete }: 
         validateAnswer(textInput);
     };
 
-    const handleBooleanClick = (val: 'Vrai' | 'Faux') => {
-        if (selectedOptionId !== null || status !== 'idle') return;
-        setSelectedOptionId(val);
-        validateAnswer(val);
-    };
-
-    const moveItem = (index: number, direction: -1 | 1) => {
+    const handleSortMove = (index: number, direction: -1 | 1) => {
         if (status !== 'idle') return;
         const newList = [...currentOrder];
         const newIndex = index + direction;
-
         if (newIndex >= 0 && newIndex < newList.length) {
             [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
             setCurrentOrder(newList);
         }
     };
 
-    const progress = (currentQuestion / questions.length) * 100;
+    // Calcul du variant pour le bouton Submit Textuel
+    let textSubmitVariant: AlphaButtonVariants = 'secondary';
+    if (status === 'correct') textSubmitVariant = 'primary';
+    else if (status === 'incorrect') textSubmitVariant = 'danger';
 
     return (
-        <div className="mx-auto w-full max-w-2xl px-4">
-            <div className="mb-6 text-center">
-                <h2 className="mb-2 text-2xl font-bold text-gray-800 md:text-3xl">{title}</h2>
-                {description && <p className="text-gray-600">{description}</p>}
-            </div>
+        <div className="mx-auto w-full max-w-2xl space-y-6">
+            <AlphaHeader title={title} subtitle={description} />
 
-            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
-                <div className="h-2 w-full bg-gray-100">
-                    <motion.div
-                        className="h-full bg-blue-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.5 }}
-                    />
-                </div>
-
-                <div className="p-6 md:p-8">
+            <AlphaCard className="relative overflow-hidden" progress={progress}>
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentQuestion}
@@ -145,222 +276,85 @@ export default function QuizGame({ title, description, questions, onComplete }: 
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.3 }}
+                            className="space-y-6"
                         >
-                            <span className="mb-4 inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">
-                                ÉTAPE {currentQuestion + 1} / {questions.length}
-                            </span>
+                            <div className="flex items-center justify-between">
+                                <AlphaFeedbackPill
+                                    message={`ÉTAPE ${currentQuestion + 1} / ${questions.length}`}
+                                    type="info"
+                                />
 
-                            <h3 className="mb-4 text-xl font-bold text-gray-800">
+                                {status === 'correct' && <AlphaFeedbackPill message={'ACCÈS AUTORISÉ'} type={'success'} />}
+                                {status === 'incorrect' && <AlphaFeedbackPill message={'ACCÈS REFUSÉ'} type={'error'} />}
+                            </div>
+
+                            <h3 className="text-foreground text-xl font-bold">
                                 {currentQ.question}
                             </h3>
 
-                            {currentQ.image && (
-                                <div className="mb-6 flex justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm">
-                                    <img
-                                        src={currentQ.image}
-                                        alt="Indice visuel"
-                                        className="max-h-64 w-auto object-contain"
-                                    />
-                                </div>
-                            )}
+                            {currentQ.image && <QuizImage src={currentQ.image} />}
 
-                            {/* TYPE 1 : QCM (MCQ) */}
+                            {/* --- RENDU SELON LE TYPE --- */}
+
+                            {/* 1. QCM */}
                             {currentQ.type === 'qcm' && currentQ.options && (
-                                <div className="space-y-3">
-                                    {currentQ.options.map((option) => {
-                                        let btnClass =
-                                            'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-blue-300';
-
-                                        if (selectedOptionId === option.id) {
-                                            if (status === 'correct')
-                                                btnClass =
-                                                    'bg-green-500 border-green-600 text-white shadow-md';
-                                            else if (status === 'incorrect')
-                                                btnClass = 'bg-red-500 border-red-600 text-white';
-                                            else
-                                                btnClass = 'bg-blue-600 border-blue-700 text-white';
-                                        }
-
-                                        return (
-                                            <motion.button
-                                                key={option.id}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={() => handleMCQClick(option.id)}
-                                                disabled={selectedOptionId !== null}
-                                                className={`w-full rounded-xl border-2 p-4 text-left font-medium transition-all ${btnClass}`}
-                                            >
-                                                <div className="flex justify-between">
-                                                    <span>{option.text}</span>
-                                                    {selectedOptionId === option.id &&
-                                                        status === 'correct' && <span>✅</span>}
-                                                    {selectedOptionId === option.id &&
-                                                        status === 'incorrect' && <span>❌</span>}
-                                                </div>
-                                            </motion.button>
-                                        );
-                                    })}
-                                </div>
+                                <QuizOptions
+                                    options={currentQ.options}
+                                    selectedId={selectedOptionId}
+                                    status={status}
+                                    onSelect={handleMCQClick}
+                                />
                             )}
 
-                            {/* TYPE 2 : TEXTE */}
+                            {/* 2. BOOLEAN (Vrai/Faux) */}
+                            {currentQ.type === 'boolean' && (
+                                <QuizBoolean
+                                    selectedId={selectedOptionId}
+                                    status={status}
+                                    onSelect={(id) => handleMCQClick(id)}
+                                />
+                            )}
+
+                            {/* 3. TEXTE LIBRE */}
                             {currentQ.type === 'text' && (
-                                <form onSubmit={handleTextSubmit} className="mt-4">
-                                    <input
-                                        type="text"
+                                <form onSubmit={handleTextSubmit} className="space-y-4">
+                                    <AlphaInput
                                         value={textInput}
                                         onChange={(e) => setTextInput(e.target.value)}
-                                        placeholder="Votre réponse..."
+                                        placeholder="Entrez le code..."
                                         disabled={status === 'correct'}
-                                        className={`w-full rounded-xl border-2 p-4 text-lg transition-all outline-none ${
-                                            status === 'correct'
-                                                ? 'border-green-500 bg-green-50 text-green-700'
-                                                : status === 'incorrect'
-                                                  ? 'border-red-300 bg-red-50 text-red-700'
-                                                  : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
-                                        }`}
+                                        variant={
+                                            status === 'correct' ? 'success' :
+                                                status === 'incorrect' ? 'error' :
+                                                    'default'
+                                        }
                                     />
-                                    <button
+
+                                    <AlphaButton
                                         type="submit"
-                                        disabled={!textInput.trim() || status !== 'idle'}
-                                        className={`mt-4 w-full rounded-xl px-6 py-3 font-bold text-white transition-all ${
-                                            status === 'correct'
-                                                ? 'bg-green-500'
-                                                : status === 'incorrect'
-                                                  ? 'bg-red-500'
-                                                  : 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
+                                        variant={textSubmitVariant}
                                     >
                                         {status === 'correct'
-                                            ? 'BRAVO'
+                                            ? 'CODE VALIDE'
                                             : status === 'incorrect'
-                                              ? 'INCORRECT'
-                                              : 'VALIDER'}
-                                    </button>
+                                                ? 'CODE INVALIDE'
+                                                : 'TRANSMETTRE'}
+                                    </AlphaButton>
                                 </form>
                             )}
 
-                            {/* TYPE 3 : VRAI / FAUX */}
-                            {currentQ.type === 'boolean' && (
-                                <div className="mt-4 flex gap-4">
-                                    {['Vrai', 'Faux'].map((val) => (
-                                        <motion.button
-                                            key={val}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() =>
-                                                handleBooleanClick(val as 'Vrai' | 'Faux')
-                                            }
-                                            disabled={selectedOptionId !== null}
-                                            className={`flex-1 rounded-xl border-b-4 py-6 text-xl font-bold transition-all ${
-                                                selectedOptionId === val
-                                                    ? status === 'correct'
-                                                        ? 'border-green-700 bg-green-500 text-white'
-                                                        : status === 'incorrect'
-                                                          ? 'border-red-700 bg-red-500 text-white'
-                                                          : 'bg-blue-600 text-white'
-                                                    : val === 'Vrai'
-                                                      ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                                                      : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
-                                            }`}
-                                        >
-                                            {val}
-                                        </motion.button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* TYPE 4 : TRI (SORT) */}
-                            {currentQ.type === 'sort' && currentOrder.length > 0 && (
-                                <div className="mt-4 space-y-3">
-                                    <p className="mb-2 text-center text-sm text-gray-500 italic">
-                                        Utilisez les flèches pour ordonner la liste
-                                    </p>
-                                    {currentOrder.map((item, index) => (
-                                        <motion.div
-                                            layout
-                                            key={item}
-                                            className={`flex items-center justify-between rounded-lg border-2 bg-white p-3 ${
-                                                status === 'correct'
-                                                    ? 'border-green-500 bg-green-50'
-                                                    : status === 'incorrect'
-                                                      ? 'border-red-500 bg-red-50'
-                                                      : 'border-gray-200'
-                                            }`}
-                                        >
-                                            <span className="font-medium text-gray-700">
-                                                <span className="mr-2 text-gray-400">
-                                                    {index + 1}.
-                                                </span>
-                                                {item}
-                                            </span>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() => moveItem(index, -1)}
-                                                    disabled={index === 0 || status !== 'idle'}
-                                                    className="rounded p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-30"
-                                                >
-                                                    ⬆️
-                                                </button>
-                                                <button
-                                                    onClick={() => moveItem(index, 1)}
-                                                    disabled={
-                                                        index === currentOrder.length - 1 ||
-                                                        status !== 'idle'
-                                                    }
-                                                    className="rounded p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-30"
-                                                >
-                                                    ⬇️
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                    <button
-                                        onClick={() => validateAnswer(currentOrder)}
-                                        disabled={status !== 'idle'}
-                                        className={`mt-4 w-full rounded-xl px-6 py-3 font-bold text-white transition-all ${
-                                            status === 'correct'
-                                                ? 'bg-green-500'
-                                                : status === 'incorrect'
-                                                  ? 'bg-red-500'
-                                                  : 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
-                                    >
-                                        {status === 'correct'
-                                            ? 'ORDRE CORRECT'
-                                            : status === 'incorrect'
-                                              ? 'ORDRE INCORRECT'
-                                              : "VALIDER L'ORDRE"}
-                                    </button>
-                                </div>
+                            {/* 4. TRI */}
+                            {currentQ.type === 'sort' && (
+                                <QuizSortableList
+                                    items={currentOrder}
+                                    onMove={handleSortMove}
+                                    onValidate={() => validateAnswer(currentOrder)}
+                                    status={status}
+                                />
                             )}
                         </motion.div>
                     </AnimatePresence>
-                </div>
-
-                <div className="flex h-16 items-center justify-center border-t border-gray-100 bg-gray-50 px-6 py-4">
-                    <AnimatePresence>
-                        {status === 'correct' && (
-                            <motion.span
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="flex items-center gap-2 font-bold text-green-600"
-                            >
-                                ✅ Bonne réponse !
-                            </motion.span>
-                        )}
-                        {status === 'incorrect' && (
-                            <motion.span
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="flex items-center gap-2 font-bold text-red-500"
-                            >
-                                ❌ Mauvaise réponse...
-                            </motion.span>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
+            </AlphaCard>
         </div>
     );
 }
