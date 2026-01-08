@@ -28,7 +28,7 @@ export default function DialogueTest() {
     const { scenarioState, currentScript, onDialogueComplete, triggerWin } =
         useGameScenario(SCRIPTS);
 
-    console.log(currentScript)
+    console.log(currentScript);
 
     return (
         <>

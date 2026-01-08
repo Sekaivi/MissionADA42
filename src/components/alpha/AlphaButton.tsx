@@ -29,7 +29,8 @@ export const AlphaButton = ({
     const variants = {
         primary:
             'border-brand-emerald text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald hover:text-black',
-        secondary: 'border-white/20 text-muted hover:border-white hover:text-white bg-transparent',
+        secondary:
+            'border-border text-muted hover:border-foreground-highlight hover:text-foreground-highlight bg-transparent',
         danger: 'border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white',
         ghost: 'border-transparent text-muted hover:text-brand-emerald hover:bg-white/5',
     };
