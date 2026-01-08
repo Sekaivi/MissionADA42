@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+
 import { OrientationData } from '@/types/orientation';
 
 interface FirewallLogicProps {
     isActive: boolean;
-    orientation: OrientationData; // On ajoute l'orientation en entrée
+    orientation: OrientationData;
     isBlowing: boolean;
     onWin: () => void;
 }
@@ -14,17 +15,15 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
     const [temp, setTemp] = useState(200);
     const [stabilityProgress, setStabilityProgress] = useState(0);
 
-    // On stocke TOUT dans une ref pour que le setInterval accède aux valeurs réelles
-    const stateRef = useRef({ 
-        isActive, 
-        orientation, 
-        isBlowing, 
+    const stateRef = useRef({
+        isActive,
+        orientation,
+        isBlowing,
         onWin,
         lastPos: { beta: 0, gamma: 0 },
-        stabilityStartTime: null as number | null 
+        stabilityStartTime: null as number | null,
     });
 
-    // Synchronisation des refs à chaque rendu
     useEffect(() => {
         stateRef.current.isActive = isActive;
         stateRef.current.orientation = orientation;
@@ -42,19 +41,18 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
             const { beta, gamma } = current.orientation;
             if (beta === null || gamma === null) return;
 
-            // --- 1. LOGIQUE DE STABILITÉ ---
-            // Calcul de la différence de mouvement
-            const delta = Math.abs(beta - current.lastPos.beta) + Math.abs(gamma - current.lastPos.gamma);
+            // LOGIQUE DE STABILITÉ
+            const delta =
+                Math.abs(beta - current.lastPos.beta) + Math.abs(gamma - current.lastPos.gamma);
             current.lastPos = { beta, gamma };
 
             let isCurrentlyStable = false;
             let newProgress = 0;
-
+            
+            // "threshold aka la tolerence de mouvement"
             if (delta > 1.5) {
-                // Trop de mouvement : Reset du chrono interne
                 current.stabilityStartTime = null;
             } else {
-                // Stable : On calcule le temps écoulé
                 if (!current.stabilityStartTime) {
                     current.stabilityStartTime = Date.now();
                 }
@@ -63,13 +61,12 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
                 isCurrentlyStable = newProgress === 100;
             }
 
-            // --- 2. LOGIQUE DE TEMPÉRATURE ---
+            // LOGIQUE DE TEMPERATURE
             setTemp((prev) => {
-                let nextTemp = prev + 0.15; // Chauffe naturelle légèrement plus rapide
+                let nextTemp = prev + 0.15;
 
-                // On ne refroidit que si STABLE (100%) ET SOUFFLE
                 if (isCurrentlyStable && current.isBlowing) {
-                    nextTemp -= 0.9; // Refroidissement plus puissant
+                    nextTemp -= 0.9;
                 }
 
                 if (nextTemp <= 50) {
@@ -79,17 +76,15 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
                 return nextTemp;
             });
 
-            // Mise à jour de la barre de progression dans l'UI
             setStabilityProgress(Math.floor(newProgress));
-
         }, 100);
 
         return () => clearInterval(gameLoop);
     }, [isActive]);
 
-    return { 
-        temp, 
-        stabilityProgress, 
-        isStable: stabilityProgress === 100 
+    return {
+        temp,
+        stabilityProgress,
+        isStable: stabilityProgress === 100,
     };
 }
