@@ -7,10 +7,9 @@ import { FireIcon, HandThumbUpIcon } from '@heroicons/react/24/solid';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { useFirewallLogic } from '@/hooks/useFirewallGame';
+import { useFirewallLogic } from '@/hooks/useFirewallLogic';
 import { useMicrophone } from '@/hooks/useMicrophone';
 import { useOrientation } from '@/hooks/useOrientation';
-import { useStability } from '@/hooks/useStability';
 
 const GAME_STATES = {
     IDLE: 'IDLE',
@@ -19,7 +18,6 @@ const GAME_STATES = {
 } as const;
 type GameStatus = (typeof GAME_STATES)[keyof typeof GAME_STATES];
 
-// --- STYLES & HELPERS ---
 
 // Fonction pour déterminer la couleur et le style selon la température
 const getThermalStyle = (temp: number) => {
@@ -44,7 +42,6 @@ const getThermalStyle = (temp: number) => {
             shadow: 'shadow-red-500/40',
             bg: 'bg-red-500',
         };
-    // Au dessus de 300 (Rouge foncé / Critique)
     return {
         color: 'text-red-900',
         border: 'border-red-900',
@@ -56,23 +53,16 @@ const getThermalStyle = (temp: number) => {
 export default function FirewallGame() {
     const [gameState, setGameState] = useState<GameStatus>(GAME_STATES.IDLE);
 
-    // --- CAPTEURS ---
+    // CAPTEURS
     const { data: orientationData } = useOrientation();
     const { data: mic, requestPermission } = useMicrophone();
 
-    // --- LOGIQUE STABILITÉ ---
-    const threshold = 2;
-    const requiredTime = 3000;
-    
-    
-    
-
-    // --- LOGIQUE JEU ---
+    // LOGIQUE DE JEU
     const { temp, stabilityProgress, isStable } = useFirewallLogic({
         isActive: gameState === GAME_STATES.PLAYING,
         orientation: orientationData,
         isBlowing: mic.isBlowing,
-        onWin: () => setGameState(GAME_STATES.WIN)
+        onWin: () => setGameState(GAME_STATES.WIN),
     });
 
     const onStart = async () => {
@@ -83,9 +73,7 @@ export default function FirewallGame() {
     // Calculs pour l'animation visuelle
     const thermalStyle = getThermalStyle(temp);
 
-    // Calcul du tremblement (Shake)
-    // Commence à 250, max à 400.
-    // On génère un petit offset aléatoire si ça doit trembler
+    // Calcul du tremblement du pare-feu
     const shakeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -98,8 +86,6 @@ export default function FirewallGame() {
                     const intensity = Math.max(0, Math.min(10, (temp - 250) / 15));
                     const x = (Math.random() - 0.5) * intensity;
                     const y = (Math.random() - 0.5) * intensity;
-
-                    // On modifie le DOM DIRECTEMENT (ultra rapide, 0 re-render)
                     shakeRef.current.style.transform = `translate(${x}px, ${y}px)`;
                 } else {
                     shakeRef.current.style.transform = `translate(0px, 0px)`;
@@ -110,11 +96,10 @@ export default function FirewallGame() {
 
         frameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(frameId);
-    }, [temp]); // Se recalibre si la température change
+    }, [temp]); // recalibrage si la température change
 
     return (
         <>
-            {/* Injection de style pour la fluidité du ventilo */}
             <style jsx global>{`
                 .fan-smooth {
                     transition:
@@ -130,7 +115,7 @@ export default function FirewallGame() {
 
             <AlphaCard title="Interface Système">
                 <div className="flex min-h-[400px] flex-col items-center justify-center p-4">
-                    {/* --- ÉTAT 1: DEMANDE D'ACCÈS --- */}
+                    {/* ÉTAT 1: DEMANDE D'ACCÈS */}
                     {gameState === GAME_STATES.IDLE && (
                         <div className="w-full max-w-sm">
                             <AlphaCard
@@ -169,10 +154,10 @@ export default function FirewallGame() {
                         </div>
                     )}
 
-                    {/* --- ÉTAT 2: JEU EN COURS --- */}
+                    {/* ÉTAT 2: JEU EN COURS */}
                     {gameState === GAME_STATES.PLAYING && (
                         <div className="w-full max-w-sm space-y-8">
-                            {/* --- LE CERCLE PARE-FEU (VISUALISATION) --- */}
+                            {/* LE CERCLE PARE-FEU */}
                             <div className="relative flex items-center justify-center py-4">
                                 {/* Wrapper pour le tremblement */}
                                 <div
@@ -203,7 +188,7 @@ export default function FirewallGame() {
                                 </div>
                             </div>
 
-                            {/* --- VENTILATION --- */}
+                            {/* VENTILATION */}
                             <div className="flex flex-col items-center gap-2">
                                 <div
                                     className={`relative transition-all duration-700 ${mic.isBlowing && isStable ? 'scale-125' : 'scale-100 opacity-80'}`}
@@ -216,9 +201,8 @@ export default function FirewallGame() {
                                         stroke="currentColor"
                                         strokeWidth="2"
                                         style={{
-                                            // Animation via CSS rotation infinie, mais on change la vitesse
+                                            // Animation via CSS rotation
                                             animation: `spin ${mic.isBlowing && isStable ? '0.2s' : '10s'} linear infinite`,
-                                            // Transition fluide sur la durée de l'anim (hack visuel)
                                             transition: 'all 1s ease-out',
                                         }}
                                     >
@@ -258,7 +242,7 @@ export default function FirewallGame() {
                                 </div>
                             </div>
 
-                            {/* --- BARRE DE STABILITÉ --- */}
+                            {/* BARRE DE STABILITÉ */}
                             <div className="space-y-2">
                                 <div className="flex justify-between text-[10px] font-bold text-neutral-400 uppercase">
                                     <span>Stabilité Gyroscopique</span>
@@ -293,7 +277,7 @@ export default function FirewallGame() {
                         </div>
                     )}
 
-                    {/* --- ÉTAT 3: VICTOIRE --- */}
+                    {/* ÉTAT 3: VICTOIRE */}
                     {gameState === GAME_STATES.WIN && (
                         <div className="animate-in fade-in zoom-in text-center duration-500">
                             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)]">
