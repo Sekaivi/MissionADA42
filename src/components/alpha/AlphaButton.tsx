@@ -4,8 +4,10 @@ import React from 'react';
 
 import clsx from 'clsx';
 
+export type AlphaButtonVariants = 'primary' | 'secondary' | 'danger' | 'ghost';
+
 interface AlphaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+    variant?: AlphaButtonVariants;
     size?: 'sm' | 'md' | 'lg';
     isLoading?: boolean;
     isActive?: boolean;
@@ -50,7 +52,7 @@ export const AlphaButton = ({
                 // base
                 'relative flex w-max items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
                 // focus accessibility
-                'focus:ring-brand-emerald/50 focus:ring-2 focus:outline-none',
+                'focus-visible:ring-brand-emerald/50 focus-visible:ring-2 focus-visible:outline-none',
                 // animation de clic (seulement si actif)
                 !disabled && !isLoading && 'active:bg-opacity-80 active:scale-95',
                 // désactivé ?
