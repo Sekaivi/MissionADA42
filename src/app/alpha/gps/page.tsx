@@ -95,7 +95,7 @@ export default function AlphaGPS() {
         <>
             <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
 
-            {!orientationGranted || !locationGranted && (
+            {!orientationGranted && !locationGranted && !locationError && !orientationError && (
                 <div className="border-border bg-surface rounded-lg border p-8 text-center">
                     <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
                     <AlphaButton onClick={requestOrientationPermission}>
