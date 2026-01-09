@@ -3,7 +3,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {computeBearing,computeDistance,angleToDirection8} from '@/utils/geo';
+
+import { angleToDirection8, computeBearing, computeDistance } from '@/utils/geo';
 
 export interface GeolocationData {
     latitude: number | null;
@@ -29,17 +30,19 @@ export interface CompassData {
     arrow: string;
 }
 
-export function useGeolocation(targetLat: number,targetLong: number,orientationHeading: number | null): {
+export function useGeolocation(
+    targetLat: number,
+    targetLong: number,
+    orientationHeading: number | null
+): {
     requestPermission: () => void;
     data: GeolocationData;
     compass: null | { arrow: string; bearing: number; relativeAngle: number };
     heading: number | null;
     error: string | null;
-    permissionGranted: boolean
+    permissionGranted: boolean;
 }
-
-{
-    const [data, setData] = useState<GeolocationData>({
+{ const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
         accuracy: null,
@@ -61,7 +64,6 @@ export function useGeolocation(targetLat: number,targetLong: number,orientationH
         return orientationHeading;
     }, [data.speed, data.gpsHeading, orientationHeading]);
 
-
     //version précédente
     const compass = useMemo(() => {
         if (
@@ -74,12 +76,7 @@ export function useGeolocation(targetLat: number,targetLong: number,orientationH
             return null;
         }
 
-        const bearing = computeBearing(
-            data.latitude,
-            data.longitude,
-            targetLat,
-            targetLong,
-        );
+        const bearing = computeBearing(data.latitude, data.longitude, targetLat, targetLong);
 
         const relativeAngle = (bearing - orientationHeading + 360) % 360;
         const arrow = angleToDirection8(relativeAngle);
@@ -128,19 +125,14 @@ export function useGeolocation(targetLat: number,targetLong: number,orientationH
                 altitudeAccuracy: coords.altitudeAccuracy,
                 speed: coords.speed,
                 gpsHeading: coords.heading,
-                distance: computeDistance(
-                    coords.latitude,
-                    coords.longitude,
-                    targetLat,
-                    targetLong
-                ),
+                distance: computeDistance(coords.latitude, coords.longitude, targetLat, targetLong),
             });
         },
         [targetLat, targetLong]
     );
 
     const onError = useCallback((err: GeolocationPositionError) => {
-        setError(err.message);
+        setError(`[iOS GPS] ${err.code} - ${err.message}`);
     }, []);
 
     const requestPermission = useCallback(() => {
@@ -149,29 +141,23 @@ export function useGeolocation(targetLat: number,targetLong: number,orientationH
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            () => setPermissionGranted(true),
-            onError,
-            { enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition(() => setPermissionGranted(true), onError, {
+            enableHighAccuracy: true,
+        });
     }, [onError]);
 
     useEffect(() => {
         if (!permissionGranted) return;
 
-        watchId.current = navigator.geolocation.watchPosition(
-            onSuccess,
-            onError,
-            {
-                enableHighAccuracy: true,
-                maximumAge: 1000,
-                timeout: 10000,
-            }
-        );
+        watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 10000,
+        });
 
         return () => {
             if (watchId.current !== null) {
-                if (typeof watchId.current === "number") {
+                if (typeof watchId.current === 'number') {
                     navigator.geolocation.clearWatch(watchId.current);
                 }
             }

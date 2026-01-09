@@ -59,16 +59,16 @@
 
 'use client';
 
-import {useEffect} from 'react';
-
-import {AlphaButton} from '@/components/alpha/AlphaButton';
-import {AlphaCard} from '@/components/alpha/AlphaCard';
-import {AlphaError} from '@/components/alpha/AlphaError';
-import {AlphaGrid} from '@/components/alpha/AlphaGrid';
-import {AlphaHeader} from '@/components/alpha/AlphaHeader';
-import {AlphaInfoRow} from '@/components/alpha/AlphaInfoRow';
-import {useGeolocation} from '@/hooks/useGeolocation';
-import {useOrientation} from '@/hooks/useOrientation';
+import { AlphaButton } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaError } from '@/components/alpha/AlphaError';
+import { AlphaGrid } from '@/components/alpha/AlphaGrid';
+import { AlphaHeader } from '@/components/alpha/AlphaHeader';
+import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { useOrientation } from '@/hooks/useOrientation';
+import {useCallback, useEffect, useRef, useState} from "react";
+import {AlphaSuccess} from "@/components/alpha/AlphaSuccess";
 
 export default function AlphaGPS() {
     const {
@@ -86,11 +86,57 @@ export default function AlphaGPS() {
         error: locationError,
     } = useGeolocation(45.2031, 5.702213, orientation.heading);
 
+    const SOLVE_DISTANCE = 2;
+    const solvedRef = useRef(false);
+    const [isSolved, setIsSolved] = useState(false);
+    const [solveMessage, setSolveMessage] = useState<string | null>(null);
+
+
     useEffect(() => {
-        if (!locationGranted) requestLocationPermission();
-    }, [locationGranted, requestLocationPermission]);
+        if (!isSolved) return;
+        if (solvedRef.current) return;
+
+        solvedRef.current = true;
+        onSolve();
+    }, [isSolved, onSolve]);
+
+    const onSolve = useCallback(() => {
+        if (solvedRef.current) return;
+
+        solvedRef.current = true;
+        setIsSolved(true);
+        setSolveMessage('🎯 Destination atteinte. GPS validé.');
+
+        console.log('[GPS PUZZLE] SOLVED');
+    }, []);
 
 
+    if (isSolved) {
+        return (
+            <AlphaSuccess message={solveMessage} />
+        );
+    }
+
+    useEffect(() => {
+        if (
+            geolocation.distance !== null &&
+            geolocation.distance <= 2
+        ) {
+            onSolve();
+        }
+    }, [geolocation.distance, onSolve]);
+
+    if (isSolved) {
+        return (
+            <>
+                <AlphaHeader
+                    title="GPS Boussole"
+                    subtitle="Navigation directionnelle vers une cible"
+                />
+                <AlphaSuccess message={solveMessage ?? 'Puzzle GPS validé'} />
+            </>
+        );
+    }
     return (
         <>
             <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
@@ -100,6 +146,15 @@ export default function AlphaGPS() {
                     <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
                     <AlphaButton onClick={requestOrientationPermission}>
                         Autoriser les capteurs
+                    </AlphaButton>
+                </div>
+            )}
+
+            {!locationGranted && (
+                <div className="border-border bg-surface rounded-lg border p-8 text-center">
+                    <p className="text-muted mb-4">Autorisation requise pour le GPS</p>
+                    <AlphaButton onClick={requestLocationPermission} fullWidth={true}>
+                        Autoriser le GPS
                     </AlphaButton>
                 </div>
             )}
@@ -116,7 +171,8 @@ export default function AlphaGPS() {
                             </div>
                         </div>
                         <p className="text-muted text-center text-xs">
-                            { Math.round(geolocation.distance | 0) }m jusqu'à la cible.
+                            {geolocation.distance ? Math.round(geolocation.distance | 0) : '??'}m
+                            jusqu'à la cible.
                         </p>
                     </AlphaCard>
 

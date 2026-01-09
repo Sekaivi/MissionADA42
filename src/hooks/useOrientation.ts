@@ -11,7 +11,12 @@ interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
 }
 
 export function useOrientation(): OrientationState {
-    const [data, setData] = useState<OrientationData>({ alpha: 0, beta: 0, gamma: 0, heading: 0 });
+    const [data, setData] = useState<OrientationData>({
+        alpha: null,
+        beta: null,
+        gamma: null,
+        heading: null,
+    });
     const [error, setError] = useState<string | null>(null);
     const [permissionGranted, setPermissionGranted] = useState(false);
 
