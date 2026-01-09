@@ -1,25 +1,31 @@
+// src/components/ClientLayout.tsx
 'use client';
 
-import React, { useEffect } from 'react';
-
-import { useTheme } from 'next-themes';
+import React from 'react';
+import { LocalThemeProvider } from '@/components/LocalThemeContext';
+import clsx from "clsx";
 
 export default function ClientLayout({
-    children,
-    variant = 'light',
-}: {
+                                         children,
+                                         variant = 'light',
+                                     }: {
     children: React.ReactNode;
     variant?: 'light' | 'dark';
 }) {
-    const { setTheme } = useTheme();
-
-    useEffect(() => {
-        setTheme(variant);
-    }, [variant, setTheme]);
-
     return (
-        <div className="bg-background text-foreground min-h-screen w-full transition-colors duration-300">
-            <div className="mx-auto w-full max-w-6xl p-8">{children}</div>
-        </div>
+        <LocalThemeProvider value={variant}>
+            <div
+                className={clsx(
+                    "min-h-screen w-full transition-colors duration-300",
+                    "bg-background text-foreground",
+                    variant
+                )}
+                style={{ colorScheme: variant }}
+            >
+                <div className="mx-auto w-full max-w-6xl p-8">
+                    {children}
+                </div>
+            </div>
+        </LocalThemeProvider>
     );
 }

@@ -9,6 +9,7 @@ import {
     InformationCircleIcon,
 } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
+import {ThemedPortalWrapper} from "@/components/ThemedPortalWrapper";
 
 export type ModalVariant = 'success' | 'error' | 'info';
 export type DurationUnit = 's' | 'ms';
@@ -112,6 +113,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
     const modalContent = (
         <AnimatePresence>
             {isOpen && (
+            <ThemedPortalWrapper>
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     {/* overlay */}
                     <motion.div
@@ -190,6 +192,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                         </div>
                     </motion.div>
                 </div>
+            </ThemedPortalWrapper>
             )}
         </AnimatePresence>
     );
