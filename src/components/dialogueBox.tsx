@@ -65,7 +65,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
     return (
         <AnimatePresence>
             {isOpen && currentLine && (
-                <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
+                <div className="pointer-events-none fixed inset-0 z-50 m-0 flex items-end justify-center px-4 pb-8">
                     <motion.div
                         key={`dialogue-session-${script[0]?.id}`}
                         initial={{ opacity: 0, y: 50, scale: 0.95 }}

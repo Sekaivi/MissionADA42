@@ -9,20 +9,24 @@ export const useGameScenario = <T extends string>(scripts: Partial<Record<T, Dia
     const [currentScript, setCurrentScript] = useState<DialogueLine[]>([]);
     const [gameState, setGameState] = useState<T | 'idle'>('idle');
 
+    const scriptsRef = useRef(scripts);
+
+    // update la ref à chaque rendu pour être sûr d'avoir la dernière version
+    useEffect(() => {
+        scriptsRef.current = scripts;
+    });
+
     // On passe la clé (ex: 'intro') qui DOIT exister dans les scripts fournis
-    const triggerPhase = useCallback(
-        (phase: T) => {
-            const selectedScript = scripts[phase];
+    const triggerPhase = useCallback((phase: T) => {
+        const selectedScript = scriptsRef.current[phase];
 
-            setGameState(phase);
+        setGameState(phase);
 
-            if (selectedScript && selectedScript.length > 0) {
-                setCurrentScript(selectedScript);
-                setIsDialogueOpen(true);
-            }
-        },
-        [scripts]
-    );
+        if (selectedScript && selectedScript.length > 0) {
+            setCurrentScript(selectedScript);
+            setIsDialogueOpen(true);
+        }
+    }, []);
 
     const onDialogueComplete = useCallback(() => {
         setIsDialogueOpen(false);

@@ -34,6 +34,27 @@ class Game extends BaseController
      * LECTURE (Polling)
      * Récupère l'état via le code
      */
+    public function list($params, $data): void
+    {
+        $games = $this->api->list(
+            "SELECT * FROM Games"
+        );
+
+        if (!$games) {
+            $this->res['status'] = false;
+            $this->res['msg']    = "Aucune partie disponible.";
+            $this->stop(false);
+        }
+
+        $this->res['status'] = true;
+        $this->res['data']   = $games;
+        $this->stop(true);
+    }
+
+    /**
+     * LECTURE (Polling)
+     * Récupère l'état via le code
+     */
     public function read($params, $data): void
     {
         $this->validateFields($data, [

@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 interface AlphaPuzzleHeaderProps {
     /** Contenu affiché à gauche (ex: Titre, Niveau) */
-    left: React.ReactNode;
+    left?: React.ReactNode;
     /** Contenu affiché à droite (ex: Statut, Timer, Score) */
     right?: React.ReactNode;
     /** Classes additionnelles pour le conteneur */

@@ -10,8 +10,8 @@ interface AlphaMessageScreenProps {
     variant?: MessageVariant;
     title: string;
     description: React.ReactNode; // texte ou JSX
-    actionLabel: string;
-    onAction: () => void;
+    actionLabel?: string;
+    onAction?: () => void;
     className?: string;
     titleClassName?: string;
 }
@@ -67,14 +67,16 @@ export const AlphaMessageScreen = ({
                 {description}
             </p>
 
-            <AlphaButton
-                onClick={onAction}
-                variant={BUTTON_VARIANTS[variant]}
-                size="lg"
-                className="mx-auto min-w-[200px]"
-            >
-                {actionLabel}
-            </AlphaButton>
+            {actionLabel && onAction && (
+                <AlphaButton
+                    onClick={onAction}
+                    variant={BUTTON_VARIANTS[variant]}
+                    size="lg"
+                    className="mx-auto min-w-[200px]"
+                >
+                    {actionLabel}
+                </AlphaButton>
+            )}
         </div>
     );
 };

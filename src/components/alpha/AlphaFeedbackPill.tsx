@@ -36,7 +36,7 @@ const FeedbackPill: React.FC<FeedbackPillProps> = ({
           : variants[type];
 
     return (
-        <div className={`mb-4 text-center ${className}`}>
+        <div className={`text-center ${className}`}>
             <span className={`${baseStyles} ${activeStyle}`}>{message}</span>
         </div>
     );
