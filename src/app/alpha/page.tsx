@@ -154,18 +154,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: PhotoIcon,
                 isGame: true,
             },
-        ],
-    },
-    {
-        title: 'Enigmes',
-        icon: GlobeAltIcon,
-        headerColor: 'text-brand-error',
-        items: [
             {
-                href: '/alpha/code-secret',
-                title: 'Enigme 1 de la partie 2',
-                subtitle: "Remettre les étapes dans l'ordre pour trouver le mot de passe",
-                icon: UserGroupIcon,
+                href: '/alpha/quiz/code-secret',
+                title: "Trouvez le mot de passe administrateur",
+                subtitle: 'Basé sur le composant QuizGame valide, customisable',
+                icon: PencilIcon,
+                isGame: true,
             },
         ],
     },
