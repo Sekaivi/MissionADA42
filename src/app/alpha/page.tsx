@@ -59,6 +59,20 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: SwatchIcon,
                 isGame: true,
             },
+            {
+                href: '/alpha/password-game',
+                title: 'Jeu du mot de passe',
+                subtitle: 'Devine le mot de passe',
+                icon: EyeIcon,
+                isGame: true,
+            },
+            {
+                href: '/alpha/qr-code-test',
+                title: 'Test du scanner QR Code',
+                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
+                icon: PuzzlePieceIcon,
+                isGame: true,
+            },
         ],
     },
     {
