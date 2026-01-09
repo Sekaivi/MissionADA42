@@ -156,7 +156,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
             },
             {
                 href: '/alpha/quiz/code-secret',
-                title: "Trouvez le mot de passe administrateur",
+                title: 'Trouvez le mot de passe administrateur',
                 subtitle: 'Basé sur le composant QuizGame valide, customisable',
                 icon: PencilIcon,
                 isGame: true,

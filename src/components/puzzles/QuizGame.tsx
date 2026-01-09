@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import Image from 'next/image';
+
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { AlphaButton, AlphaButtonVariants } from '@/components/alpha/AlphaButton';
@@ -38,11 +40,11 @@ const QuizImage = ({ src }: { src: string }) => (
 );
 
 const QuizOptions = ({
-                         options,
-                         selectedId,
-                         status,
-                         onSelect,
-                     }: {
+    options,
+    selectedId,
+    status,
+    onSelect,
+}: {
     options: { id: string | number; text: string }[];
     selectedId: string | number | null;
     status: 'idle' | 'correct' | 'incorrect';
@@ -68,9 +70,7 @@ const QuizOptions = ({
                         disabled={selectedId !== null && !isSelected}
                         fullWidth
                         className={`py-6 !text-lg !font-bold ${
-                            hasLongText
-                                ? 'justify-between text-left'
-                                : 'justify-center text-center'
+                            hasLongText ? 'justify-between text-left' : 'justify-center text-center'
                         }`}
                     >
                         {option.text}
@@ -96,18 +96,17 @@ const QuizBoolean = (props: {
 );
 
 const QuizSortableList = ({
-                              items,
-                              onMove,
-                              onValidate,
-                              status,
-                          }: {
+    items,
+    onMove,
+    onValidate,
+    status,
+}: {
     items: string[];
     onMove: (index: number, direction: -1 | 1) => void;
     onValidate: () => void;
     status: 'idle' | 'correct' | 'incorrect';
 }) => {
-    const variant: AlphaButtonVariants =
-        status === 'incorrect' ? 'danger' : 'primary';
+    const variant: AlphaButtonVariants = status === 'incorrect' ? 'danger' : 'primary';
 
     return (
         <div className="space-y-3">
@@ -123,8 +122,8 @@ const QuizSortableList = ({
                         status === 'correct'
                             ? 'border-brand-emerald bg-brand-emerald/10'
                             : status === 'incorrect'
-                                ? 'border-brand-error bg-brand-error/10'
-                                : 'border-white/10 bg-surface'
+                              ? 'border-brand-error bg-brand-error/10'
+                              : 'bg-surface border-white/10'
                     }`}
                 >
                     <span className="font-mono text-sm">
@@ -157,39 +156,31 @@ const QuizSortableList = ({
                 {status === 'idle'
                     ? "VALIDER L'ORDRE"
                     : status === 'correct'
-                        ? 'ORDRE CORRECT'
-                        : 'ORDRE INCORRECT'}
+                      ? 'ORDRE CORRECT'
+                      : 'ORDRE INCORRECT'}
             </AlphaButton>
         </div>
     );
 };
 
-export default function QuizGame({
-                                     questions,
-                                     onSolve,
-                                     isSolved,
-                                     onTextAttempt,
-                                 }: QuizGameProps) {
+export default function QuizGame({ questions, onSolve, isSolved, onTextAttempt }: QuizGameProps) {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [selectedOptionId, setSelectedOptionId] = useState<string | number | null>(null);
     const [textInput, setTextInput] = useState('');
 
     const [currentOrder, setCurrentOrder] = useState<string[]>(() =>
-        questions[0]?.type === 'sort'
-            ? questions[0].options?.map((o) => o.text) || []
-            : []
+        questions[0]?.type === 'sort' ? questions[0].options?.map((o) => o.text) || [] : []
     );
 
     const currentQ = questions[currentQuestion];
     const progress = ((currentQuestion + 1) / questions.length) * 100;
 
     const validateAnswer = (userAnswer: string | number | string[]) => {
-        let isCorrect =
+        const isCorrect =
             currentQ.type === 'sort'
                 ? JSON.stringify(userAnswer) === JSON.stringify(currentQ.answer)
-                : String(userAnswer).toLowerCase() ===
-                String(currentQ.answer).toLowerCase();
+                : String(userAnswer).toLowerCase() === String(currentQ.answer).toLowerCase();
 
         if (isCorrect) {
             setStatus('correct');
@@ -205,9 +196,7 @@ export default function QuizGame({
 
                     const nextQ = questions[nextIndex];
                     setCurrentOrder(
-                        nextQ.type === 'sort'
-                            ? nextQ.options?.map((o) => o.text) || []
-                            : []
+                        nextQ.type === 'sort' ? nextQ.options?.map((o) => o.text) || [] : []
                     );
                 }, 1000);
             } else {
@@ -226,9 +215,7 @@ export default function QuizGame({
         e.preventDefault();
         if (status !== 'idle' || !textInput) return;
 
-        const isValid =
-            String(textInput).toLowerCase() ===
-            String(currentQ.answer).toLowerCase();
+        const isValid = String(textInput).toLowerCase() === String(currentQ.answer).toLowerCase();
 
         onTextAttempt?.(textInput, isValid);
         validateAnswer(textInput);
@@ -268,16 +255,16 @@ export default function QuizGame({
                                     status === 'correct'
                                         ? 'success'
                                         : status === 'incorrect'
-                                            ? 'error'
-                                            : 'default'
+                                          ? 'error'
+                                          : 'default'
                                 }
                             />
                             <AlphaButton type="submit">
                                 {status === 'idle'
                                     ? 'TRANSMETTRE'
                                     : status === 'correct'
-                                        ? 'CODE VALIDE'
-                                        : 'CODE INVALIDE'}
+                                      ? 'CODE VALIDE'
+                                      : 'CODE INVALIDE'}
                             </AlphaButton>
                         </form>
                     )}
