@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
+import { ChromaticPuzzleScenarioStep } from '@/app/alpha/camera/chromatic-puzzle-page/page';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
@@ -12,9 +13,11 @@ import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
+import { DialogueBox } from '@/components/dialogueBox';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { PRESETS } from '@/utils/colorPresets';
 
 import { PuzzleProps } from './PuzzleRegistry';
@@ -22,7 +25,6 @@ import { PuzzleProps } from './PuzzleRegistry';
 const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
 
-// composant interne pour afficher la séquence de couleurs
 interface ColorPreset {
     id: string;
     displayHex: string;
@@ -32,7 +34,7 @@ interface ColorPreset {
 interface AlphaSequenceDisplayProps {
     sequence: string[];
     presets: ColorPreset[];
-    phase: 'init' | 'memory' | 'scan' | 'win';
+    phase: ChromaticPuzzleScenarioStep;
     step: number;
     className?: string;
 }
@@ -65,19 +67,10 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
                         key={index}
                         style={dynamicStyle}
                         className={clsx(
-                            // base
                             'flex h-12 w-12 items-center justify-center rounded-full border-2 font-bold transition-all duration-300',
-
-                            // phase de mémorisation
                             isMemory && 'scale-110 text-white shadow-lg',
-
-                            // couleur validée
                             isCompleted && 'text-white opacity-50',
-
-                            // current
                             isActive && 'scale-110 animate-pulse border-current bg-transparent',
-
-                            // next
                             isPending && 'bg-surface-highlight border-border text-muted opacity-30'
                         )}
                     >
@@ -97,21 +90,28 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
     );
 };
 
-export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
+export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
+    const {
+        gameState: phase,
+        triggerPhase,
+        isDialogueOpen,
+        currentScript,
+        onDialogueComplete,
+    } = useGameScenario<ChromaticPuzzleScenarioStep>(scripts);
+
     const { videoRef, error } = useCamera();
 
     const scanConfig = useMemo(() => ({ size: 180, xOffset: 0, yOffset: 0 }), []);
     const activePresets = useMemo(() => GAME_PRESETS, []);
 
+    // gestion du typage pour l'affichage (idle -> init)
+    const displayPhase = (phase === 'idle' ? 'init' : phase) as ChromaticPuzzleScenarioStep;
+
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);
-    const [phase, setPhase] = useState<'init' | 'memory' | 'scan' | 'win'>('init');
-
     const [, setTimeLeft] = useState(MEMO_TIME);
-
     const [feedbackMsg, setFeedbackMsg] = useState('Initialisation...');
     const [isValidating, setIsValidating] = useState(false);
-
     const processingRef = useRef(false);
 
     const { detectedId } = useColorDetection(videoRef, activePresets, phase === 'scan', scanConfig);
@@ -127,14 +127,14 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
 
     const startGame = useCallback(() => {
         generateSequence();
+        triggerPhase('memory');
         setStep(0);
-        setPhase('memory');
         setTimeLeft(MEMO_TIME);
         setFeedbackMsg(`Mémorisez la séquence : ${MEMO_TIME}s`);
 
         processingRef.current = false;
         setIsValidating(false);
-    }, [generateSequence]);
+    }, [generateSequence, triggerPhase]);
 
     // timer
     useEffect(() => {
@@ -142,7 +142,7 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
-                    setPhase('scan');
+                    triggerPhase('scan');
                     setFeedbackMsg("SCANNEZ LES OBJETS DANS L'ORDRE");
                     return 0;
                 }
@@ -151,7 +151,7 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [phase]);
+    }, [phase, triggerPhase]);
 
     // validation de la couleur détectée
     useEffect(() => {
@@ -161,7 +161,6 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
             const expectedId = sequence[step];
 
             if (detectedId === expectedId) {
-                // verrouillage logique
                 processingRef.current = true;
 
                 requestAnimationFrame(() => {
@@ -172,21 +171,16 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 timer = setTimeout(() => {
                     const colorName = GAME_PRESETS.find((p) => p.id === detectedId)?.name;
 
-                    // update state après succès
                     setFeedbackMsg(`CORRECT ! ${colorName} validé.`);
                     const nextStep = step + 1;
                     setStep(nextStep);
 
-                    // déverrouillage
                     processingRef.current = false;
                     setIsValidating(false);
 
                     if (nextStep >= sequence.length) {
-                        setPhase('win');
+                        triggerPhase('win');
                         setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
-                        setTimeout(() => {
-                            onSolve();
-                        }, SCENARIO.defaultTimeBeforeNextStep);
                     }
                 }, 800);
             }
@@ -202,24 +196,37 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 setIsValidating(false);
             }
         };
-    }, [detectedId, phase, sequence, step, onSolve]);
+    }, [detectedId, phase, sequence, step, onSolve, triggerPhase]);
 
     // init
     useEffect(() => {
-        const t = setTimeout(() => startGame(), 100);
-        return () => clearTimeout(t);
-    }, [startGame]);
+        triggerPhase('init');
+    }, [triggerPhase]);
+
+    // transitions automatiques après dialogues
+    useScenarioTransition(phase, isDialogueOpen, {
+        init: startGame,
+        win: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE CHROMATIQUE VALIDÉE'} />;
     if (error) return <AlphaError message={error} />;
 
     return (
         <div className="space-y-6">
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
             <AlphaCard title="Module de Sécurité Chromatique">
                 <AlphaSequenceDisplay
                     sequence={sequence}
                     presets={GAME_PRESETS}
-                    phase={phase}
+                    phase={displayPhase}
                     step={step}
                     className="mb-6"
                 />
@@ -227,7 +234,7 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 <AlphaFeedbackPill
                     message={feedbackMsg}
                     type={phase === 'win' ? 'success' : 'info'}
-                    isLoading={phase === 'init' || isValidating}
+                    isLoading={phase === 'init' || (isValidating && phase !== 'win')}
                 />
             </AlphaCard>
 
@@ -265,13 +272,13 @@ export const ChromaticPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
             )}
 
             <AlphaModal
-                isOpen={phase === 'win'}
+                isOpen={phase === 'win' && !isDialogueOpen}
                 message={feedbackMsg}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
             />
 
-            {(phase === 'scan' || phase === 'win') && (
+            {(phase === 'scan' || phase === 'win') && !isDialogueOpen && (
                 <div className="flex justify-center">
                     <AlphaButton onClick={startGame}>Réinitialiser la séquence</AlphaButton>
                 </div>

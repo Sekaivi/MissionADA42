@@ -1,9 +1,14 @@
+'use client';
+
 import React, { useCallback, useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
+import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/solid';
+import clsx from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
+
 import { useTypewriter } from '@/hooks/useTypeWriter';
-// Import de Next Image
 import { DialogueLine } from '@/types/dialogue';
 
 interface DialogueBoxProps {
@@ -14,14 +19,27 @@ interface DialogueBoxProps {
 
 export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, isOpen }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const currentLine = script[currentIndex];
 
-    const { displayedText, isTyping, completeText } = useTypewriter(currentLine?.text || '', 30);
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    const [prevScript, setPrevScript] = useState(script);
 
-    // CORRECTION 1 : On utilise useCallback pour stabiliser cette fonction
+    if ((isOpen && !prevIsOpen) || script !== prevScript) {
+        setCurrentIndex(0);
+        setPrevIsOpen(isOpen);
+        setPrevScript(script);
+    }
+    if (!isOpen && prevIsOpen) {
+        setPrevIsOpen(false);
+    }
+
+    const currentLine = script[Math.min(currentIndex, script.length - 1)];
+    const isRightAvatar = currentLine?.side === 'right';
+    const isLastLine = currentIndex === script.length - 1;
+
+    const { displayedText, isTyping, completeText } = useTypewriter(currentLine?.text || '', 20);
+
     const handleInteraction = useCallback(() => {
         if (!isOpen) return;
-
         if (isTyping) {
             completeText();
         } else {
@@ -29,12 +47,10 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                 setCurrentIndex((prev) => prev + 1);
             } else {
                 onComplete();
-                setTimeout(() => setCurrentIndex(0), 100);
             }
         }
-    }, [isOpen, isTyping, completeText, currentIndex, script.length, onComplete]); // Dépendances précises
+    }, [isOpen, isTyping, completeText, currentIndex, script.length, onComplete]);
 
-    // CORRECTION 2 : On ajoute handleInteraction dans le tableau de dépendances
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (isOpen && (e.key === 'Enter' || e.key === ' ')) {
@@ -46,67 +62,122 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, handleInteraction]);
 
-    if (!isOpen || !currentLine) return null;
-
     return (
-        <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center px-4 pb-8">
-            <div
-                className="animate-in fade-in slide-in-from-bottom-4 pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 border-slate-600 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-sm duration-300"
-                onClick={handleInteraction}
-            >
-                <div className="border-brand-emerald bg-brand-emerald absolute -top-5 left-6 rounded border px-4 py-1 text-sm font-bold tracking-wider text-white uppercase shadow-md">
-                    {currentLine.speaker}
-                </div>
-
-                <div className="flex items-start gap-6">
-                    {currentLine.avatar && (
-                        <div
-                            className={`flex-shrink-0 ${currentLine.side === 'right' ? 'order-last' : ''}`}
+        <AnimatePresence>
+            {isOpen && currentLine && (
+                <div className="pointer-events-none fixed inset-0 z-50 m-0 flex items-end justify-center px-4 pb-8">
+                    <motion.div
+                        key={`dialogue-session-${script[0]?.id}`}
+                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95, transition: { duration: 0.2 } }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        className="pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 border-slate-600 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-md"
+                        onClick={handleInteraction}
+                    >
+                        <motion.div
+                            key={`name-${currentLine.id}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className={clsx(
+                                'bg-brand-emerald border-brand-emerald absolute -top-5 rounded border px-4 py-1 text-sm font-bold tracking-wider text-white uppercase shadow-md',
+                                isRightAvatar ? 'right-6' : 'left-6'
+                            )}
                         >
-                            {/* CORRECTION 3 : Utilisation de next/image */}
-                            {/* Note: width/height 96 correspond à w-24 h-24 (24 * 4px) */}
-                            <div className="relative h-24 w-24 overflow-hidden rounded border-2 border-slate-500 bg-slate-800">
-                                <Image
-                                    src={currentLine.avatar}
-                                    alt={currentLine.speaker}
-                                    fill // Remplit le conteneur parent
-                                    className="object-cover"
-                                    sizes="96px"
-                                />
+                            {currentLine.speaker}
+                        </motion.div>
+
+                        <div className="relative z-10 flex items-start gap-6">
+                            <AnimatePresence mode="popLayout">
+                                {currentLine.avatar && (
+                                    <motion.div
+                                        key={`${currentLine.speaker}-${currentLine.side}`}
+                                        initial={{
+                                            opacity: 0,
+                                            x: isRightAvatar ? 30 : -30,
+                                            scale: 0.9,
+                                        }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{
+                                            opacity: 0,
+                                            x: isRightAvatar ? 30 : -30,
+                                            scale: 0.9,
+                                        }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                        className={clsx(
+                                            'relative h-24 w-24 flex-shrink-0 overflow-hidden rounded border-2 border-slate-500 bg-slate-800 shadow-inner',
+                                            isRightAvatar ? 'order-last' : ''
+                                        )}
+                                    >
+                                        <motion.div
+                                            key={currentLine.avatar}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="relative h-full w-full"
+                                        >
+                                            <Image
+                                                src={currentLine.avatar}
+                                                alt={currentLine.speaker}
+                                                fill
+                                                className="object-cover"
+                                                sizes="96px"
+                                            />
+                                        </motion.div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="relative z-0 flex-grow pt-2">
+                                <p className="min-h-[4rem] font-mono text-lg leading-relaxed text-slate-100">
+                                    {displayedText}
+                                    {isTyping && (
+                                        <motion.span
+                                            animate={{ opacity: [1, 0] }}
+                                            transition={{ repeat: Infinity, duration: 0.8 }}
+                                            className="bg-brand-emerald ml-1 inline-block h-5 w-2.5 align-middle shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+                                        />
+                                    )}
+                                </p>
                             </div>
                         </div>
-                    )}
 
-                    <div className="flex-grow">
-                        <p className="min-h-[4rem] font-mono text-lg leading-relaxed text-slate-100">
-                            {displayedText}
-                            {isTyping && (
-                                <span className="bg-brand-emerald ml-1 inline-block h-5 w-2 animate-pulse align-middle" />
-                            )}
-                        </p>
-                    </div>
+                        {/* INDICATEUR SUIVANT / TERMINER */}
+                        {!isTyping && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className={clsx(
+                                    'text-brand-emerald absolute bottom-4 flex items-center gap-2 transition-all duration-300',
+                                    // derniere ligne => texte gras/brillant
+                                    isLastLine
+                                        ? 'font-bold text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                                        : '',
+                                    isRightAvatar ? 'right-32' : 'right-4'
+                                )}
+                            >
+                                <span className="text-[10px] font-bold tracking-widest uppercase opacity-80">
+                                    {isLastLine ? 'Terminer' : 'Click / Space'}
+                                </span>
+
+                                <motion.div
+                                    animate={isLastLine ? { scale: [1, 1.2, 1] } : { x: [0, 3, 0] }}
+                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                >
+                                    {isLastLine ? (
+                                        // check pour la fin
+                                        <CheckIcon className={'h-4 w-4'} />
+                                    ) : (
+                                        // flèche pour la suite
+                                        <ArrowRightIcon className={'h-4 w-4'} />
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </motion.div>
                 </div>
-
-                {!isTyping && (
-                    <div className="text-brand-emerald absolute right-4 bottom-4 animate-bounce">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                            />
-                        </svg>
-                        <span className="text-xs font-bold uppercase">Click</span>
-                    </div>
-                )}
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };

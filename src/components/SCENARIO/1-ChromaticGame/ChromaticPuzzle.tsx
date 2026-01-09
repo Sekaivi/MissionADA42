@@ -1,7 +1,7 @@
 'use client';
 
-import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { ChromaticPuzzle } from '@/components/puzzles/ChromaticPuzzle';
+import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -23,18 +23,6 @@ const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
     win: [say(CHARACTERS.harry, 'Pas mal pour un nooby noob...', { emotion: 'scared' })],
 };
 
-export default function ChromaticPuzzlePage() {
-    return (
-        <>
-            <AlphaHeader title={'Module de Sécurité'} />
-            <ChromaticPuzzle
-                scripts={SCRIPTS}
-                onSolve={() =>
-                    window.alert(
-                        "Bravo, vous avez réussi le module de jeu ! Lors de l'escape game, on passerait à l'étape suivante."
-                    )
-                }
-            />
-        </>
-    );
+export default function ChromaticPuzzle1({ onSolve, isSolved }: PuzzleProps) {
+    return <ChromaticPuzzle scripts={SCRIPTS} onSolve={onSolve} isSolved={isSolved} />;
 }

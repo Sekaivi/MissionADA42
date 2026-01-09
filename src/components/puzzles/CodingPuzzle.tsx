@@ -23,6 +23,8 @@ const PUZZLE_CONSTANTS = {
     START_Y: 20,
     SNAP_DISTANCE: 50,
     LOCK_TIME_MS: 1500,
+    BLOCK_WIDTH: 280,
+    BLOCK_HEIGHT: 40,
 };
 
 const PUZZLE_DATA: Record<Difficulty, string[]> = {
@@ -83,7 +85,7 @@ interface Block {
     y: number;
     isLocked: boolean;
     targetSlotId: number;
-    placedSlotId?: number; // Correction 1 : Ajout de la propriété
+    placedSlotId?: number;
 }
 
 interface IntroScreenProps {
@@ -142,9 +144,12 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const reqRef = useRef<number>(null);
     const loopRef = useRef<(time: number) => void>(null);
+
     const activeBlockPosRef = useRef({ x: 0, y: 0 });
+
     const snapTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTimeRef = useRef<number>(0);
+    const blocksRef = useRef<Block[]>([]);
 
     // Sync Refs
     const orientationRef = useRef(orientationData);
@@ -164,6 +169,9 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     useEffect(() => {
         snapReadySlotIdRef.current = snapReadySlotId;
     }, [snapReadySlotId]);
+    useEffect(() => {
+        blocksRef.current = blocks;
+    }, [blocks]);
 
     // --- LOGIQUE MÉTIER ---
 
@@ -175,11 +183,11 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         const newBlocks: Block[] = currentLines.map((line, index) => ({
             id: index,
             text: line,
-            x: 50 + Math.random() * 150,
-            y: 100 + Math.random() * 200,
+            x: 50 + Math.random() * 100, // Position initiale aléatoire
+            y: 300 + Math.random() * 100, // Plus bas pour ne pas chevaucher les slots
             isLocked: false,
             targetSlotId: index,
-            placedSlotId: undefined, // Reset
+            placedSlotId: undefined,
         }));
 
         setBlocks(newBlocks);
@@ -189,7 +197,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
 
     const lockBlock = useCallback((blockId: number, slotId: number) => {
         const containerW = containerRef.current?.clientWidth || 0;
-        const targetX = containerW / 2 - 140;
+        const targetX = containerW / 2 - 140; // Centré par rapport à la largeur supposée du bloc (280px)
         const targetY = PUZZLE_CONSTANTS.START_Y + slotId * PUZZLE_CONSTANTS.SLOT_HEIGHT;
 
         setActiveBlockId(null);
@@ -203,7 +211,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                           isLocked: true,
                           x: targetX,
                           y: targetY,
-                          placedSlotId: slotId, // Correction 2 : On sauvegarde l'emplacement réel
+                          placedSlotId: slotId,
                       }
                     : b
             )
@@ -226,7 +234,6 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     };
 
     const verifyCode = () => {
-        // Correction 3 : On compare le targetSlotId (attendu) avec placedSlotId (réel)
         const allCorrect = blocks.every((b) => b.isLocked && b.targetSlotId === b.placedSlotId);
 
         if (allCorrect) {
@@ -237,11 +244,32 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         }
     };
 
-    const selectBlock = (id: number, x: number, y: number) => {
-        const blk = blocks.find((b) => b.id === id);
-        if (blk?.isLocked) return;
+    const selectBlock = (id: number) => {
+        // 1. Récupérer le bloc ciblé
+        const targetBlock = blocks.find((b) => b.id === id);
+        if (!targetBlock) return;
+
+        // 2. Sauvegarder l'état du bloc précédent s'il y en a un
+        if (activeBlockId !== null && activeBlockId !== id) {
+            const finalX = activeBlockPosRef.current.x;
+            const finalY = activeBlockPosRef.current.y;
+
+            setBlocks((prev) =>
+                prev.map((b) => (b.id === activeBlockId ? { ...b, x: finalX, y: finalY } : b))
+            );
+        }
+
+        if (targetBlock.isLocked) {
+            setBlocks((prev) =>
+                prev.map((b) =>
+                    b.id === id ? { ...b, isLocked: false, placedSlotId: undefined } : b
+                )
+            );
+        }
+
         setActiveBlockId(id);
-        activeBlockPosRef.current = { x, y };
+        activeBlockPosRef.current = { x: targetBlock.x, y: targetBlock.y };
+
         setSnapReadySlotId(null);
         if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
     };
@@ -259,11 +287,13 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         if (!lastTimeRef.current) lastTimeRef.current = time;
         const deltaTime = time - lastTimeRef.current;
         lastTimeRef.current = time;
+
         const timeFactor = Math.min(deltaTime, 100) / 16.66;
 
         const { beta = 0, gamma = 0 } = orientationRef.current;
         const { DEAD_ZONE, SENSITIVITY } = PUZZLE_CONSTANTS;
 
+        // Physique simple
         const vy =
             Math.abs(beta || 0) <= DEAD_ZONE
                 ? 0
@@ -274,16 +304,20 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                 : ((gamma || 0) - Math.sign(gamma || 0) * DEAD_ZONE) * SENSITIVITY;
 
         const { width, height } = containerRef.current.getBoundingClientRect();
+
+        // Calcul de la position absolue
         let newX = activeBlockPosRef.current.x + vx * timeFactor;
         let newY = activeBlockPosRef.current.y + vy * timeFactor;
 
-        newX = Math.max(0, Math.min(newX, width - 280));
-        newY = Math.max(0, Math.min(newY, height - 40));
+        newX = Math.max(0, Math.min(newX, width - PUZZLE_CONSTANTS.BLOCK_WIDTH));
+        newY = Math.max(0, Math.min(newY, height - PUZZLE_CONSTANTS.BLOCK_HEIGHT));
 
         activeBlockPosRef.current = { x: newX, y: newY };
 
         const blockEl = document.getElementById(`block-${activeBlockIdRef.current}`);
-        if (blockEl) blockEl.style.transform = `translate(${newX}px, ${newY}px)`;
+        if (blockEl) {
+            blockEl.style.transform = `translate(${newX}px, ${newY}px)`;
+        }
 
         const slotCenterX = width / 2 - 140;
         let closestSlotId = -1;
@@ -298,14 +332,23 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
             }
         });
 
-        if (minDist < PUZZLE_CONSTANTS.SNAP_DISTANCE) {
+        // Vérification occupation
+        const isSlotOccupied = blocksRef.current.some(
+            (b) => b.isLocked && b.placedSlotId === closestSlotId
+        );
+
+        if (minDist < PUZZLE_CONSTANTS.SNAP_DISTANCE && !isSlotOccupied) {
             if (snapReadySlotIdRef.current !== closestSlotId) {
                 setSnapReadySlotId(closestSlotId);
                 if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
 
                 const currentBlockId = activeBlockIdRef.current;
                 snapTimerRef.current = setTimeout(() => {
-                    if (activeBlockIdRef.current === currentBlockId)
+                    // Vérification finale avant lock
+                    const currentlyOccupied = blocksRef.current.some(
+                        (b) => b.isLocked && b.placedSlotId === closestSlotId
+                    );
+                    if (activeBlockIdRef.current === currentBlockId && !currentlyOccupied)
                         lockBlock(currentBlockId, closestSlotId);
                 }, PUZZLE_CONSTANTS.LOCK_TIME_MS);
             }
@@ -386,7 +429,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                 <div className="flex h-full flex-1 flex-col gap-6">
                     <div
                         ref={containerRef}
-                        className="mx-auto border-brand-emerald relative h-full w-full max-w-4xl flex-1 overflow-hidden rounded-lg border-2 bg-black/80 shadow-[0_0_20px_rgba(0,212,146,0.2)]"
+                        className="border-brand-emerald relative mx-auto h-full w-full max-w-4xl flex-1 overflow-hidden rounded-lg border-2 bg-black/80 shadow-[0_0_20px_rgba(0,212,146,0.2)]"
                     >
                         {puzzleLines.map((_, index) => (
                             <TargetSlot
@@ -399,14 +442,19 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                             />
                         ))}
 
-                        {blocks.map((block) => (
-                            <CodeBlock
-                                key={block.id}
-                                {...block}
-                                isActive={activeBlockId === block.id}
-                                onSelect={() => selectBlock(block.id, block.x, block.y)}
-                            />
-                        ))}
+                        {blocks.map((block) => {
+                            const isActive = activeBlockId === block.id;
+                            return (
+                                <CodeBlock
+                                    key={block.id}
+                                    {...block}
+                                    x={isActive ? 0 : block.x}
+                                    y={isActive ? 0 : block.y}
+                                    isActive={isActive}
+                                    onSelect={() => selectBlock(block.id)}
+                                />
+                            );
+                        })}
                     </div>
 
                     <AlphaButton onClick={verifyCode} className="mx-auto">
