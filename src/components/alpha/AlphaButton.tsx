@@ -51,7 +51,7 @@ export const AlphaButton = ({
             disabled={disabled || isLoading}
             className={clsx(
                 // base
-                'relative flex items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
+                'relative flex cursor-pointer items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
                 // focus accessibility
                 'focus-visible:ring-brand-emerald/50 focus-visible:ring-2 focus-visible:outline-none',
                 // animation de clic (seulement si actif)

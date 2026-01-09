@@ -17,6 +17,3 @@ export interface DialogueLine {
     avatar: string;
     side?: 'left' | 'right';
 }
-
-// clefs possibles pour les scénarios (extensible)
-export type GameScenarioStep = 'intro' | 'breach' | 'lockdown' | 'success' | 'failure';
