@@ -9,15 +9,11 @@ const LocalThemeContext = createContext<'light' | 'dark'>('light');
 export const useLocalTheme = () => useContext(LocalThemeContext);
 
 export const LocalThemeProvider = ({
-                                       children,
-                                       value
-                                   }: {
+    children,
+    value,
+}: {
     children: React.ReactNode;
-    value: 'light' | 'dark'
+    value: 'light' | 'dark';
 }) => {
-    return (
-        <LocalThemeContext.Provider value={value}>
-            {children}
-        </LocalThemeContext.Provider>
-    );
+    return <LocalThemeContext.Provider value={value}>{children}</LocalThemeContext.Provider>;
 };

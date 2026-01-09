@@ -181,6 +181,9 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                     if (nextStep >= sequence.length) {
                         triggerPhase('win');
                         setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
+                        setTimeout(() => {
+                            onSolve();
+                        }, SCENARIO.defaultTimeBeforeNextStep);
                     }
                 }, 800);
             }
