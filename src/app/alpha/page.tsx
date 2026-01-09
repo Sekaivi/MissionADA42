@@ -163,19 +163,6 @@ const ALPHA_MODULES: ModuleGroup[] = [
             },
         ],
     },
-    {
-        title: 'Enigmes',
-        icon: GlobeAltIcon,
-        headerColor: 'text-brand-error',
-        items: [
-            {
-                href: '/alpha/code-secret',
-                title: 'Enigme 1 de la partie 2',
-                subtitle: "Remettre les étapes dans l'ordre pour trouver le mot de passe",
-                icon: UserGroupIcon,
-            },
-        ],
-    },
 ];
 
 export default function AlphaHome() {
