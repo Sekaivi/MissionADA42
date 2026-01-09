@@ -18,7 +18,6 @@ const GAME_STATES = {
 } as const;
 type GameStatus = (typeof GAME_STATES)[keyof typeof GAME_STATES];
 
-
 // Fonction pour déterminer la couleur et le style selon la température
 const getThermalStyle = (temp: number) => {
     if (temp < 150)

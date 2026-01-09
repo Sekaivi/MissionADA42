@@ -48,7 +48,7 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
 
             let isCurrentlyStable = false;
             let newProgress = 0;
-            
+
             // "threshold aka la tolerence de mouvement"
             if (delta > 1.5) {
                 current.stabilityStartTime = null;
