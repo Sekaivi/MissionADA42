@@ -185,6 +185,15 @@ const CodeGame = ({
     const [isError, setIsError] = useState(false);
     const [shake, setShake] = useState(0);
 
+    const historyRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        // scroll vers le bas à chaque nouvel essai
+        if (historyRef.current) {
+            historyRef.current.scrollTop = historyRef.current.scrollHeight;
+        }
+    }, [history]);
+
     const handleInput = (num: string) => {
         if (isSuccess || currentGuess.length >= codeLength || isError) return;
         if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
@@ -199,39 +208,49 @@ const CodeGame = ({
     const checkCode = () => {
         if (currentGuess.length !== codeLength) return;
 
-        const result: string[] = [];
-        let correctCount = 0;
+        const result: string[] = Array(codeLength).fill('gray');
+        const secretArr = targetCode.split('');
+        const guessArr = currentGuess.split('');
 
-        for (let i = 0; i < codeLength; i++) {
-            const digit = currentGuess[i];
-            if (digit === targetCode[i]) {
-                result.push('green');
-                correctCount++;
-            } else if (targetCode.includes(digit)) {
-                result.push('yellow');
-            } else {
-                result.push('gray');
+        // verts : bien placé
+        guessArr.forEach((digit, i) => {
+            if (digit === secretArr[i]) {
+                result[i] = 'green';
+                secretArr[i] = '#'; // utilisé dans le secret
+                guessArr[i] = '*'; // traité dans l'essai
             }
-        }
+        });
+
+        // jaunes : mal placé
+        guessArr.forEach((digit, i) => {
+            if (digit !== '*') {
+                // si pas déjà vert
+                const foundIndex = secretArr.indexOf(digit);
+                if (foundIndex !== -1) {
+                    result[i] = 'yellow';
+                    secretArr[foundIndex] = '#'; // consomme l'occurrence
+                }
+            }
+        });
+
+        // calcul du succès => tout doit être vert
+        const isWin = result.every((r) => r === 'green');
 
         setHistory((prev) => [...prev, { guess: currentGuess, result }]);
 
-        if (correctCount === codeLength) {
-            // SUCCÈS
+        if (isWin) {
             setIsSuccess(true);
             setStatus('ACCÈS AUTORISÉ');
             if (typeof navigator !== 'undefined' && navigator.vibrate)
                 navigator.vibrate([50, 50, 50]);
             onSuccess();
         } else {
-            // ERREUR
             setCurrentGuess('');
             setStatus('CODE INCORRECT');
             setIsError(true);
             setShake((prev) => prev + 1);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(200);
 
-            // reset l'état d'erreur après 1.5 seconde
             setTimeout(() => {
                 setIsError(false);
                 setStatus('DÉCRYPTAGE REQUIS');
@@ -239,12 +258,10 @@ const CodeGame = ({
         }
     };
 
-    let terminalVariant: TerminalVariant;
+    let terminalVariant: TerminalVariant = 'success';
     if (isSuccess) terminalVariant = 'success';
     else if (isError) terminalVariant = 'error';
-    else terminalVariant = 'success';
 
-    // Détermine la couleur dominante selon l'état
     const themeColor = isError ? 'text-brand-error' : 'text-brand-emerald';
     const borderColor = isError ? 'border-brand-error' : 'border-brand-emerald';
     const bgColor = isError ? 'bg-brand-error/10' : 'bg-brand-emerald/10';
@@ -252,8 +269,10 @@ const CodeGame = ({
     return (
         <div className="flex w-full flex-col items-center font-mono text-sm select-none">
             <AlphaTerminalWrapper variant={terminalVariant} className="mb-3">
-                {/* Historique */}
-                <div className="no-scrollbar mb-2 flex h-32 flex-col justify-end gap-1 overflow-y-auto">
+                <div
+                    ref={historyRef}
+                    className="custom-scrollbar mb-2 flex h-32 flex-col gap-1 overflow-y-auto overscroll-y-contain pr-1"
+                >
                     {history.length === 0 && (
                         <div
                             className={`flex h-full flex-col items-center justify-center text-center text-xs opacity-50 ${isError ? 'text-brand-error' : 'text-brand-emerald'}`}
@@ -265,7 +284,7 @@ const CodeGame = ({
                     {history.map((item, idx) => (
                         <div
                             key={idx}
-                            className={`animate-in slide-in-from-left flex items-center justify-between border-b pb-1 ${isError ? 'border-brand-error/30' : 'border-brand-emerald/30'}`}
+                            className={`animate-in slide-in-from-left flex shrink-0 items-center justify-between border-b pb-1 ${isError ? 'border-brand-error/30' : 'border-brand-emerald/30'}`}
                         >
                             <span
                                 className={`text-base font-bold tracking-[0.3em] ${isError ? 'text-brand-error' : 'text-brand-emerald'}`}
@@ -293,7 +312,6 @@ const CodeGame = ({
                     ))}
                 </div>
 
-                {/* zone de saisie */}
                 <motion.div
                     key={shake}
                     animate={{ x: [0, -5, 5, -5, 5, 0] }}
