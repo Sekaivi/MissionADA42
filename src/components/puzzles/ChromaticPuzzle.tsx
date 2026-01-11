@@ -181,9 +181,6 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                     if (nextStep >= sequence.length) {
                         triggerPhase('win');
                         setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
-                        setTimeout(() => {
-                            onSolve();
-                        }, SCENARIO.defaultTimeBeforeNextStep);
                     }
                 }, 800);
             }
@@ -246,15 +243,8 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                     <AlphaVideoContainer
                         scanSettings={phase === 'scan' ? scanConfig : undefined}
                         label={phase === 'scan' ? 'SCAN EN COURS' : 'ATTENTE'}
+                        videoRef={videoRef}
                     >
-                        <video
-                            ref={videoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            className="h-full w-full object-cover"
-                        />
-
                         {detectedId && phase === 'scan' && (
                             <div className="absolute right-0 bottom-4 left-0 text-center">
                                 <span

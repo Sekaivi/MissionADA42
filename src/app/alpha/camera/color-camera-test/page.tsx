@@ -134,14 +134,7 @@ const ScannerSection: React.FC<ScannerSectionProps> = ({
 }) => (
     <div className="space-y-6">
         <AlphaCard title="Scanner Optique" contentClassName="space-y-4">
-            <AlphaVideoContainer scanSettings={scanConfig} label="COLOR SENSOR">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="h-full w-full object-cover opacity-90"
-                />
+            <AlphaVideoContainer scanSettings={scanConfig} label="COLOR SENSOR" videoRef={videoRef}>
                 {detectedName && (
                     <div
                         className="pointer-events-none absolute inset-0 z-20 border-[6px] transition-colors duration-300"
@@ -246,7 +239,7 @@ export default function AlphaColorCameraTest() {
     const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
     const activePresets = useMemo(() => Object.values(PRESETS), []);
-    const scanConfig = useMemo(() => ({ size: 100, xOffset: -150, yOffset: 0 }), []);
+    const scanConfig = useMemo(() => ({ size: 100, xOffset: 0, yOffset: 0 }), []);
 
     const { detectedId, debug: debugData } = useColorDetection(
         videoRef,

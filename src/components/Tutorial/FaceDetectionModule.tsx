@@ -122,15 +122,7 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
                     type={isValidating ? 'success' : 'info'}
                 />
 
-                <AlphaVideoContainer>
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="h-full w-full scale-x-[-1] object-cover"
-                    />
-
+                <AlphaVideoContainer videoRef={videoRef}>
                     {/* effet de scan si l'ia tourne */}
                     {!isValidating && isModelLoaded && (
                         <>

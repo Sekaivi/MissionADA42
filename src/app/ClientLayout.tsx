@@ -24,7 +24,7 @@ export default function ClientLayout({
                 )}
                 style={{ colorScheme: variant }}
             >
-                <div className="mx-auto w-full max-w-6xl p-8">{children}</div>
+                <div className="mx-auto w-full max-w-3xl p-8">{children}</div>
             </div>
         </LocalThemeProvider>
     );

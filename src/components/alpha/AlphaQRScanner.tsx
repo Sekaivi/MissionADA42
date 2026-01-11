@@ -6,34 +6,44 @@ import { Html5Qrcode } from 'html5-qrcode';
 
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import FeedbackPill from '@/components/alpha/AlphaFeedbackPill';
+import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
+import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
 
-interface AlphaQRScannerProps {
-    onResult: (result: string) => void;
-    onError?: (error: unknown) => void;
-    className?: string;
+interface AlphaQRScannerProps extends PuzzleProps {
+    target: string;
 }
 
-export const AlphaQRScanner = ({ onResult, className }: AlphaQRScannerProps) => {
+export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
+    const elementId = 'reader-stream';
+
     const [lastResult, setLastResult] = useState<string | null>(null);
-    const [isMirrored] = useState(true);
+    const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
     const lastResultRef = useRef<string | null>(null);
-    const onResultRef = useRef(onResult);
+    const onResultRef = useRef(onSolve);
     const scannerRef = useRef<Html5Qrcode | null>(null);
-    const mountRef = useRef<HTMLDivElement | null>(null);
+
+    const mountRef = useRef<HTMLDivElement>(null);
+
+    const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
-        onResultRef.current = onResult;
-    }, [onResult]);
+        onResultRef.current = onSolve;
+    }, [onSolve]);
 
     useEffect(() => {
         if (!mountRef.current) return;
-        const elementId = 'reader-stream';
+
         const initScanner = async () => {
             try {
                 if (scannerRef.current?.isScanning) {
                     await scannerRef.current.stop();
                 }
+
                 const html5QrCode = new Html5Qrcode(elementId);
                 scannerRef.current = html5QrCode;
+
                 const qrBoxSize = (viewfinderWidth: number, viewfinderHeight: number) => {
                     const minEdgePercentage = 0.7;
                     const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
@@ -49,16 +59,27 @@ export const AlphaQRScanner = ({ onResult, className }: AlphaQRScannerProps) => 
                         fps: 10,
                         qrbox: qrBoxSize,
                         aspectRatio: 1.0,
-                        // experimentalFeatures: {
-                        //     useBarCodeDetectorIfSupported: true,
-                        // },
-                        //formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
                     },
                     (decodedText) => {
-                        if (decodedText !== lastResultRef.current) {
-                            lastResultRef.current = decodedText;
-                            setLastResult(decodedText);
-                            onResultRef.current(decodedText);
+                        if (decodedText === lastResultRef.current) return;
+
+                        lastResultRef.current = decodedText;
+                        setLastResult(decodedText);
+
+                        if (decodedText.trim() === target.trim()) {
+                            setScanStatus('success');
+
+                            setTimeout(() => {
+                                onResultRef.current();
+                                html5QrCode.pause();
+                            }, SCENARIO.defaultTimeBeforeNextStep);
+                        } else {
+                            setScanStatus('error');
+                            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+                            errorTimeoutRef.current = setTimeout(() => {
+                                setScanStatus('idle');
+                                lastResultRef.current = null;
+                            }, 2000);
                         }
                     },
                     () => {}
@@ -67,46 +88,56 @@ export const AlphaQRScanner = ({ onResult, className }: AlphaQRScannerProps) => 
                 console.error('Erreur caméra', err);
             }
         };
+
         const timer = setTimeout(initScanner, 100);
+
         return () => {
             clearTimeout(timer);
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
             if (scannerRef.current && scannerRef.current.isScanning) {
                 scannerRef.current
                     .stop()
-                    .then(() => {
-                        scannerRef.current?.clear();
-                    })
+                    .then(() => scannerRef.current?.clear())
                     .catch((err) => console.error(err));
             }
         };
-    }, []);
+    }, [target]);
+
+    let feedbackMessage = 'RECHERCHE DE SIGNAL...';
+    let feedbackType: 'info' | 'success' | 'error' = 'info';
+    let containerBorderClass = 'border-brand-emerald/20';
+
+    if (scanStatus === 'success') {
+        feedbackMessage = 'CIBLE VERROUILLÉE';
+        feedbackType = 'success';
+        containerBorderClass = 'border-brand-emerald';
+    } else if (scanStatus === 'error') {
+        feedbackMessage = 'SIGNAL NON RECONNU';
+        feedbackType = 'error';
+        containerBorderClass = 'border-brand-error';
+    }
 
     return (
-        <AlphaCard title="MODULE DE SCAN QR CODE" className={className}>
+        <AlphaCard title="MODULE DE SCAN QR CODE">
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <FeedbackPill
-                        message={lastResult ? 'CIBLE VERROUILLÉE' : 'RECHERCHE DE SIGNAL...'}
-                        type={lastResult ? 'success' : 'info'}
-                        pulse={!lastResult}
-                    />
-                </div>
-                <div className="border-brand-emerald/20 relative aspect-square w-full overflow-hidden rounded-lg border-2 bg-black md:aspect-video">
-                    <div className="relative h-full w-full">
-                        <div
-                            id="reader-stream"
-                            ref={mountRef}
-                            className={`h-full w-full overflow-hidden [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover ${isMirrored ? '[&_video]:scale-x-[-1]' : ''} `}
-                        />
+                <FeedbackPill
+                    message={feedbackMessage}
+                    type={feedbackType}
+                    pulse={scanStatus === 'idle'}
+                />
 
-                        <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(rgba(16,185,129,0)_50%,rgba(16,185,129,0.1)_50%)] bg-[length:100%_4px] opacity-20" />
-                        <div className="border-brand-emerald/30 text-brand-emerald absolute top-2 left-2 z-20 rounded border bg-black/70 px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
-                            SCANNER QR - SYSTEM V.3
-                        </div>
-                    </div>
-                </div>
+                <AlphaVideoContainer
+                    label="QR Scanner"
+                    className={containerBorderClass}
+                    qrMountRef={mountRef}
+                    qrElementId={elementId}
+                />
 
-                <div className="text-brand-emerald h-16 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-xs break-all">
+                <div
+                    className={`h-16 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-xs break-all transition-colors ${
+                        scanStatus === 'error' ? 'text-brand-error' : 'text-brand-emerald'
+                    }`}
+                >
                     <span className="mr-2 opacity-50">[DATA]:</span>
                     {lastResult || (
                         <span className="animate-pulse opacity-50">En attente de données...</span>

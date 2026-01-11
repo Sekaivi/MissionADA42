@@ -87,15 +87,7 @@ export default function AlphaCameraOnly() {
                     }
                 >
                     <div className="space-y-4">
-                        <AlphaVideoContainer label="RECORDING">
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="h-full w-full object-contain"
-                            />
-                        </AlphaVideoContainer>
+                        <AlphaVideoContainer label="RECORDING" videoRef={videoRef} />
                     </div>
                 </AlphaCard>
 
