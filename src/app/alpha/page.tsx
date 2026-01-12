@@ -89,13 +89,14 @@ const ALPHA_MODULES: ModuleGroup[] = [
             },
             {
                 href: '/alpha/sensors/spin-puzzle-page',
+                href: '/alpha/sensors/spin-puzzle-page',
                 title: 'Jeu de rotation',
                 subtitle: 'Basé sur le composant SpinPuzzle valide',
                 icon: ArrowPathIcon,
                 isGame: true,
             },
             {
-                href: '/alpha/sensors/coding-puzzle-page',
+                href: '/alpha/sensor/coding-puzzle-page',
                 title: 'Jeu de code',
                 subtitle: 'Basé sur le composant CodingPuzzle valide',
                 icon: PuzzlePieceIcon,
