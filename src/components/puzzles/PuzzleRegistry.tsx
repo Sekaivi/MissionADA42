@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { BoltIcon, StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
-import { ChromaticPuzzle } from '@/components/puzzles/ChromaticPuzzle';
+import ChromaticPuzzle1 from '@/components/SCENARIO/1-ChromaticGame/ChromaticPuzzle';
 import { CodingPuzzle } from '@/components/puzzles/CodingPuzzle';
 import { OrientationPuzzle } from '@/components/puzzles/OrientationPuzzle';
 import { SpinPuzzle } from '@/components/puzzles/SpinPuzzle';
@@ -177,7 +177,7 @@ export const DefeatScreen = () => (
 
 export const PUZZLE_COMPONENTS = {
     'test-puzzle': TestPuzzle,
-    'chromatic-puzzle': ChromaticPuzzle,
+    'chromatic-puzzle': ChromaticPuzzle1,
     'orientation-puzzle': OrientationPuzzle,
     'spin-puzzle': SpinPuzzle,
     'coding-puzzle': CodingPuzzle,
