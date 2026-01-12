@@ -380,7 +380,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     return (
-        <div className="h-[90dvh]">
+        <div className="h-[100dvh]">
             <AlphaScanlines />
 
             <AlphaPuzzleHeader
