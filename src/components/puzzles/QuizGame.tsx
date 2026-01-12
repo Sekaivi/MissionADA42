@@ -431,6 +431,8 @@ const CodeGame = ({
 };
 
 export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }: QuizGameProps) {
+    const [isWin, setIsWin] = useState(false);
+
     const {
         gameState: phase,
         triggerPhase,
@@ -448,6 +450,7 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
             triggerPhase('playing');
         },
         win: () => {
+            setIsWin(true);
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
     });
@@ -464,7 +467,6 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
     const currentQ = questions[currentQuestion];
     const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-    const [isWin, setIsWin] = useState(false);
     const handleNextStep = () => {
         if (currentQuestion + 1 < questions.length) {
             setTimeout(() => {
@@ -481,8 +483,6 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
                 );
             }, 1000);
         } else {
-            setIsWin(true);
-            setTimeout(onSolve, SCENARIO.defaultTimeBeforeNextStep);
             triggerPhase('win');
         }
     };
@@ -541,91 +541,90 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
                         type="info"
                     />
 
-                        <h3 className="text-xl font-bold">{currentQ.question}</h3>
+                    <h3 className="text-xl font-bold">{currentQ.question}</h3>
 
-                        {currentQ.image && <QuizImage src={currentQ.image} />}
+                    {currentQ.image && <QuizImage src={currentQ.image} />}
 
-                        {/* --- TYPE: TEXT --- */}
-                        {currentQ.type === 'text' && (
-                            <form onSubmit={handleTextSubmit} className="space-y-4">
-                                <AlphaInput
-                                    value={textInput}
-                                    onChange={(e) => setTextInput(e.target.value)}
-                                    placeholder="Entrez la réponse..."
-                                    variant={
-                                        status === 'correct'
-                                            ? 'success'
-                                            : status === 'incorrect'
-                                              ? 'error'
-                                              : 'default'
-                                    }
-                                />
-                                <AlphaButton
-                                    type="submit"
-                                    variant={`${status === 'idle' ? 'secondary' : status === 'correct' ? 'primary' : 'danger'}`}
-                                >
-                                    {status === 'idle'
-                                        ? 'TRANSMETTRE'
-                                        : status === 'correct'
-                                          ? 'RÉPONSE VALIDE'
-                                          : 'RÉPONSE INVALIDE'}
-                                </AlphaButton>
-                            </form>
-                        )}
-
-                        {/* --- TYPE: QCM --- */}
-                        {currentQ.type === 'qcm' && currentQ.options && (
-                            <QuizOptions
-                                options={currentQ.options}
-                                selectedId={selectedOptionId}
-                                status={status}
-                                onSelect={(id) => {
-                                    setSelectedOptionId(id);
-                                    validateAnswer(id);
-                                }}
+                    {/* --- TYPE: TEXT --- */}
+                    {currentQ.type === 'text' && (
+                        <form onSubmit={handleTextSubmit} className="space-y-4">
+                            <AlphaInput
+                                value={textInput}
+                                onChange={(e) => setTextInput(e.target.value)}
+                                placeholder="Entrez la réponse..."
+                                variant={
+                                    status === 'correct'
+                                        ? 'success'
+                                        : status === 'incorrect'
+                                          ? 'error'
+                                          : 'default'
+                                }
                             />
-                        )}
+                            <AlphaButton
+                                type="submit"
+                                variant={`${status === 'idle' ? 'secondary' : status === 'correct' ? 'primary' : 'danger'}`}
+                            >
+                                {status === 'idle'
+                                    ? 'TRANSMETTRE'
+                                    : status === 'correct'
+                                      ? 'RÉPONSE VALIDE'
+                                      : 'RÉPONSE INVALIDE'}
+                            </AlphaButton>
+                        </form>
+                    )}
 
-                        {/* --- TYPE: BOOLEAN --- */}
-                        {currentQ.type === 'boolean' && (
-                            <QuizBoolean
-                                selectedId={selectedOptionId}
-                                status={status}
-                                onSelect={(id) => {
-                                    setSelectedOptionId(id);
-                                    validateAnswer(id);
-                                }}
-                            />
-                        )}
+                    {/* --- TYPE: QCM --- */}
+                    {currentQ.type === 'qcm' && currentQ.options && (
+                        <QuizOptions
+                            options={currentQ.options}
+                            selectedId={selectedOptionId}
+                            status={status}
+                            onSelect={(id) => {
+                                setSelectedOptionId(id);
+                                validateAnswer(id);
+                            }}
+                        />
+                    )}
 
-                        {/* --- TYPE: SORT --- */}
-                        {currentQ.type === 'sort' && (
-                            <QuizSortableList
-                                items={currentOrder}
-                                onMove={(i, d) => {
-                                    const list = [...currentOrder];
-                                    [list[i], list[i + d]] = [list[i + d], list[i]];
-                                    setCurrentOrder(list);
-                                }}
-                                onValidate={() => validateAnswer(currentOrder)}
-                                status={status}
-                            />
-                        )}
+                    {/* --- TYPE: BOOLEAN --- */}
+                    {currentQ.type === 'boolean' && (
+                        <QuizBoolean
+                            selectedId={selectedOptionId}
+                            status={status}
+                            onSelect={(id) => {
+                                setSelectedOptionId(id);
+                                validateAnswer(id);
+                            }}
+                        />
+                    )}
 
-                        {/* --- TYPE: NUMBER (CODE GAME) --- */}
-                        {currentQ.type === 'number' && (
-                            <CodeGame
-                                targetCode={String(currentQ.answer)}
-                                showLegend={currentQ.showLegend}
-                                onSuccess={() => {
-                                    setStatus('correct');
-                                    handleNextStep();
-                                }}
-                            />
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-            </AlphaCard>
-        </div>
+                    {/* --- TYPE: SORT --- */}
+                    {currentQ.type === 'sort' && (
+                        <QuizSortableList
+                            items={currentOrder}
+                            onMove={(i, d) => {
+                                const list = [...currentOrder];
+                                [list[i], list[i + d]] = [list[i + d], list[i]];
+                                setCurrentOrder(list);
+                            }}
+                            onValidate={() => validateAnswer(currentOrder)}
+                            status={status}
+                        />
+                    )}
+
+                    {/* --- TYPE: NUMBER (CODE GAME) --- */}
+                    {currentQ.type === 'number' && (
+                        <CodeGame
+                            targetCode={String(currentQ.answer)}
+                            showLegend={currentQ.showLegend}
+                            onSuccess={() => {
+                                setStatus('correct');
+                                handleNextStep();
+                            }}
+                        />
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        </AlphaCard>
     );
 }

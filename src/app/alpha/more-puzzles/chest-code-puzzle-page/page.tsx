@@ -38,9 +38,13 @@ const SCRIPTS: Partial<Record<ChestCodeScenarioStep, DialogueLine[]>> = {
         }),
     ],
     solved_password: [
-        say(CHARACTERS.fabien, "Mot de passe craqué. On dirait que '123456' n'est plus à la mode.", {
-            emotion: 'happy',
-        }),
+        say(
+            CHARACTERS.fabien,
+            "Mot de passe craqué. On dirait que '123456' n'est plus à la mode.",
+            {
+                emotion: 'happy',
+            }
+        ),
     ],
 
     win: [
