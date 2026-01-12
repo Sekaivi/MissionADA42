@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { useOrientation } from '@/hooks/useOrientation';
-import {angleToDirection8, computeBearing, computeDistance} from "@/utils/geo";
+import { angleToDirection8, computeBearing, computeDistance } from '@/utils/geo';
 
 export interface GeolocationData {
     latitude: number | null;
@@ -53,12 +54,7 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
             return null;
         }
 
-        const bearing = computeBearing(
-            data.latitude,
-            data.longitude,
-            targetLat,
-            targetLong
-        );
+        const bearing = computeBearing(data.latitude, data.longitude, targetLat, targetLong);
 
         const relativeAngle = (bearing - heading + 360) % 360;
 
@@ -81,12 +77,7 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
                 altitudeAccuracy: coords.altitudeAccuracy,
                 speed: coords.speed,
                 gpsHeading: coords.heading,
-                distance: computeDistance(
-                    coords.latitude,
-                    coords.longitude,
-                    targetLat,
-                    targetLong
-                ),
+                distance: computeDistance(coords.latitude, coords.longitude, targetLat, targetLong),
             });
         },
         [targetLat, targetLong]
@@ -114,11 +105,9 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            () => setPermissionGranted(true),
-            onError,
-            { enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition(() => setPermissionGranted(true), onError, {
+            enableHighAccuracy: true,
+        });
     }, [onError]);
 
     useEffect(() => {
@@ -132,7 +121,7 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
 
         return () => {
             if (watchId.current !== null) {
-                if (typeof watchId.current === "number") {
+                if (typeof watchId.current === 'number') {
                     navigator.geolocation.clearWatch(watchId.current);
                 }
             }
