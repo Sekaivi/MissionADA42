@@ -30,4 +30,12 @@ export const CHARACTERS: Record<string, Character> = {
         },
         defaultSide: 'left',
     },
+    paj: {
+        id: 'paj',
+        name: 'Pierre-Alain Jacquot',
+        avatars: {
+            default: '/images/avatars/paj.png',
+        },
+        defaultSide: 'right',
+    },
 };
