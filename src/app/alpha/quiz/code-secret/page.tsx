@@ -7,7 +7,7 @@ const QUESTIONS_ADMIN: Question[] = [
     {
         type: 'number',
         question: 'Veuillez entrer le mot de passe administrateur',
-        answer: 1234,
+        answer: 6092,
         showLegend: true,
     },
 ];

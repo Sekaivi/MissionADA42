@@ -4,17 +4,18 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { clsx } from 'clsx';
 
-// Interface pour gérer la permission iOS
+import { AlphaButton } from '@/components/alpha/AlphaButton';
+import { AlphaPuzzleHeader } from '@/components/alpha/AlphaGameHeader';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
+import { AlphaTitle } from '@/components/alpha/AlphaTitle';
+import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
+
 interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
     requestPermission?: () => Promise<'granted' | 'denied'>;
 }
 
-interface BombDefusalProps {
-    onSolve: () => void;
-    isSolved: boolean;
-}
-
-export default function BombDefusalGame({ onSolve }: BombDefusalProps) {
+export default function MazePuzzle({ onSolve }: PuzzleProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number | null>(null);
     const timerRef = useRef<number | null>(null);
@@ -70,7 +71,7 @@ export default function BombDefusalGame({ onSolve }: BombDefusalProps) {
         if (win) {
             window.setTimeout(() => {
                 onSolve();
-            }, 1500);
+            }, SCENARIO.defaultDuration);
         }
     };
 
@@ -260,57 +261,49 @@ export default function BombDefusalGame({ onSolve }: BombDefusalProps) {
 
     return (
         <div className="flex h-full w-full flex-col items-center gap-4 text-center">
-            <div className="flex w-full max-w-[300px] justify-between font-mono text-sm">
-                <span className={clsx(timeLeft < 10 && 'animate-pulse text-red-500')}>
-                    TIME: {timeLeft}s
-                </span>
-                <span className="text-muted-foreground">
-                    GYRO_SENSOR: {permissionGranted ? 'ON' : 'OFF'}
-                </span>
-            </div>
+            <AlphaPuzzleHeader
+                left={
+                    <span className={clsx(timeLeft < 10 && 'text-brand-error animate-pulse')}>
+                        TIME: {timeLeft}s
+                    </span>
+                }
+                right={`GYRO_SENSOR: ${permissionGranted ? 'ON' : 'OFF'}`}
+            />
 
             <div className="group relative">
-                <canvas
-                    ref={canvasRef}
-                    width={300}
-                    height={400}
-                    className={clsx(
-                        'rounded-lg border-2 bg-black shadow-[0_0_20px_rgba(0,0,0,0.5)]',
-                        gameStatus === 'playing'
-                            ? 'border-brand-emerald shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-                            : 'border-white/20'
-                    )}
-                />
+                {gameStatus == 'playing' && (
+                    <canvas
+                        ref={canvasRef}
+                        width={300}
+                        height={400}
+                        className={clsx(
+                            'rounded-lg border-2 shadow-[0_0_20px_var(--color-muted)]',
+                            gameStatus === 'playing'
+                                ? 'border-brand-emerald shadow-[0_0_15px_var(--color-brand-emerald)]'
+                                : 'border-border'
+                        )}
+                    />
+                )}
 
                 {/* OVERLAY ÉCRANS */}
                 {gameStatus !== 'playing' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-black/80 p-6 backdrop-blur-sm">
+                    <>
                         {gameStatus === 'idle' && (
                             <>
-                                <h3 className="mb-2 text-xl font-bold text-white">DÉSARMORÇAGE</h3>
-                                <p className="text-muted-foreground mb-6 text-xs">
+                                <AlphaTitle>DÉSARMORÇAGE</AlphaTitle>
+                                <p className="text-muted-foreground mb-6">
                                     Incline ton appareil pour guider le fusible (carré blanc) vers
                                     la zone sécurisée.
-                                    <br />
-                                    <span className="text-[10px] opacity-50">
-                                        (Ou utilise les flèches du clavier)
-                                    </span>
                                 </p>
 
                                 {needsPermission && !permissionGranted ? (
-                                    <button
-                                        onClick={requestAccess}
-                                        className="bg-brand-emerald rounded px-6 py-2 font-bold text-black transition-transform hover:scale-105"
-                                    >
+                                    <AlphaButton className={'mx-auto'} onClick={requestAccess}>
                                         ACTIVER CAPTEURS
-                                    </button>
+                                    </AlphaButton>
                                 ) : (
-                                    <button
-                                        onClick={handleStartClick}
-                                        className="rounded bg-white px-6 py-2 font-bold text-black transition-transform hover:scale-105"
-                                    >
+                                    <AlphaButton className={'mx-auto'} onClick={handleStartClick}>
                                         LANCER SÉQUENCE
-                                    </button>
+                                    </AlphaButton>
                                 )}
                             </>
                         )}
@@ -323,27 +316,30 @@ export default function BombDefusalGame({ onSolve }: BombDefusalProps) {
                             </div>
                         )}
 
+                        <AlphaModal
+                            isOpen={gameStatus === 'won'}
+                            variant="success"
+                            title="Labyrinthe"
+                            message="Epreuve passée avec succès"
+                            autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                            durationUnit={'ms'}
+                        />
+
                         {gameStatus === 'lost' && (
-                            <div className="flex flex-col items-center text-red-500">
+                            <div className="text-brand-error flex flex-col items-center">
                                 <span className="mb-2 text-4xl">✕</span>
                                 <span className="text-lg font-bold tracking-widest">ÉCHEC</span>
                                 <button
                                     onClick={handleStartClick}
-                                    className="mt-6 rounded border border-red-500 px-6 py-2 text-sm text-red-500 transition-colors hover:bg-red-500 hover:text-white"
+                                    className="border-brand-error text-brand-error hover:bg-brand-error mt-6 rounded border px-6 py-2 text-sm transition-colors hover:text-white"
                                 >
                                     RÉINITIALISER
                                 </button>
                             </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
-
-            {gameStatus === 'playing' && (
-                <p className="text-muted-foreground animate-pulse text-[10px]">
-                    {'/// KEEP DEVICE STABLE ///'}
-                </p>
-            )}
         </div>
     );
 }

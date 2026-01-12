@@ -954,7 +954,7 @@ export default function EscapeGamePage() {
     return (
         <div className="min-h-screen pb-20">
             <AlphaHeader title="Escape Game System" subtitle="Scénario: Protocole Alpha" />
-            <div className="mx-auto mt-8 max-w-2xl px-4">
+            <div className="mx-auto mt-8">
                 {activeMode === 'select' && (
                     <AlphaCard title="Bienvenue">
                         <div className="grid grid-cols-1 gap-6 py-8 md:grid-cols-2">

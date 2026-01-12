@@ -22,11 +22,12 @@ interface AlphaModalProps {
     message?: string;
     subMessage?: string;
     Icon?: React.ElementType;
+    children?: React.ReactNode;
 
     /** durée avant fermeture automatique */
     autoCloseDuration?: number;
 
-    /** * unité de temps pour autoCloseDuration.
+    /** unité de temps pour autoCloseDuration.
      * @default 's'
      */
     durationUnit?: DurationUnit;
@@ -73,6 +74,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
     message,
     subMessage,
     Icon,
+    children,
     autoCloseDuration,
     durationUnit = 's',
     onAutoClose,
@@ -155,14 +157,19 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                         />
                                     </div>
 
-                                    <h3 className="text-foreground mb-2 text-xl font-bold">
-                                        {message}
-                                    </h3>
+                                    {message && (
+                                        <h3 className="text-foreground mb-2 text-xl font-bold">
+                                            {message}
+                                        </h3>
+                                    )}
+
                                     {subMessage && (
                                         <p className="text-muted font-mono text-sm leading-relaxed">
                                             {subMessage}
                                         </p>
                                     )}
+
+                                    {children && <div className="mt-4 w-full">{children}</div>}
 
                                     {!durationData && onClose && (
                                         <motion.button

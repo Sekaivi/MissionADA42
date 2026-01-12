@@ -123,13 +123,6 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: PuzzlePieceIcon,
                 isGame: true,
             },
-            {
-                href: '/alpha/chest-code',
-                title: 'Jeu du coffre',
-                subtitle: 'Trouvez comment ouvrir le coffre',
-                icon: PuzzlePieceIcon,
-                isGame: true,
-            },
         ],
     },
     {
@@ -211,6 +204,13 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'Jeu du mot de passe',
                 subtitle: 'Devine le mot de passe',
                 icon: EyeIcon,
+                isGame: true,
+            },
+            {
+                href: '/alpha/more-puzzles/chest-code-puzzle-page',
+                title: 'Jeu du coffre',
+                subtitle: 'Trouvez comment ouvrir le coffre',
+                icon: PuzzlePieceIcon,
                 isGame: true,
             },
         ],

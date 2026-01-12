@@ -14,12 +14,12 @@ interface AlphaPuzzleHeaderProps {
 export const AlphaPuzzleHeader = ({ left, right, className }: AlphaPuzzleHeaderProps) => (
     <div
         className={clsx(
-            'mx-auto mb-2 flex w-full max-w-[90%] justify-between border-b border-white/20 pb-1 font-mono text-sm',
+            'border-border mx-auto mb-2 flex w-full justify-between border-b pb-1 font-mono text-sm',
             className
         )}
     >
-        <div className="text-foreground font-medium">{left}</div>
+        <div className="text-foreground content-center font-medium">{left}</div>
 
-        <div className="text-muted text-right">{right}</div>
+        <div className="text-muted content-center text-right">{right}</div>
     </div>
 );

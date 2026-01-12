@@ -11,6 +11,7 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaInput } from '@/components/alpha/AlphaInput';
 import { AlphaMessageScreen } from '@/components/alpha/AlphaMessageScreen';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaTerminalWrapper, TerminalVariant } from '@/components/alpha/AlphaTerminalWrapper';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
@@ -438,6 +439,7 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
     const currentQ = questions[currentQuestion];
     const progress = ((currentQuestion + 1) / questions.length) * 100;
 
+    const [isWin, setIsWin] = useState(false);
     const handleNextStep = () => {
         if (currentQuestion + 1 < questions.length) {
             setTimeout(() => {
@@ -454,6 +456,7 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
                 );
             }, 1000);
         } else {
+            setIsWin(true);
             setTimeout(onSolve, SCENARIO.defaultTimeBeforeNextStep);
         }
     };
@@ -486,6 +489,14 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
 
     return (
         <AlphaCard progress={progress}>
+            <AlphaModal
+                isOpen={isWin}
+                variant={'success'}
+                message={'Puzzle validé'}
+                autoCloseDuration={SCENARIO.defaultDuration}
+                durationUnit={'ms'}
+            />
+
             <AnimatePresence mode="wait">
                 <motion.div
                     key={currentQuestion}
