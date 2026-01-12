@@ -1,6 +1,9 @@
 'use client';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import QuizGame, { Question } from '@/components/puzzles/QuizGame';
+import QuizGame, { Question, QuizScenarioStep } from '@/components/puzzles/QuizGame';
+import { CHARACTERS } from '@/data/characters';
+import { DialogueLine } from '@/types/dialogue';
+import { say } from '@/utils/dialogueUtils';
 
 const QUESTIONS_POLICE: Question[] = [
     {
@@ -16,14 +19,16 @@ const QUESTIONS_POLICE: Question[] = [
     },
 ];
 
+const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
+    init: [say(CHARACTERS.fabien, 'Répondez instinctivement à ces quelques questions.')],
+};
+
 export default function QuizTextPage() {
     return (
         <>
-            <AlphaHeader
-                title={"Laboratoire d'Analyse"}
-                subtitle="Utilisez vos outils pour analyser les preuves."
-            />
+            <AlphaHeader title={'Réponses textuelles'} />
             <QuizGame
+                scripts={SCRIPTS}
                 questions={QUESTIONS_POLICE}
                 onSolve={() =>
                     window.alert(

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
@@ -11,9 +11,14 @@ import { AlphaButton, AlphaButtonVariants } from '@/components/alpha/AlphaButton
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
+
+export type RebuildPuzzleScenarioStep = 'idle' | 'intro' | 'success' | 'error';
 
 export type Piece = {
     id: string;
@@ -30,31 +35,44 @@ export default function RebuildPuzzle({
     correctOrder,
     onSolve,
     isSolved,
+    scripts = {},
 }: RebuildPuzzleProps) {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<RebuildPuzzleScenarioStep>(scripts);
+
     const [pool, setPool] = useState<Piece[]>([]);
     const [slots, setSlots] = useState<(Piece | null)[]>([]);
     const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
-    const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
-    const [isMounted, setIsMounted] = useState(false);
 
-    // ref pour éviter les re-mélanges inutiles si le parent re-render
-    const initializedRef = useRef(false);
-
-    // pour tout initialiser au montage
     useEffect(() => {
-        setIsMounted(true);
-
-        if (!initializedRef.current) {
+        const timer = setTimeout(() => {
+            // mélange initial
             const shuffled = [...allPieces].sort(() => Math.random() - 0.5);
             setPool(shuffled);
             setSlots(Array(correctOrder.length).fill(null));
-            initializedRef.current = true;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
+            // déclenche l'intro si pas résolu
+            if (!isSolved) {
+                triggerPhase('intro');
+            }
+        }, 0);
+
+        return () => clearTimeout(timer);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Transition après le dialogue d'intro
+    useScenarioTransition(gameState, isDialogueOpen, {
+        intro: () => {
+            // Rien de spécial à faire ici, le jeu est déjà prêt
+            triggerPhase('idle');
+        },
+        success: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
 
     const handlePoolPieceClick = (piece: Piece) => {
-        if (status === 'success') return;
+        if (gameState === 'success') return;
         if (selectedPiece?.id === piece.id) {
             setSelectedPiece(null);
         } else {
@@ -63,17 +81,19 @@ export default function RebuildPuzzle({
     };
 
     const handleSlotClick = (index: number) => {
-        if (status === 'success') return;
+        if (gameState === 'success') return;
 
         const currentSlotPiece = slots[index];
 
         if (selectedPiece) {
+            // PLACER UNE PIECE DANS UN SLOT
             const newSlots = [...slots];
             newSlots[index] = selectedPiece;
             setSlots(newSlots);
 
             setPool((prevPool) => {
                 const filteredPool = prevPool.filter((p) => p.id !== selectedPiece.id);
+                // Si le slot avait déjà une pièce, on la remet dans le pool
                 if (currentSlotPiece) {
                     return [...filteredPool, currentSlotPiece];
                 }
@@ -81,55 +101,65 @@ export default function RebuildPuzzle({
             });
 
             setSelectedPiece(null);
-            setStatus('idle');
         } else if (currentSlotPiece) {
+            // RETIRER UNE PIECE D'UN SLOT
             const newSlots = [...slots];
             newSlots[index] = null;
             setSlots(newSlots);
 
             setPool((prev) => [...prev, currentSlotPiece]);
-            setStatus('idle');
         }
     };
 
     const checkCombination = () => {
+        // Vérifie si tous les slots sont remplis
         if (slots.some((s) => s === null)) {
-            setStatus('error');
-            setTimeout(() => setStatus('idle'), 1000);
+            triggerPhase('error');
+            setTimeout(() => triggerPhase('idle'), 1000);
             return;
         }
 
+        // Vérifie l'ordre
         const isCorrect = slots.every((piece, index) => piece?.id === correctOrder[index]);
 
         if (isCorrect) {
-            setStatus('success');
-            setTimeout(() => {
-                onSolve();
-            }, SCENARIO.defaultTimeBeforeNextStep);
+            triggerPhase('success');
+            // La transition 'success' gérée par useScenarioTransition appellera onSolve
         } else {
-            setStatus('error');
-            setTimeout(() => setStatus('idle'), 1500);
+            triggerPhase('error');
+            setTimeout(() => triggerPhase('idle'), 1500);
         }
     };
 
-    if (!isMounted) return null;
+    if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     let buttonVariant: AlphaButtonVariants = 'primary';
     let buttonText = 'ANALYSER';
 
-    if (status === 'success') {
+    if (gameState === 'success') {
         buttonVariant = 'primary';
         buttonText = 'ACCÈS AUTORISÉ';
-    } else if (status === 'error') {
+    } else if (gameState === 'error') {
         buttonVariant = 'danger';
         buttonText = 'ERREUR DE RECONSTITUTION';
     }
 
-    if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
-
     return (
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            {/* LEFT COLUMN: Assembly Zone */}
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
+            <AlphaModal
+                isOpen={gameState === 'success' && !isDialogueOpen}
+                title={'Succès'}
+                message="Epreuve passée avec succès"
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+            />
+
             <AlphaCard
                 contentClassName="flex flex-col items-center space-y-6"
                 title={'Assembly Zone'}
@@ -137,9 +167,9 @@ export default function RebuildPuzzle({
                 <div
                     className={clsx(
                         'relative w-56 overflow-hidden rounded border-2 transition-all duration-300',
-                        status === 'success'
+                        gameState === 'success'
                             ? 'border-brand-emerald shadow-[0_0_15px_var(--color-brand-emerald)]'
-                            : status === 'error'
+                            : gameState === 'error'
                               ? 'border-brand-error shadow-[0_0_15px_var(--color-brand-error)]'
                               : 'border-surface bg-surface-highlight'
                     )}
@@ -181,10 +211,10 @@ export default function RebuildPuzzle({
                     ))}
                 </div>
 
-                {status === 'success' && <AlphaSuccess message={'Séquence validée !'} />}
-                {status === 'error' && <AlphaError message={'Séquence incorrecte !'} />}
+                {gameState === 'success' && <AlphaSuccess message={'Séquence validée !'} />}
+                {gameState === 'error' && <AlphaError message={'Séquence incorrecte !'} />}
 
-                {status !== 'error' && status !== 'success' && (
+                {gameState !== 'error' && gameState !== 'success' && (
                     <AlphaButton onClick={checkCombination} variant={buttonVariant}>
                         {buttonText}
                     </AlphaButton>
@@ -206,7 +236,11 @@ export default function RebuildPuzzle({
                                     layout
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+                                    exit={{
+                                        opacity: 0,
+                                        scale: 0.5,
+                                        transition: { duration: 0.2 },
+                                    }}
                                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                                     onClick={() => handlePoolPieceClick(piece)}
                                     className={clsx(

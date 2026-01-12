@@ -1,6 +1,6 @@
 'use client';
-import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import QuizGame, { Question, QuizScenarioStep } from '@/components/puzzles/QuizGame';
+import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import QuizGame, { Question } from '@/components/puzzles/QuizGame';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -83,7 +83,9 @@ const QUESTIONS_MMI: Question[] = [
     },
 ];
 
-const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
+export type QCMScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
+
+const SCRIPTS: Partial<Record<QCMScenarioStep, DialogueLine[]>> = {
     init: [
         say(
             CHARACTERS.fabien,
@@ -91,59 +93,70 @@ const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            'Bon les élèves de 3e année vous ont déjà expliqué la situation j’imagine mais pour faire court, un élève de MMI vient de développer un virus qui menace toutes les machines alors Pierre-Alain a créé un antivirus mais la clé USB sur laquelle il était stocké a été subtilisée par cet élève.'
+            'Bon les élèves de 3e année vous ont déjà expliqué la situation j’imagine, donc faisons court.'
         ),
         say(
             CHARACTERS.fabien,
-            'Comme par hasard, cet évènement est survenu juste après une SAE de dev… On a reçu un message de la part du malfaiteur et il nous a laissé un puzzle pour retrouver la clé USB avec l’antivirus préparé par M. Jacquot.'
+            'Un élève vient de développer un virus qui menace toutes les machines, alors M. Jacquot a créé un antivirus.'
         ),
         say(
             CHARACTERS.fabien,
-            ' Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des première année, donc vous avez été choisis pour trouver cette clé, pour l’activer et sauver l’IUT. D’ailleurs, même si c’est pas la priorité ultime, il faudrait aussi trouver l’identité de l’élève qui a créé ce virus…'
+            "Le problème, c'est que la clé USB sur laquelle il était stocké a été subtilisée par ce mystérieux élève..."
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Comme par hasard, cet évènement est survenu juste après une SAE de dev !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'On a reçu un message du malfaiteur et il nous a laissé des puzzles pour retrouver notre précieuse clé USB !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des premières années.'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Vous avez donc été choisis pour trouver cette clé, l’activer et sauver l’IUT !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            "D’ailleurs, même si ce n'est pas la priorité ultime, il faudrait aussi trouver l’identité de l’élève qui a créé ce virus..."
         ),
         say(
             CHARACTERS.paj,
-            'Si on l’attrape, il subira les conséquences de ses actes et je m’en assurerai personnellement.',
+            'Si on l’attrape, il subira les conséquences de ses actes, et je m’en assurerai personnellement.',
             {}
         ),
-        say(CHARACTERS.harry, 'Bienvenue ! HAHAHAHAHA !', { side: 'left' }),
+        say(CHARACTERS.unknown, 'Bienvenue ! HAHAHAHAHA !'),
         say(
-            CHARACTERS.harry,
-            'Alors comme ça vous voulez retrouver l’antivirus et empêcher mon petit bébé de prendre le contrôle de l’IUT ?',
-            { side: 'left' }
+            CHARACTERS.unknown,
+            'Alors comme ça vous voulez retrouver l’antivirus et empêcher mon petit bébé de prendre le contrôle de votre cher IUT ?'
         ),
         say(
-            CHARACTERS.harry,
-            'Bonne chance, on va voir si les MMI sont si intelligents que ça… D’ailleurs comme vous pouvez le voir, dans maintenant moins d’une heure le virus va s’activer et vous pourrez dire bye-bye à votre diplôme !',
-            { side: 'left' }
+            CHARACTERS.unknown,
+            'Bonne chance, on va voir si les MMI sont si intelligents que ça...'
+        ),
+        say(
+            CHARACTERS.unknown,
+            'D’ailleurs comme vous pouvez le voir, dans maintenant moins d’une heure le virus va s’activer et vous pourrez dire bye-bye à votre diplôme !'
         ),
     ],
     win: [
         say(
-            CHARACTERS.harry,
-            'Bravo, maintenant que vous vous croyez tellement intelligents, passons à l’énigme suivante…',
-            { emotion: 'scared' }
+            CHARACTERS.unknown,
+            'Bravo, maintenant que vous vous croyez tellement intelligents, passons à l’énigme suivante...'
         ),
     ],
 };
 
-export default function QuizQcmPage() {
+export default function QcmPuzzle1({ isSolved, onSolve }: PuzzleProps) {
     return (
-        <>
-            <AlphaHeader
-                title={'Échauffement MMI'}
-                subtitle="Répondez correctement pour débloquer l'accès au système."
-            />
-
-            <QuizGame
-                scripts={SCRIPTS}
-                questions={QUESTIONS_MMI}
-                onSolve={() =>
-                    window.alert(
-                        "Bravo, vous avez réussi le module de jeu ! Lors de l'escape game, on passerait à l'étape suivante."
-                    )
-                }
-            />
-        </>
+        <QuizGame
+            scripts={SCRIPTS}
+            questions={QUESTIONS_MMI}
+            onSolve={onSolve}
+            isSolved={isSolved}
+        />
     );
 }

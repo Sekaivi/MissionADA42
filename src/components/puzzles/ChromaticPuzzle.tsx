@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
-import { ChromaticPuzzleScenarioStep } from '@/app/alpha/camera/chromatic-puzzle-page/page';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
@@ -21,6 +20,8 @@ import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario'
 import { PRESETS } from '@/utils/colorPresets';
 
 import { PuzzleProps } from './PuzzleRegistry';
+
+export type ChromaticPuzzleScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
 
 const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
@@ -222,6 +223,14 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                 onComplete={onDialogueComplete}
             />
 
+            <AlphaModal
+                isOpen={phase === 'win' && !isDialogueOpen}
+                title={'Succès'}
+                message="Epreuve passée avec succès"
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+            />
+
             <AlphaCard title="Module de Sécurité Chromatique">
                 <AlphaSequenceDisplay
                     sequence={sequence}
@@ -263,13 +272,6 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                     </AlphaVideoContainer>
                 </AlphaCard>
             )}
-
-            <AlphaModal
-                isOpen={phase === 'win' && !isDialogueOpen}
-                message={feedbackMsg}
-                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
-                durationUnit={'ms'}
-            />
 
             {(phase === 'scan' || phase === 'win') && !isDialogueOpen && (
                 <div className="flex justify-center">

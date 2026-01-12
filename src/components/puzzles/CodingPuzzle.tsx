@@ -5,15 +5,19 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaPuzzleHeader } from '@/components/alpha/AlphaGameHeader';
 import { AlphaMessageScreen, MessageVariant } from '@/components/alpha/AlphaMessageScreen';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaScanlines } from '@/components/alpha/AlphaScanlines';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { CodeBlock, TargetSlot } from '@/components/alpha/HUD';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
 import { Difficulty } from '@/types/game';
 
-type GameState = 'intro' | 'playing' | 'win' | 'breach' | 'lockdown';
+export type CodingPuzzleGameState = 'intro' | 'playing' | 'win' | 'breach' | 'lockdown';
 
 const PUZZLE_CONSTANTS = {
     STARTING_LINES: 3,
@@ -126,11 +130,13 @@ const IntroScreen = ({ difficulty, setDifficulty, onStart }: IntroScreenProps) =
     </div>
 );
 
-export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
+export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<CodingPuzzleGameState>(scripts);
+
     const { data: orientationData, requestPermission, permissionGranted } = useOrientation();
 
     // States
-    const [gameState, setGameState] = useState<GameState>('intro');
     const [difficulty, setDifficulty] = useState<Difficulty>('easy');
     const [activeLinesCount, setActiveLinesCount] = useState(PUZZLE_CONSTANTS.STARTING_LINES);
 
@@ -223,24 +229,24 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         setActiveLinesCount(PUZZLE_CONSTANTS.STARTING_LINES);
         setupLevel(difficulty, PUZZLE_CONSTANTS.STARTING_LINES);
         lastTimeRef.current = 0;
-        setGameState('playing');
+        triggerPhase('playing');
     };
 
     const handleRetry = () => {
         const nextCount = activeLinesCount + 1;
         setActiveLinesCount(nextCount);
         setupLevel(difficulty, nextCount);
-        setGameState('playing');
+        triggerPhase('playing');
     };
 
     const verifyCode = () => {
         const allCorrect = blocks.every((b) => b.isLocked && b.targetSlotId === b.placedSlotId);
 
         if (allCorrect) {
-            setGameState('win');
+            triggerPhase('win');
         } else {
             const maxAvailable = PUZZLE_DATA[difficulty].length;
-            setGameState(activeLinesCount < maxAvailable ? 'breach' : 'lockdown');
+            triggerPhase(activeLinesCount < maxAvailable ? 'breach' : 'lockdown');
         }
     };
 
@@ -375,12 +381,36 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         };
     }, [gameState]);
 
-    // --- RENDU ---
+    // init
+    useEffect(() => {
+        triggerPhase('intro');
+    }, [triggerPhase]);
+
+    // transitions automatiques après dialogues
+    useScenarioTransition(gameState, isDialogueOpen, {
+        win: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     return (
         <div className="h-[100dvh]">
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
+            <AlphaModal
+                isOpen={gameState === 'win' && !isDialogueOpen}
+                title={'Succès'}
+                message="Epreuve passée avec succès"
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+            />
+
             <AlphaScanlines />
 
             <AlphaPuzzleHeader
@@ -414,9 +444,7 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                     actionLabel={MESSAGE_CONFIG[gameState].actionLabel}
                     titleClassName={MESSAGE_CONFIG[gameState].titleClass}
                     onAction={() => {
-                        if (gameState === 'win') {
-                            onSolve();
-                        } else if (gameState === 'breach') {
+                        if (gameState === 'breach') {
                             handleRetry();
                         } else if (gameState === 'lockdown') {
                             window.location.reload();

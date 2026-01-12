@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { BoltIcon, StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
-import ChromaticPuzzle1 from '@/components/SCENARIO/1-ChromaticGame/ChromaticPuzzle';
-import { CodingPuzzle } from '@/components/puzzles/CodingPuzzle';
-import { OrientationPuzzle } from '@/components/puzzles/OrientationPuzzle';
-import { SpinPuzzle } from '@/components/puzzles/SpinPuzzle';
-import { SCENARIO } from '@/data/alphaScenario';
+import QcmPuzzle1 from '@/components/SCENARIO/1-QcmGame/QcmPuzzle';
+import SpinPuzzle2 from '@/components/SCENARIO/2-SpinPuzzle/SpinPuzzle';
+import ChromaticPuzzle3 from '@/components/SCENARIO/3-ChromaticGame/ChromaticPuzzle';
+import CodingPuzzle4 from '@/components/SCENARIO/4-CodingPuzzle/CodingPuzzle';
+import OrientationPuzzle5 from '@/components/SCENARIO/5-OrientationPuzzle/OrientationPuzzle';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 
@@ -24,59 +24,6 @@ const formatDuration = (ms: number) => {
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
     return `${m}m ${s}s`;
-};
-
-// Puzzle test
-const TestPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
-    const [charging, setCharging] = useState(false);
-    const [isValid, setIsValid] = useState(false);
-    const handleConnect = () => {
-        setCharging(true);
-        setTimeout(() => {
-            setCharging(false);
-            setIsValid(true);
-
-            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
-        }, 1500);
-    };
-    if (isSolved)
-        return (
-            <div className="rounded-xl border border-green-500 bg-green-900/20 p-6 text-center">
-                <h2 className="text-xl font-bold text-green-400">SYSTÈME STABILISÉ</h2>
-            </div>
-        );
-    return (
-        <div className="border-brand-purple rounded-xl border bg-purple-900/20 p-6 text-center">
-            <h2 className="text-brand-purple mb-4 text-xl font-bold">PUZZLE TEST : Surcharge</h2>
-
-            {isValid ? (
-                <>
-                    <p className="mb-6 text-sm">
-                        Le noyau est stabilisé. Bravo ! Vous allez être redirigé...
-                    </p>
-                </>
-            ) : (
-                <>
-                    <p className="mb-6 text-sm">
-                        Le noyau est instable. Redirigez l'énergie manuellement.
-                    </p>
-                    <button
-                        onClick={handleConnect}
-                        disabled={charging}
-                        className={`relative w-full overflow-hidden rounded-lg py-4 font-bold transition-all ${charging ? 'cursor-wait bg-purple-900 text-purple-300' : 'bg-brand-purple text-white hover:bg-purple-500'}`}
-                    >
-                        <div className="relative z-10 flex items-center justify-center gap-2">
-                            <BoltIcon className={`h-5 w-5 ${charging ? 'animate-pulse' : ''}`} />
-                            {charging ? 'REDIRECTION EN COURS...' : 'REDIRIGER LE FLUX'}
-                        </div>
-                        <div
-                            className={`absolute top-0 left-0 h-full bg-white/20 transition-all duration-[1500ms] ease-out ${charging ? 'w-full' : 'w-0'}`}
-                        />
-                    </button>
-                </>
-            )}
-        </div>
-    );
 };
 
 // écran de victoire (fin de l'escape game)
@@ -176,11 +123,12 @@ export const DefeatScreen = () => (
 );
 
 export const PUZZLE_COMPONENTS = {
-    'test-puzzle': TestPuzzle,
-    'chromatic-puzzle': ChromaticPuzzle1,
-    'orientation-puzzle': OrientationPuzzle,
-    'spin-puzzle': SpinPuzzle,
-    'coding-puzzle': CodingPuzzle,
+    'qcm-puzzle': QcmPuzzle1,
+    'spin-puzzle': SpinPuzzle2,
+    'chromatic-puzzle': ChromaticPuzzle3,
+    'coding-puzzle': CodingPuzzle4,
+    'orientation-puzzle': OrientationPuzzle5,
+
     'victory-screen': VictoryScreen,
 };
 export type PuzzleComponentId = keyof typeof PUZZLE_COMPONENTS;

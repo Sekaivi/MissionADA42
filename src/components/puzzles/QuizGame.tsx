@@ -431,8 +431,6 @@ const CodeGame = ({
 };
 
 export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }: QuizGameProps) {
-    const [isWin, setIsWin] = useState(false);
-
     const {
         gameState: phase,
         triggerPhase,
@@ -450,7 +448,6 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
             triggerPhase('playing');
         },
         win: () => {
-            setIsWin(true);
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
     });
@@ -521,10 +518,10 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
                 onComplete={onDialogueComplete}
             />
             <AlphaModal
-                isOpen={isWin}
+                isOpen={phase === 'win' && !isDialogueOpen}
                 variant={'success'}
                 message={'Puzzle validé'}
-                autoCloseDuration={SCENARIO.defaultDuration}
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
             />
 

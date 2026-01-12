@@ -12,6 +12,14 @@ export const CHARACTERS: Record<string, Character> = {
         },
         defaultSide: 'left',
     },
+    unknown: {
+        id: 'fanfaron-mystérieux',
+        name: 'Fanfaron mystérieux',
+        avatars: {
+            default: '/images/avatars/mysterious.jpg',
+        },
+        defaultSide: 'left',
+    },
     fabien: {
         id: 'fabien',
         name: 'Fabien Romanens',

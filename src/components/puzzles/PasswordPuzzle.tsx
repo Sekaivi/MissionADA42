@@ -8,26 +8,47 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaInput } from '@/components/alpha/AlphaInput';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { GameContext, RuleStatus } from '@/types/passwordGame';
 import { PASSWORD_RULES } from '@/utils/passwordRules';
 
-export const PasswordPuzzle = ({ onSolve, isSolved }: PuzzleProps) => {
+export type PasswordPuzzleScenarioStep = 'idle' | 'intro' | 'playing' | 'win';
+
+export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<PasswordPuzzleScenarioStep>(scripts);
+
     const [password, setPassword] = useState('');
     const [isMounted, setIsMounted] = useState(false);
 
+    // init lazy du contexte de jeu
     const [context] = useState<GameContext>(() => ({
         sessionId: generateRandomId(),
         requiredSum: Math.floor(Math.random() * 10) + 15,
     }));
 
     useEffect(() => {
+        // montage initial
         const timer = setTimeout(() => {
             setIsMounted(true);
+            if (!isSolved) {
+                triggerPhase('intro');
+            }
         }, 0);
         return () => clearTimeout(timer);
-    }, []);
+    }, [isSolved, triggerPhase]);
+
+    useScenarioTransition(gameState, isDialogueOpen, {
+        intro: () => {
+            triggerPhase('playing');
+        },
+        win: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
 
     const ruleStates = useMemo(() => {
         if (!isMounted) return [];
@@ -57,20 +78,18 @@ export const PasswordPuzzle = ({ onSolve, isSolved }: PuzzleProps) => {
         return ruleStates.every((r) => r.status === 'valid');
     }, [ruleStates, isMounted]);
 
-    // déclencher le onSolve du parent quand c'est gagné
     useEffect(() => {
-        if (isWin && !isSolved) {
+        if (isWin && gameState === 'playing' && !isSolved) {
             const timer = setTimeout(() => {
-                onSolve();
-            }, SCENARIO.defaultTimeBeforeNextStep);
+                triggerPhase('win');
+            }, 500);
             return () => clearTimeout(timer);
         }
-    }, [isWin, isSolved, onSolve]);
+    }, [isWin, gameState, isSolved, triggerPhase]);
 
-    // affichage progressif des règles (validées + courante + suivante)
+    // affichage progressif des règles
     const visibleRules = useMemo(() => {
         const lastValidIndex = ruleStates.map((r) => r.status).lastIndexOf('valid');
-        // on affiche jusqu'à 1 règle après la dernière valide pour inciter à continuer
         return ruleStates.slice(0, lastValidIndex + 2);
     }, [ruleStates]);
 
@@ -81,51 +100,58 @@ export const PasswordPuzzle = ({ onSolve, isSolved }: PuzzleProps) => {
     }
 
     return (
-        <AlphaCard title="/// SECURITY_GATE ///">
+        <>
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
             <AlphaModal
-                isOpen={isWin}
-                variant="success"
-                title="Mot de passe"
-                message="Mot de passe valide !"
-                subMessage="Le mot de passe a été validé ! On peut passer à la suite !"
+                isOpen={gameState === 'win' && !isDialogueOpen}
+                title={'Succès'}
+                message="Epreuve passée avec succès"
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
             />
-            <div className="flex w-full flex-col items-center justify-center font-mono">
-                <div className="mb-6 text-center">
-                    <p className="text-muted text-xs tracking-widest uppercase">
-                        Auth Protocol v9.0
-                    </p>
-                </div>
 
-                <SecurityHud sessionId={context.sessionId} targetSum={context.requiredSum} />
+            <AlphaCard title="/// SECURITY_GATE ///">
+                <div className="flex w-full flex-col items-center justify-center font-mono">
+                    <div className="mb-6 text-center">
+                        <p className="text-muted text-xs tracking-widest uppercase">
+                            Auth Protocol v9.0
+                        </p>
+                    </div>
 
-                <div className="relative mb-8 w-full">
-                    <AlphaInput
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isWin}
-                        variant={isWin ? 'success' : 'default'}
-                        placeholder="ENTER_PASSWORD..."
-                        autoComplete="off"
-                        spellCheck={false}
-                        className="pr-20 font-mono tracking-wider"
-                    />
+                    <SecurityHud sessionId={context.sessionId} targetSum={context.requiredSum} />
 
-                    <div className="text-muted pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px]">
-                        LEN: {password.length}
+                    <div className="relative mb-8 w-full">
+                        <AlphaInput
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={isWin || isDialogueOpen}
+                            variant={isWin ? 'success' : 'default'}
+                            placeholder="ENTER_PASSWORD..."
+                            autoComplete="off"
+                            spellCheck={false}
+                            className="pr-20 font-mono tracking-wider"
+                        />
+
+                        <div className="text-muted pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                            LEN: {password.length}
+                        </div>
+                    </div>
+
+                    <div className="flex w-full flex-col-reverse gap-2">
+                        <div className="flex w-full flex-col transition-all">
+                            {visibleRules.map((item) => (
+                                <RuleItem key={item.id} rule={item} status={item.status} />
+                            ))}
+                        </div>
                     </div>
                 </div>
-
-                <div className="flex w-full flex-col-reverse gap-2">
-                    <div className="flex w-full flex-col transition-all">
-                        {visibleRules.map((item) => (
-                            <RuleItem key={item.id} rule={item} status={item.status} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </AlphaCard>
+            </AlphaCard>
+        </>
     );
 };
 

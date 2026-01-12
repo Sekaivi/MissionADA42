@@ -15,6 +15,7 @@ interface AlphaCircularGaugeProps {
     className?: string;
     contentClassName?: string;
     children?: React.ReactNode;
+    animate?: boolean; // forcer l'animation css fluide
 }
 
 const VARIANT_STYLES: Record<GaugeVariant, string> = {
@@ -35,6 +36,7 @@ export const AlphaCircularGauge: React.FC<AlphaCircularGaugeProps> = ({
     className,
     contentClassName,
     children,
+    animate = true,
 }) => {
     // calcul du pourcentage clamped entre 0 et 100
     const percentage = progress ?? Math.min(100, Math.max(0, (value / max) * 100));
@@ -54,7 +56,7 @@ export const AlphaCircularGauge: React.FC<AlphaCircularGaugeProps> = ({
         >
             <svg
                 // overflow-visible pour permettre à l'ombre de sortir de la viewBox
-                className="h-full w-full -rotate-90 transform overflow-visible transition-all duration-500 ease-out"
+                className="h-full w-full -rotate-90 transform overflow-visible"
                 viewBox="0 0 100 100"
             >
                 {/* cercle de fond */}
@@ -80,7 +82,7 @@ export const AlphaCircularGauge: React.FC<AlphaCircularGaugeProps> = ({
                     strokeDashoffset={offset}
                     strokeLinecap="round"
                     className={clsx(
-                        'transition-all duration-300 ease-out',
+                        animate && 'transition-all duration-300 ease-out',
                         VARIANT_STYLES[variant],
                         showGlow && 'drop-shadow-[0_0_5px_currentColor]'
                     )}

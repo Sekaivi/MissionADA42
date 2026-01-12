@@ -13,8 +13,10 @@ import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
 
 const LEVELS = [
@@ -23,10 +25,14 @@ const LEVELS = [
     { target: 720, label: '2 Tours à Droite', direction: 'right' },
 ];
 
-export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
+export type SpinPuzzleScenarioStep = 'idle' | 'intro' | 'playing' | 'won';
+
+export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<SpinPuzzleScenarioStep>(scripts);
+
     const { data, error, permissionGranted, requestPermission } = useOrientation();
     const [levelIndex, setLevelIndex] = useState(0);
-    const [gameState, setGameState] = useState<'intro' | 'playing' | 'won'>('intro');
     const [totalRotation, setTotalRotation] = useState(0);
     const lastAlphaRef = useRef<number | null>(null);
 
@@ -34,7 +40,7 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         setTotalRotation(0);
         lastAlphaRef.current = data.alpha;
         setLevelIndex(0);
-        setGameState('playing');
+        triggerPhase('playing');
     };
 
     const nextLevel = useCallback(() => {
@@ -42,9 +48,9 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
         if (levelIndex + 1 < LEVELS.length) {
             setLevelIndex((prev) => prev + 1);
         } else {
-            setGameState('won');
+            triggerPhase('won');
         }
-    }, [levelIndex]);
+    }, [levelIndex, triggerPhase]);
 
     // calcul de rotation
     useEffect(() => {
@@ -84,15 +90,31 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
             const timer = setTimeout(nextLevel, 500);
             return () => clearTimeout(timer);
         }
-        if (gameState === 'won') {
+    }, [isTargetReached, gameState, nextLevel]);
+
+    // init
+    useEffect(() => {
+        triggerPhase('intro');
+    }, [triggerPhase]);
+
+    // transitions automatiques après dialogues
+    useScenarioTransition(gameState, isDialogueOpen, {
+        intro: startGame,
+        won: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
-        }
-    }, [isTargetReached, gameState, nextLevel, onSolve]);
+        },
+    });
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     return (
         <>
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
             {/* cas iOS demande la permission */}
             {!permissionGranted && !error && (
                 <AlphaCard title={'Permissions requises'}>
@@ -120,7 +142,7 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                             )}
 
                             <AlphaModal
-                                isOpen={gameState === 'won'}
+                                isOpen={gameState === 'won' && !isDialogueOpen}
                                 message={'Protocole complété avec succès.'}
                                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                                 durationUnit={'ms'}
@@ -150,6 +172,7 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
                                         variant={getGaugeVariant()}
                                         showGlow={isTargetReached}
                                         size="h-56 w-56"
+                                        animate={false}
                                     >
                                         <span
                                             className={`text-3xl font-bold ${isWrongDirection ? 'text-brand-error' : 'text-foreground'}`}

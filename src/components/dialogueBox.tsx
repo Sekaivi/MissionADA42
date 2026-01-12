@@ -38,18 +38,27 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
 
     const { displayedText, isTyping, completeText } = useTypewriter(currentLine?.text || '', 20);
 
-    const handleInteraction = useCallback(() => {
-        if (!isOpen) return;
-        if (isTyping) {
-            completeText();
-        } else {
-            if (currentIndex < script.length - 1) {
-                setCurrentIndex((prev) => prev + 1);
-            } else {
-                onComplete();
+    const handleInteraction = useCallback(
+        (e?: React.MouseEvent | KeyboardEvent) => {
+            // empêche le clic de remonter vers l'overlay si on clique sur la boîte
+            if (e && 'stopPropagation' in e) {
+                e.stopPropagation();
             }
-        }
-    }, [isOpen, isTyping, completeText, currentIndex, script.length, onComplete]);
+
+            if (!isOpen) return;
+
+            if (isTyping) {
+                completeText();
+            } else {
+                if (currentIndex < script.length - 1) {
+                    setCurrentIndex((prev) => prev + 1);
+                } else {
+                    onComplete();
+                }
+            }
+        },
+        [isOpen, isTyping, completeText, currentIndex, script.length, onComplete]
+    );
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -65,30 +74,37 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
     return (
         <AnimatePresence>
             {isOpen && currentLine && (
-                <div className="pointer-events-none fixed inset-0 z-50 m-0 flex items-end justify-center px-4 pb-8">
+                <motion.div
+                    key="dialogue-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.3 } }}
+                    className="fixed inset-0 z-50 m-0 flex items-end justify-center bg-black/50 px-4 pb-8"
+                    onClick={handleInteraction}
+                >
                     <motion.div
                         key={`dialogue-session-${script[0]?.id}`}
                         initial={{ opacity: 0, y: 50, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95, transition: { duration: 0.2 } }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 border-slate-600 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-md"
+                        className="border-border bg-surface pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 p-6 shadow-2xl backdrop-blur-md"
                         onClick={handleInteraction}
                     >
                         <motion.div
-                            key={`name-${currentLine.id}`}
+                            key={`name-${currentLine.speaker}`}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className={clsx(
-                                'bg-brand-emerald border-brand-emerald absolute -top-5 rounded border px-4 py-1 text-sm font-bold tracking-wider text-white uppercase shadow-md',
+                                'bg-brand-emerald border-brand-emerald absolute -top-5 rounded border px-4 py-1 text-sm font-bold tracking-wider uppercase shadow-md',
                                 isRightAvatar ? 'right-6' : 'left-6'
                             )}
                         >
                             {currentLine.speaker}
                         </motion.div>
 
-                        <div className="relative z-10 flex items-start gap-6">
+                        <div className="flex items-start gap-3" onClick={handleInteraction}>
                             <AnimatePresence mode="popLayout">
                                 {currentLine.avatar && (
                                     <motion.div
@@ -106,7 +122,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                                         }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                         className={clsx(
-                                            'relative h-24 w-24 flex-shrink-0 overflow-hidden rounded border-2 border-slate-500 bg-slate-800 shadow-inner',
+                                            'border-border relative h-18 w-18 flex-shrink-0 overflow-hidden rounded border-2 shadow-inner',
                                             isRightAvatar ? 'order-last' : ''
                                         )}
                                     >
@@ -122,7 +138,6 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                                                 alt={currentLine.speaker}
                                                 fill
                                                 className="object-cover"
-                                                sizes="96px"
                                             />
                                         </motion.div>
                                     </motion.div>
@@ -130,7 +145,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                             </AnimatePresence>
 
                             <div className="relative z-0 flex-grow pt-2">
-                                <p className="min-h-[4rem] font-mono text-lg leading-relaxed text-slate-100">
+                                <p className="min-h-[4rem] font-mono text-sm leading-relaxed">
                                     {displayedText}
                                     {isTyping && (
                                         <motion.span
@@ -149,16 +164,12 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className={clsx(
-                                    'text-brand-emerald absolute bottom-4 flex items-center gap-2 transition-all duration-300',
-                                    // derniere ligne => texte gras/brillant
-                                    isLastLine
-                                        ? 'font-bold text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
-                                        : '',
-                                    isRightAvatar ? 'right-32' : 'right-4'
+                                    'text-brand-emerald absolute right-2 bottom-1.5 flex items-center gap-2 transition-all duration-300',
+                                    isLastLine ? 'font-bold text-emerald-400' : ''
                                 )}
                             >
                                 <span className="text-[10px] font-bold tracking-widest uppercase opacity-80">
-                                    {isLastLine ? 'Terminer' : 'Click / Space'}
+                                    {isLastLine ? 'Terminer' : 'Continuer'}
                                 </span>
 
                                 <motion.div
@@ -166,17 +177,15 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                                     transition={{ repeat: Infinity, duration: 1.5 }}
                                 >
                                     {isLastLine ? (
-                                        // check pour la fin
                                         <CheckIcon className={'h-4 w-4'} />
                                     ) : (
-                                        // flèche pour la suite
                                         <ArrowRightIcon className={'h-4 w-4'} />
                                     )}
                                 </motion.div>
                             </motion.div>
                         )}
                     </motion.div>
-                </div>
+                </motion.div>
             )}
         </AnimatePresence>
     );

@@ -1,12 +1,10 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { ChromaticPuzzle } from '@/components/puzzles/ChromaticPuzzle';
+import { ChromaticPuzzle, ChromaticPuzzleScenarioStep } from '@/components/puzzles/ChromaticPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
-
-export type ChromaticPuzzleScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
 
 const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
     init: [

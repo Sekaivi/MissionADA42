@@ -65,7 +65,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
             {
                 href: '/alpha/camera/chromatic-puzzle-page',
                 title: 'Jeu de mémorisation de couleurs',
-                subtitle: 'Basé sur le composant ChromaticPuzzle valide',
+                subtitle: 'Basé sur le composant ChromaticPuzzle valide. Supporte les dialogues.',
                 icon: SwatchIcon,
                 isGame: true,
             },
@@ -97,29 +97,22 @@ const ALPHA_MODULES: ModuleGroup[] = [
             },
             {
                 href: '/alpha/sensors/orientation-puzzle-page',
-                title: "Jeu d'inclinaison",
-                subtitle: 'Basé sur le composant OrientationPuzzle valide',
-                icon: MapIcon,
-                isGame: true,
-            },
-            {
-                href: '/alpha/orientation-game',
-                title: "Séquenceur d'Orientation",
-                subtitle: "Jeu d'inclinaison (Tilt)",
+                title: "Séquence d'orientation (inclinaison)",
+                subtitle: 'Basé sur le composant OrientationPuzzle valide. Supporte les dialogues.',
                 icon: DevicePhoneMobileIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/sensors/spin-puzzle-page',
                 title: 'Jeu de rotation',
-                subtitle: 'Basé sur le composant SpinPuzzle valide',
+                subtitle: 'Basé sur le composant SpinPuzzle valide. Supporte les dialogues.',
                 icon: ArrowPathIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/sensors/coding-puzzle-page',
                 title: 'Jeu de code',
-                subtitle: 'Basé sur le composant CodingPuzzle valide',
+                subtitle: 'Basé sur le composant CodingPuzzle valide. Supporte les dialogues.',
                 icon: PuzzlePieceIcon,
                 isGame: true,
             },
@@ -160,35 +153,40 @@ const ALPHA_MODULES: ModuleGroup[] = [
             {
                 href: '/alpha/quiz/qcm',
                 title: 'QCM à la suite',
-                subtitle: 'Basé sur le composant QuizGame valide, qcm customisable',
+                subtitle:
+                    'Basé sur le composant QuizGame valide, qcm customisable. Supporte les dialogues.',
                 icon: SquaresPlusIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/quiz/text',
                 title: 'Réponse textuelle requise',
-                subtitle: 'Basé sur le composant QuizGame valide, customisable',
+                subtitle:
+                    'Basé sur le composant QuizGame valide, customisable. Supporte les dialogues.',
                 icon: PencilIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/quiz/trueFalse',
                 title: 'Vrai ou faux',
-                subtitle: 'Basé sur le composant QuizGame valide, customisable',
+                subtitle:
+                    'Basé sur le composant QuizGame valide, customisable. Supporte les dialogues.',
                 icon: ShieldCheckIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/quiz/rebuildPuzzle',
                 title: "Reconstitution d'image",
-                subtitle: 'Basé sur le composant RebuildPuzzle valide, customisable',
+                subtitle:
+                    'Basé sur le composant RebuildPuzzle valide, customisable. Supporte les dialogues.',
                 icon: PhotoIcon,
                 isGame: true,
             },
             {
-                href: '/alpha/quiz/code-secret',
+                href: '/alpha/quiz/secret-code',
                 title: 'Code secret',
-                subtitle: 'Basé sur le composant QuizGame valide, customisable',
+                subtitle:
+                    'Basé sur le composant QuizGame valide, customisable. Supporte les dialogues',
                 icon: LockOpenIcon,
                 isGame: true,
             },
@@ -202,14 +200,15 @@ const ALPHA_MODULES: ModuleGroup[] = [
             {
                 href: '/alpha/more-puzzles/password-game',
                 title: 'Jeu du mot de passe',
-                subtitle: 'Devine le mot de passe',
+                subtitle:
+                    'Devine le mot de passe. La config change automatiquement. Valide et Supporte les dialogues.',
                 icon: EyeIcon,
                 isGame: true,
             },
             {
                 href: '/alpha/more-puzzles/chest-code-puzzle-page',
                 title: 'Jeu du coffre',
-                subtitle: 'Trouvez comment ouvrir le coffre',
+                subtitle: 'Supporte les dialogues',
                 icon: PuzzlePieceIcon,
                 isGame: true,
             },

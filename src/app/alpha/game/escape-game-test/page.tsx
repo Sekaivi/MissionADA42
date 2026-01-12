@@ -7,7 +7,6 @@ import {
     BellAlertIcon,
     ClockIcon,
     ComputerDesktopIcon,
-    LightBulbIcon,
     RocketLaunchIcon,
     TrophyIcon,
     UserGroupIcon,
@@ -316,7 +315,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
                 className="text-brand-error mt-1 flex items-center gap-1 text-xs hover:text-red-300 disabled:opacity-50"
             >
                 <ArrowRightEndOnRectangleIcon className="h-3 w-3" />{' '}
-                {isLeaving ? 'Départ...' : 'Fin'}
+                {isLeaving ? 'Départ...' : 'Quitter'}
             </button>
         </div>
     </div>
@@ -482,32 +481,32 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
                 playerId={playerId}
             />
 
-            {isHost && !isGameWon && (
-                <div className="border-brand-purple/30 mb-6 rounded-lg border bg-black/20 p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                        <h5 className="text-brand-purple flex items-center gap-2 text-xs font-bold uppercase">
-                            <LightBulbIcon className="h-4 w-4" /> Solution
-                        </h5>
-                        <span className="text-muted text-xs">ID: {currentScenarioStep.id}</span>
-                    </div>
-                    <p className="mb-2 text-sm text-gray-300 italic">
-                        "{currentScenarioStep.description}"
-                    </p>
-                    <div className="border-brand-emerald text-brand-emerald mb-3 border-l-2 pl-3 font-mono text-sm font-bold">
-                        SOLUTION : {currentScenarioStep.solution}
-                    </div>
-                    {/* CORRECTION ANY: Typage explicite des indices */}
-                    {currentScenarioStep.hints.map((h: { id: string; text: string }) => (
-                        <div key={h.id} className="text-muted text-xs">
-                            💡 {h.text}
-                        </div>
-                    ))}
-                </div>
-            )}
+            {/*{isHost && !isGameWon && (*/}
+            {/*    <div className="border-brand-purple/30 mb-6 rounded-lg border bg-black/20 p-4">*/}
+            {/*        <div className="mb-2 flex items-center justify-between">*/}
+            {/*            <h5 className="text-brand-purple flex items-center gap-2 text-xs font-bold uppercase">*/}
+            {/*                <LightBulbIcon className="h-4 w-4" /> Solution*/}
+            {/*            </h5>*/}
+            {/*            <span className="text-muted text-xs">ID: {currentScenarioStep.id}</span>*/}
+            {/*        </div>*/}
+            {/*        <p className="mb-2 text-sm text-gray-300 italic">*/}
+            {/*            "{currentScenarioStep.description}"*/}
+            {/*        </p>*/}
+            {/*        <div className="border-brand-emerald text-brand-emerald mb-3 border-l-2 pl-3 font-mono text-sm font-bold">*/}
+            {/*            SOLUTION : {currentScenarioStep.solution}*/}
+            {/*        </div>*/}
+            {/*        /!* CORRECTION ANY: Typage explicite des indices *!/*/}
+            {/*        {currentScenarioStep.hints.map((h: { id: string; text: string }) => (*/}
+            {/*            <div key={h.id} className="text-muted text-xs">*/}
+            {/*                💡 {h.text}*/}
+            {/*            </div>*/}
+            {/*        ))}*/}
+            {/*    </div>*/}
+            {/*)}*/}
 
             {!gameState?.pendingProposal && (
                 <div
-                    className={`mb-8 ${isHost ? 'border-border border-t border-dashed pt-6' : ''}`}
+                    className={`mb-8`} // ${isHost ? 'border-border border-t border-dashed pt-6' : ''}
                 >
                     {isHost && !isGameWon && (
                         <h4 className="text-muted mb-4 text-center text-xs font-bold uppercase">
@@ -620,10 +619,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
         () => updateState({ ...gameState!, pendingProposal: null, lastUpdate: Date.now() }),
         [gameState, updateState]
     );
-
-    const handleManualSkip = useCallback(() => {
-        handleAccept();
-    }, [handleAccept]);
 
     const handleHostLogout = async () => {
         setIsLeaving(true);
@@ -743,14 +738,6 @@ const HostInterface = ({ onLogout }: { onLogout: () => void }) => {
                                 ))}
                             </div>
                         </div>
-                    </div>
-                    <div className="border-border mt-8 border-t pt-4">
-                        <button
-                            onClick={handleManualSkip}
-                            className="text-muted w-full text-xs underline hover:text-white"
-                        >
-                            Forcer la validation (Skip Étape)
-                        </button>
                     </div>
                 </>
             )}

@@ -18,14 +18,17 @@ import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useOrientationGesture } from '@/hooks/useOrientationGesture';
 import { Direction } from '@/types/orientation';
 
 // config du mini jeu
-const GAME_LENGTH = 6;
+export type OrientationPuzzleGameState = 'intro' | 'playing' | 'won';
+const GAME_LENGTH = 1;
 const POSSIBLE_DIRECTIONS: Direction[] = ['Haut', 'Bas', 'Gauche', 'Droite'];
 
 const DIRECTION_CONFIG: Record<
@@ -65,7 +68,10 @@ const DIRECTION_CONFIG: Record<
     },
 };
 
-export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
+export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<OrientationPuzzleGameState>(scripts);
+
     const { data, error, permissionGranted, requestPermission } = useOrientation();
 
     const { instantDirection, validatedDirection } = useOrientationGesture(data, {
@@ -74,7 +80,6 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
     });
 
     // states
-    const [gameState, setGameState] = useState<'intro' | 'playing' | 'won'>('intro');
     const [sequence, setSequence] = useState<Direction[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [hasSensorData, setHasSensorData] = useState(false);
@@ -107,7 +112,7 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
     const startGame = () => {
         generateSequence();
         setCurrentIndex(0);
-        setGameState('playing');
+        triggerPhase('playing');
     };
 
     // boucle de validation
@@ -123,14 +128,13 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
                 setCurrentIndex(nextIndex);
 
                 if (nextIndex >= sequence.length) {
-                    setGameState('won');
-                    setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+                    triggerPhase('won');
                 }
             }, 200);
 
             return () => clearTimeout(timer);
         }
-    }, [validatedDirection, currentIndex, gameState, sequence, onSolve]);
+    }, [validatedDirection, currentIndex, gameState, sequence, triggerPhase]);
 
     // helpers pour l'affichage
     const currentDir = sequence[currentIndex];
@@ -141,10 +145,35 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
     const CurrentGestureIcon = DIRECTION_CONFIG[instantDirection].Icon;
     const ValidatedGestureIcon = DIRECTION_CONFIG[validatedDirection].Icon;
 
+    // init
+    useEffect(() => {
+        triggerPhase('intro');
+    }, [triggerPhase]);
+
+    // transitions automatiques après dialogues
+    useScenarioTransition(gameState, isDialogueOpen, {
+        won: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
+
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     return (
         <>
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
+
+            <AlphaModal
+                isOpen={gameState === 'won' && !isDialogueOpen}
+                message={'Protocole complété avec succès.'}
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+            />
+
             {/* cas iOS demande la permission */}
             {!permissionGranted && !error && (
                 <AlphaCard title={'Permissions requises'}>
@@ -177,13 +206,6 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved }) 
                                 <AlphaButton onClick={startGame}>Démarrer la Séquence</AlphaButton>
                             </div>
                         )}
-
-                        <AlphaModal
-                            isOpen={gameState === 'won'}
-                            message={'Protocole complété avec succès.'}
-                            autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
-                            durationUnit={'ms'}
-                        />
 
                         {gameState === 'won' && (
                             <div className="my-6 space-y-6 text-center">
