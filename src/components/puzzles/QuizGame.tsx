@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
@@ -14,8 +14,12 @@ import { AlphaMessageScreen } from '@/components/alpha/AlphaMessageScreen';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaTerminalWrapper, TerminalVariant } from '@/components/alpha/AlphaTerminalWrapper';
+import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
+
+export type QuizScenarioStep = 'idle' | 'init' | 'playing' | 'win';
 
 export interface Question {
     question: string;
@@ -426,7 +430,31 @@ const CodeGame = ({
     );
 };
 
-export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps) {
+export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }: QuizGameProps) {
+    const [isWin, setIsWin] = useState(false);
+
+    const {
+        gameState: phase,
+        triggerPhase,
+        isDialogueOpen,
+        currentScript,
+        onDialogueComplete,
+    } = useGameScenario<QuizScenarioStep>(scripts);
+
+    useEffect(() => {
+        triggerPhase('init');
+    }, [triggerPhase]);
+
+    useScenarioTransition(phase, isDialogueOpen, {
+        init: () => {
+            triggerPhase('playing');
+        },
+        win: () => {
+            setIsWin(true);
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
+
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [selectedOptionId, setSelectedOptionId] = useState<string | number | null>(null);
@@ -439,7 +467,6 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
     const currentQ = questions[currentQuestion];
     const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-    const [isWin, setIsWin] = useState(false);
     const handleNextStep = () => {
         if (currentQuestion + 1 < questions.length) {
             setTimeout(() => {
@@ -456,8 +483,7 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
                 );
             }, 1000);
         } else {
-            setIsWin(true);
-            setTimeout(onSolve, SCENARIO.defaultTimeBeforeNextStep);
+            triggerPhase('win');
         }
     };
 
@@ -489,6 +515,11 @@ export default function QuizGame({ questions, onSolve, isSolved }: QuizGameProps
 
     return (
         <AlphaCard progress={progress}>
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+            />
             <AlphaModal
                 isOpen={isWin}
                 variant={'success'}
