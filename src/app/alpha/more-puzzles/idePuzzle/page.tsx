@@ -1,14 +1,13 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-
 
 // pour l'ecran de fin quand c'est reussi ?
 
@@ -132,14 +131,14 @@ const page_themes = {
     },
     top3: {
         className: {
-            bad: "text-blue",
-            good: "text-black"
+            bad: 'text-blue',
+            good: 'text-black',
         },
         style: {
-            bad: { animation: 'blinkingTextAnim 0.5s steps(2, jump-none) infinite alternate', },
-            good: { animation: 'none', }
-        }
-    }
+            bad: { animation: 'blinkingTextAnim 0.5s steps(2, jump-none) infinite alternate' },
+            good: { animation: 'none' },
+        },
+    },
 };
 
 // champs de l'IDE
@@ -187,8 +186,6 @@ const ide_fields = [
         placeholder: '--',
     },
 ];
-
-const messagesHarry = [];
 
 export default function Etap2Enigme2() {
     const [inputs, setInputs] = useState<Record<string, string>>({
@@ -247,25 +244,25 @@ export default function Etap2Enigme2() {
 
     return (
         <>
-
-            <AlphaHeader title={"Du CSS de qualité"} subtitle={"à vous de démontrer vos compétences de super développeur et améliorer ce site !"} />
+            <AlphaHeader
+                title={'Du CSS de qualité'}
+                subtitle={
+                    'à vous de démontrer vos compétences de super développeur et améliorer ce site !'
+                }
+            />
 
             {/* MESSAGE DE HARRY DLER */}
             <div className="max-w-md rounded-2xl border border-white/20 bg-gradient-to-br from-purple-600/80 to-blue-600/80 p-4 shadow-lg backdrop-blur-md">
                 <p className="mb-1 text-xs font-bold tracking-wider text-white/70 uppercase">
                     ANONYME
                 </p>
-                <p
-                    ref={msgHarry}
-                    id="content-msg"
-                    className="text-sm leading-relaxed text-white"
-                >
-                    Vous êtes plutôt créatifs en MMI non ? Alors arrangez moi tout ça. Si vous
-                    aimez rigolez, croyez moi qu’on va rigoler
+                <p ref={msgHarry} id="content-msg" className="text-sm leading-relaxed text-white">
+                    Vous êtes plutôt créatifs en MMI non ? Alors arrangez moi tout ça. Si vous aimez
+                    rigolez, croyez moi qu’on va rigoler
                 </p>
             </div>
 
-            <AlphaGrid className='h-[500px]'>
+            <AlphaGrid className="h-[500px]">
                 {/* SECTION SITE */}
                 <section className="w-full overflow-hidden rounded-lg border border-gray-700 shadow-2xl">
                     <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#2d2d2d] px-4 py-3 backdrop-blur-sm">
@@ -274,18 +271,17 @@ export default function Etap2Enigme2() {
                             <span className="h-3 w-3 rounded-full bg-amber-500/80"></span>
                             <span className="h-3 w-3 rounded-full bg-emerald-500/80"></span>
                         </div>
-                        <span className="text-xs text-gray-500">
-                            localhost:3000/preview
-                        </span>
+                        <span className="text-xs text-gray-500">localhost:3000/preview</span>
                         <div></div>
                     </div>
 
                     {/* A AJUSTER POUR LA FIN DU JEU */}
                     <div
-                        className={`overflow-y-auto h-full ${isFixed
-                            ? page_themes.website.className.good
-                            : page_themes.website.className.bad
-                            }`}
+                        className={`h-full overflow-y-auto ${
+                            isFixed
+                                ? page_themes.website.className.good
+                                : page_themes.website.className.bad
+                        }`}
                         style={
                             isFixed ? page_themes.website.style.good : page_themes.website.style.bad
                         }
@@ -307,7 +303,11 @@ export default function Etap2Enigme2() {
                                                 : page_themes.imageCoverContainer.className.bad
                                         }
                                     >
-                                        <img className="relative" src={page_images.banner} />
+                                        <img
+                                            className="relative"
+                                            src={page_images.banner}
+                                            alt="web designer paradise"
+                                        />
                                     </div>
                                     <h1
                                         className={
@@ -454,12 +454,16 @@ export default function Etap2Enigme2() {
                                         <img src={page_images.smiley} alt="smiley GIF" />
                                     </div>
                                     <p
-                                        className={isFixed
-                                            ? page_themes.top3.className.good
-                                            : page_themes.top3.className.bad}
-                                        style={isFixed
-                                            ? page_themes.top3.style.good
-                                            : page_themes.top3.style.bad}
+                                        className={
+                                            isFixed
+                                                ? page_themes.top3.className.good
+                                                : page_themes.top3.className.bad
+                                        }
+                                        style={
+                                            isFixed
+                                                ? page_themes.top3.style.good
+                                                : page_themes.top3.style.bad
+                                        }
                                     >
                                         Top 3 éléments html
                                     </p>
@@ -492,7 +496,7 @@ export default function Etap2Enigme2() {
                     {!isFixed && (
                         <motion.section
                             exit={{ x: 100, opacity: 0 }}
-                            className="mx-auto w-full overflow-hidden rounded-lg border border-gray-700 bg-[#1e1e1e] font-mono text-gray-300 shadow-2xl flex flex-col"
+                            className="mx-auto flex w-full flex-col overflow-hidden rounded-lg border border-gray-700 bg-[#1e1e1e] font-mono text-gray-300 shadow-2xl"
                         >
                             {/* --- BARRE DE TITRE STYLE MAC --- */}
                             <div className="flex items-center justify-between border-b border-[#3e3e3e] bg-[#2d2d2d] px-4 py-2">
@@ -523,7 +527,7 @@ export default function Etap2Enigme2() {
                             </div>
 
                             {/* --- ZONE DE CODE --- */}
-                            <section className="relative p-6 overflow-y-auto">
+                            <section className="relative overflow-y-auto p-6">
                                 {ide_fields.map((field, index) => (
                                     <div key={index} className="group flex">
                                         {/* Numéros de ligne */}
