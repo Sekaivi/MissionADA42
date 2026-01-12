@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 
-import { DialogueBox } from '@/components/dialogueBox';
 
 // pour l'ecran de fin quand c'est reussi ?
 
@@ -71,7 +70,7 @@ const page_themes = {
     p: {
         className: {
             bad: "font-['Festive',_cursive] text-[42px] text-[#3CFF00]",
-            good: '',
+            good: 'text-black text-[12px]',
         },
     },
     website: {
@@ -128,9 +127,19 @@ const page_themes = {
     fakeLink: {
         className: {
             bad: 'font-serif text-purple-700 underline font-bold',
-            good: '',
+            good: 'text-black text-[12px]',
         },
     },
+    top3: {
+        className: {
+            bad: "text-blue",
+            good: "text-black"
+        },
+        style: {
+            bad: { animation: 'blinkingTextAnim 0.5s steps(2, jump-none) infinite alternate', },
+            good: { animation: 'none', }
+        }
+    }
 };
 
 // champs de l'IDE
@@ -445,11 +454,12 @@ export default function Etap2Enigme2() {
                                         <img src={page_images.smiley} alt="smiley GIF" />
                                     </div>
                                     <p
-                                        className="text-blue"
-                                        style={{
-                                            animation:
-                                                'blinkingTextAnim 0.5s steps(2, jump-none) infinite alternate',
-                                        }}
+                                        className={isFixed
+                                            ? page_themes.top3.className.good
+                                            : page_themes.top3.className.bad}
+                                        style={isFixed
+                                            ? page_themes.top3.style.good
+                                            : page_themes.top3.style.bad}
                                     >
                                         Top 3 éléments html
                                     </p>
@@ -504,7 +514,7 @@ export default function Etap2Enigme2() {
                                 </span>
                                 <button
                                     onClick={() => {
-                                        setIsFixed(true);
+                                        handleExecute();
                                     }}
                                     className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-green-800 active:scale-95"
                                 >
@@ -644,7 +654,7 @@ export default function Etap2Enigme2() {
                             </h2>
 
                             <p className="mb-8 text-sm leading-relaxed font-medium text-slate-500">
-                                Je trouve ça presque beau...
+                                C'en est presque beau...
                             </p>
 
                             {/* Bouton stylisé Bleu/Vert */}
