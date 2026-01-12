@@ -13,7 +13,9 @@ import {
     LockOpenIcon,
     PencilIcon,
     PhotoIcon,
+    PlusIcon,
     PuzzlePieceIcon,
+    QrCodeIcon,
     QuestionMarkCircleIcon,
     ShieldCheckIcon,
     SquaresPlusIcon,
@@ -53,6 +55,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: EyeIcon,
             },
             {
+                href: '/alpha/camera/qr-code',
+                title: 'Scanner QR Code',
+                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
+                icon: QrCodeIcon,
+            },
+            {
                 href: '/alpha/camera/chromatic-puzzle-page',
                 title: 'Jeu de mémorisation de couleurs',
                 subtitle: 'Basé sur le composant ChromaticPuzzle valide',
@@ -73,7 +81,7 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: CubeTransparentIcon,
             },
             {
-                href: '/alpha/sensors/orientation-game',
+                href: '/alpha/sensors/orientation-puzzle-page',
                 title: "Jeu d'inclinaison",
                 subtitle: 'Basé sur le composant OrientationPuzzle valide',
                 icon: DevicePhoneMobileIcon,
@@ -101,19 +109,19 @@ const ALPHA_MODULES: ModuleGroup[] = [
         headerColor: 'text-brand-error',
         items: [
             {
-                href: '/alpha/dialogue-test',
+                href: '/alpha/game/dialogue-test',
                 title: 'Dialogues',
                 subtitle: 'Test du hook de dialogues',
                 icon: ChatBubbleLeftIcon,
             },
             {
-                href: '/alpha/game-sync-test',
+                href: '/alpha/game/game-sync-test',
                 title: 'Lancer une partie synchronisée',
                 subtitle: "Test pour créer et modifier les informations d'une partie",
                 icon: UserGroupIcon,
             },
             {
-                href: '/alpha/escape-game-test',
+                href: '/alpha/game/escape-game-test',
                 title: 'Lancer un escape game',
                 subtitle: "Tester une configuration d'escape game réel",
                 icon: PuzzlePieceIcon,
@@ -160,6 +168,20 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'Code secret',
                 subtitle: 'Basé sur le composant QuizGame valide, customisable',
                 icon: LockOpenIcon,
+                isGame: true,
+            },
+        ],
+    },
+    {
+        title: 'Jeux divers',
+        icon: PlusIcon,
+        headerColor: 'text-brand-yellow',
+        items: [
+            {
+                href: '/alpha/more-puzzles/password-game',
+                title: 'Jeu du mot de passe',
+                subtitle: 'Devine le mot de passe',
+                icon: EyeIcon,
                 isGame: true,
             },
         ],
