@@ -41,8 +41,8 @@ export function useGeolocation(
     heading: number | null;
     error: string | null;
     permissionGranted: boolean;
-}
-{ const [data, setData] = useState<GeolocationData>({
+} {
+    const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
         accuracy: null,
