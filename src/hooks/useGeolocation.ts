@@ -17,13 +17,9 @@ export interface GeolocationData {
     distance: number | null;
 }
 
-export function useGeolocation(
-    targetLat = 45.2031,
-    targetLong = 5.702213,
-    externalOrientation?: OrientationData
-) {
-    const internalOrientation = useOrientation();
-    const orientation = externalOrientation || internalOrientation.data;
+export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
+    const { data: orientation } = useOrientation();
+
     const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
@@ -41,11 +37,11 @@ export function useGeolocation(
 
     // Sélection du bon heading
     const heading = useMemo(() => {
-        if (data.gpsHeading !== null && data.speed !== null && data.speed > 2) {
+        if (data.speed && data.speed > 1 && data.gpsHeading !== null) {
             return data.gpsHeading;
         }
-        return orientation.heading;
-    }, [data.gpsHeading, data.speed, orientation.heading]);
+        return orientation.heading ?? null;
+    }, [data.speed, data.gpsHeading, orientation.heading]);
 
     // Compass
     const compass = useMemo(() => {
@@ -54,7 +50,7 @@ export function useGeolocation(
             data.longitude === null ||
             heading === null ||
             data.accuracy === null ||
-            data.accuracy > 100
+            data.accuracy > 50
         ) {
             return null;
         }
@@ -67,7 +63,7 @@ export function useGeolocation(
             relativeAngle,
             arrow: angleToDirection8(relativeAngle),
         };
-    }, [data.latitude, data.longitude, data.accuracy, heading, targetLat, targetLong]);
+    }, [data, heading, targetLat, targetLong]);
 
     const onSuccess = useCallback(
         (position: GeolocationPosition) => {
