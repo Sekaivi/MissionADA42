@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef } from 'react';
+import React, {useMemo, useRef, useState} from 'react';
 
 import clsx from 'clsx';
 
@@ -10,10 +10,12 @@ import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
-import { useCamera } from '@/hooks/useCamera';
+import {FacingMode, useCamera} from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { ColorDefinition } from '@/types/colorDetection';
 import { PRESETS } from '@/utils/colorPresets';
+import {ArrowPathIcon} from "@heroicons/react/24/solid";
+import {AlphaButton} from "@/components/alpha/AlphaButton";
 
 interface DebugData {
     rgbAverage: { r: number; g: number; b: number };
@@ -124,6 +126,8 @@ interface ScannerSectionProps {
     scanConfig: { size: number; xOffset: number; yOffset: number };
     detectedName?: string;
     detectedColorHex?: string;
+    toggleCamera: ()=>void;
+    facingMode: FacingMode;
 }
 
 const ScannerSection: React.FC<ScannerSectionProps> = ({
@@ -132,10 +136,18 @@ const ScannerSection: React.FC<ScannerSectionProps> = ({
     scanConfig,
     detectedName,
     detectedColorHex,
+    toggleCamera,
+    facingMode
 }) => (
     <div className="space-y-6">
-        <AlphaCard title="Scanner Optique" contentClassName="space-y-4">
-            <AlphaVideoContainer scanSettings={scanConfig} label="COLOR SENSOR" videoRef={videoRef}>
+        <AlphaCard title="Scanner Optique" contentClassName="space-y-4" action={
+            <AlphaButton onClick={toggleCamera} variant="primary">
+                <ArrowPathIcon className="h-5 w-5" />
+            </AlphaButton>
+        }>
+            <AlphaVideoContainer scanSettings={scanConfig} label="COLOR SENSOR" videoRef={videoRef}
+                                 isMirrored={facingMode === 'user'}
+            >
                 {detectedName && (
                     <div
                         className="pointer-events-none absolute inset-0 z-20 border-[6px] transition-colors duration-300"
@@ -236,7 +248,9 @@ const MatchingSection: React.FC<MatchingSectionProps> = ({ debugData, activePres
 );
 
 export default function AlphaColorCameraTest() {
-    const { videoRef, error } = useCamera();
+    const [facingMode, setFacingMode] = useState<FacingMode>('environment');
+
+    const { videoRef, error } = useCamera(facingMode);
     const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
     const activePresets = useMemo(() => Object.values(PRESETS), []);
@@ -251,6 +265,10 @@ export default function AlphaColorCameraTest() {
     );
 
     const detectedPreset = activePresets.find((p) => p.id === detectedId);
+
+    const toggleCamera = () => {
+        setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
+    };
 
     return (
         <>
@@ -269,6 +287,8 @@ export default function AlphaColorCameraTest() {
                     scanConfig={scanConfig}
                     detectedName={detectedPreset?.name}
                     detectedColorHex={detectedPreset?.displayHex}
+                    toggleCamera={toggleCamera}
+                    facingMode={facingMode}
                 />
 
                 {/* col 2 : data */}

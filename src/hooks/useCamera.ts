@@ -2,69 +2,84 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-export function useCamera() {
+export type FacingMode = 'user' | 'environment';
+
+export function useCamera(facingMode: FacingMode = 'environment') {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
-    const [stream, setStream] = useState<MediaStream | null>(null);
+
+    // ref du stream pour pouvoir le couper proprement même hors du cycle de rendu
+    const streamRef = useRef<MediaStream | null>(null);
 
     // init, exécuté une seule fois au montage
     useEffect(() => {
         let isMounted = true; // sécurité pour ne pas update l'état si le composant est démonté pendant le chargement
 
-        async function initCamera() {
-            try {
-                // tentative caméra arrière
-                const mediaStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: 'environment' } },
-                });
+        const startCamera = async () => {
+            // si un stream tourne déjà => stop avant d'en demander un autre
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current = null;
+            }
 
-                if (isMounted) {
-                    setStream(mediaStream);
-                } else {
-                    // si l'utilisateur a quitté la page pendant le chargement, on coupe tout de suite
+            setError(null);
+
+            try {
+                // config des contraintes selon le mode demandé
+                const constraints: MediaStreamConstraints = {
+                    audio: false,
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                    },
+                };
+
+                const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                if (!isMounted) {
                     mediaStream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
+
+                // succès => on attache le stream
+                streamRef.current = mediaStream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = mediaStream;
                 }
             } catch (err) {
-                console.warn('Échec caméra arrière, tentative fallback...', err);
+                console.warn(`Erreur accès caméra (${facingMode}):`, err);
 
-                // fallback caméra avant ou pc
+                // fallback : si la caméra spécifique échoue, on essaie d'ouvrir n'importe quelle caméra dispo
                 try {
-                    const mediaStreamFallback = await navigator.mediaDevices.getUserMedia({
+                    if (!isMounted) return;
+
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({
                         video: true,
                     });
 
-                    if (isMounted) {
-                        setStream(mediaStreamFallback);
-                    } else {
-                        mediaStreamFallback.getTracks().forEach((track) => track.stop());
+                    streamRef.current = fallbackStream;
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = fallbackStream;
                     }
                 } catch (e) {
                     console.error('Erreur critique caméra', e);
-                    if (isMounted) setError('Accès caméra refusé ou impossible.');
+                    if (isMounted) setError('Accès caméra refusé.');
                 }
             }
-        }
+        };
 
-        initCamera();
+        startCamera();
 
+        // cleanup
         return () => {
             isMounted = false;
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((track) => track.stop());
+                streamRef.current = null;
+            }
         };
-    }, []);
-
-    useEffect(() => {
-        if (!stream) return;
-
-        // attacher le stream à la vidéo
-        if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-        }
-
-        // cleanup coupe la caméra quand le composant est détruit
-        return () => {
-            stream.getTracks().forEach((track) => track.stop());
-        };
-    }, [stream]);
+    }, [facingMode]);
 
     return { videoRef, error };
 }
