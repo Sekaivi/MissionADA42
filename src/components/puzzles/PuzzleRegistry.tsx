@@ -27,7 +27,7 @@ export interface PuzzleProps<T extends string = string> {
     modalConfig?: ModalConfig;
 }
 
-export type PuzzlePhase = 'idle' | 'intro' | 'playing' | 'win' | 'lose';
+export type PuzzlePhases = 'idle' | 'intro' | 'playing' | 'win' | 'lose';
 
 const formatDuration = (ms: number) => {
     if (!ms || ms < 0) return '0m 0s';

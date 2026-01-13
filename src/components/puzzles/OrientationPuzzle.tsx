@@ -19,7 +19,7 @@ import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
@@ -27,8 +27,9 @@ import { useOrientationGesture } from '@/hooks/useOrientationGesture';
 import { Direction } from '@/types/orientation';
 
 // config du mini jeu
-export type OrientationPuzzleGameState = 'intro' | 'playing' | 'won';
-const GAME_LENGTH = 1;
+export type OrientationPuzzlePhases = PuzzlePhases;
+
+const GAME_LENGTH = 6;
 const POSSIBLE_DIRECTIONS: Direction[] = ['Haut', 'Bas', 'Gauche', 'Droite'];
 
 const DIRECTION_CONFIG: Record<
@@ -70,7 +71,7 @@ const DIRECTION_CONFIG: Record<
 
 export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<OrientationPuzzleGameState>(scripts);
+        useGameScenario<OrientationPuzzlePhases>(scripts);
 
     const { data, error, permissionGranted, requestPermission } = useOrientation();
 
@@ -128,7 +129,7 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, sc
                 setCurrentIndex(nextIndex);
 
                 if (nextIndex >= sequence.length) {
-                    triggerPhase('won');
+                    triggerPhase('win');
                 }
             }, 200);
 
@@ -152,7 +153,7 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, sc
 
     // transitions automatiques après dialogues
     useScenarioTransition(gameState, isDialogueOpen, {
-        won: () => {
+        win: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
     });
@@ -168,7 +169,7 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, sc
             />
 
             <AlphaModal
-                isOpen={gameState === 'won' && !isDialogueOpen}
+                isOpen={gameState === 'win' && !isDialogueOpen}
                 message={'Protocole complété avec succès.'}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
@@ -207,7 +208,7 @@ export const OrientationPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, sc
                             </div>
                         )}
 
-                        {gameState === 'won' && (
+                        {gameState === 'win' && (
                             <div className="my-6 space-y-6 text-center">
                                 <AlphaSuccess message={'Protocole complété avec succès.'} />
                                 <AlphaButton onClick={startGame}>Nouvelle Séquence</AlphaButton>

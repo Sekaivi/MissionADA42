@@ -1,16 +1,13 @@
 'use client';
 
-import {
-    OrientationPuzzle,
-    OrientationPuzzleGameState,
-} from '@/components/puzzles/OrientationPuzzle';
+import { OrientationPuzzle, OrientationPuzzlePhases } from '@/components/puzzles/OrientationPuzzle';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<OrientationPuzzleGameState, DialogueLine[]>> = {
-    won: [
+const SCRIPTS: Partial<Record<OrientationPuzzlePhases, DialogueLine[]>> = {
+    win: [
         say(
             CHARACTERS.unknown,
             'HAHAHA ! Je pensais pas que vous seriez si stupides, vous êtes au courant que je suis déjà passé au-delà de votre pare-feu et que je suis dans votre système ?'

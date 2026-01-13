@@ -15,12 +15,12 @@ import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaTerminalWrapper, TerminalVariant } from '@/components/alpha/AlphaTerminalWrapper';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { normalizeText } from '@/utils/textUtils';
 
-export type QuizScenarioStep = 'idle' | 'init' | 'playing' | 'win';
+export type QuizPuzzlePhases = PuzzlePhases;
 
 export interface Question {
     question: string;
@@ -444,14 +444,14 @@ export default function QuizGame({
         isDialogueOpen,
         currentScript,
         onDialogueComplete,
-    } = useGameScenario<QuizScenarioStep>(scripts);
+    } = useGameScenario<QuizPuzzlePhases>(scripts);
 
     useEffect(() => {
-        triggerPhase('init');
+        triggerPhase('intro');
     }, [triggerPhase]);
 
     useScenarioTransition(phase, isDialogueOpen, {
-        init: () => {
+        intro: () => {
             triggerPhase('playing');
         },
         win: () => {

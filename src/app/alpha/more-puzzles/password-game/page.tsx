@@ -1,12 +1,12 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { PasswordPuzzle, PasswordPuzzleScenarioStep } from '@/components/puzzles/PasswordPuzzle';
+import { PasswordPuzzle, PasswordPuzzlePhases } from '@/components/puzzles/PasswordPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<PasswordPuzzleScenarioStep, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<PasswordPuzzlePhases, DialogueLine[]>> = {
     intro: [say(CHARACTERS.fabien, 'Here I am')],
     win: [say(CHARACTERS.fabien, 'Rock you like a hurricane')],
 };

@@ -9,17 +9,17 @@ import { AlphaInput } from '@/components/alpha/AlphaInput';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { GameContext, RuleStatus } from '@/types/passwordGame';
 import { PASSWORD_RULES } from '@/utils/passwordRules';
 
-export type PasswordPuzzleScenarioStep = 'idle' | 'intro' | 'playing' | 'win';
+export type PasswordPuzzlePhases = PuzzlePhases;
 
 export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {}, modalConfig }: PuzzleProps) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<PasswordPuzzleScenarioStep>(scripts);
+        useGameScenario<PasswordPuzzlePhases>(scripts);
 
     const [password, setPassword] = useState('');
     const [isMounted, setIsMounted] = useState(false);

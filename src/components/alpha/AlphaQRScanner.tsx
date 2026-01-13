@@ -8,7 +8,7 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import FeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
-import { PuzzlePhase } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 
 interface AlphaQRScannerProps extends PuzzleProps {
@@ -19,7 +19,7 @@ export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
     const elementId = 'reader-stream';
 
     const [lastResult, setLastResult] = useState<string | null>(null);
-    const [scanStatus, setScanStatus] = useState<PuzzlePhase>('idle');
+    const [scanStatus, setScanStatus] = useState<PuzzlePhases>('idle');
 
     const lastResultRef = useRef<string | null>(null);
     const onResultRef = useRef(onSolve);

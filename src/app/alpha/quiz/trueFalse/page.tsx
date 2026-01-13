@@ -1,6 +1,6 @@
 'use client';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import QuizGame, { Question, QuizScenarioStep } from '@/components/puzzles/QuizGame';
+import QuizGame, { Question, QuizPuzzlePhases } from '@/components/puzzles/QuizGame';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -18,8 +18,8 @@ const QUESTIONS_LOGIC: Question[] = [
     },
 ];
 
-const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
-    init: [say(CHARACTERS.fabien, 'Répondez instinctivement à ces quelques questions.')],
+const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
+    intro: [say(CHARACTERS.fabien, 'Répondez instinctivement à ces quelques questions.')],
 };
 
 export default function QuizTrueFalsePage() {

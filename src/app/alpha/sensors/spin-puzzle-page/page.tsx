@@ -1,13 +1,13 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { SpinPuzzle, SpinPuzzleScenarioStep } from '@/components/puzzles/SpinPuzzle';
+import { SpinPuzzle, SpinPuzzlePhases } from '@/components/puzzles/SpinPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<SpinPuzzleScenarioStep, DialogueLine[]>> = {
-    won: [
+const SCRIPTS: Partial<Record<SpinPuzzlePhases, DialogueLine[]>> = {
+    win: [
         say(
             CHARACTERS.harry,
             'Haha, vous êtes si ridicules… Allez je m’adapte à vous, voici une petite énigme pour élève de CP.'

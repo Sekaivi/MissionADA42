@@ -1,12 +1,12 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { ChromaticPuzzle, ChromaticPuzzleScenarioStep } from '@/components/puzzles/ChromaticPuzzle';
+import { ChromaticPuzzle, ChromaticPuzzlePhases } from '@/components/puzzles/ChromaticPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<ChromaticPuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(
             CHARACTERS.harry,

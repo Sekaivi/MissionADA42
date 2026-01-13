@@ -5,17 +5,17 @@ import React from 'react';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { CHARACTERS } from '@/data/characters';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-export type DialogueScenarioStep = 'idle' | 'init' | 'win';
+export type DialoguePuzzlePhases = PuzzlePhases;
 
-const SCRIPTS: Partial<Record<DialogueScenarioStep, DialogueLine[]>> = {
-    init: [
+const SCRIPTS: Partial<Record<DialoguePuzzlePhases, DialogueLine[]>> = {
+    intro: [
         say(CHARACTERS.paj, "Oulaaaah... Le système a l'air instable et en surchauffe !"),
         say(
             CHARACTERS.paj,
@@ -34,13 +34,13 @@ const SCRIPTS: Partial<Record<DialogueScenarioStep, DialogueLine[]>> = {
 
 export default function FirewallPuzzle({ isSolved, onSolve }: PuzzleProps) {
     const { gameState, isDialogueOpen, currentScript, triggerPhase, onDialogueComplete } =
-        useGameScenario<DialogueScenarioStep>(SCRIPTS);
+        useGameScenario<DialoguePuzzlePhases>(SCRIPTS);
 
     useScenarioTransition(gameState, isDialogueOpen, {
         idle: () => {
-            triggerPhase('init');
+            triggerPhase('intro');
         },
-        init: () => {
+        intro: () => {
             triggerPhase('win');
         },
         win: () => {

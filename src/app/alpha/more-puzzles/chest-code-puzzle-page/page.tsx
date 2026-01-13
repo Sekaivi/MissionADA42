@@ -1,14 +1,14 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import ChestCodePuzzle, { ChestCodeScenarioStep } from '@/components/puzzles/ChestCodePuzzle';
+import ChestCodePuzzle, { ChestCodePuzzlePhases } from '@/components/puzzles/ChestCodePuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
 const CODE = [4, 2, 7, 1];
 
-const SCRIPTS: Partial<Record<ChestCodeScenarioStep, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<ChestCodePuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(CHARACTERS.fabien, 'Le système est verrouillé. Il faut les 4 clefs de chiffrement.', {
             emotion: 'neutral',

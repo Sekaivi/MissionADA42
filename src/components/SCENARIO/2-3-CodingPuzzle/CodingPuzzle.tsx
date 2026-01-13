@@ -1,12 +1,12 @@
 'use client';
 
-import { CodingPuzzle, CodingPuzzleGameState } from '@/components/puzzles/CodingPuzzle';
+import { CodingPuzzle, CodingPuzzlePhases } from '@/components/puzzles/CodingPuzzle';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<CodingPuzzleGameState, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<CodingPuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(
             CHARACTERS.unknown,

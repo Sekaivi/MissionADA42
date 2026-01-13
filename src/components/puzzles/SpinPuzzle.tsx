@@ -14,7 +14,7 @@ import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
@@ -25,11 +25,11 @@ const LEVELS = [
     { target: 720, label: '2 Tours à Droite', direction: 'right' },
 ];
 
-export type SpinPuzzleScenarioStep = 'idle' | 'intro' | 'playing' | 'won';
+export type SpinPuzzlePhases = PuzzlePhases;
 
 export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<SpinPuzzleScenarioStep>(scripts);
+        useGameScenario<SpinPuzzlePhases>(scripts);
 
     const { data, error, permissionGranted, requestPermission } = useOrientation();
     const [levelIndex, setLevelIndex] = useState(0);
@@ -48,7 +48,7 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts =
         if (levelIndex + 1 < LEVELS.length) {
             setLevelIndex((prev) => prev + 1);
         } else {
-            triggerPhase('won');
+            triggerPhase('win');
         }
     }, [levelIndex, triggerPhase]);
 
@@ -100,7 +100,7 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts =
     // transitions automatiques après dialogues
     useScenarioTransition(gameState, isDialogueOpen, {
         intro: startGame,
-        won: () => {
+        win: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
     });
@@ -142,13 +142,13 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts =
                             )}
 
                             <AlphaModal
-                                isOpen={gameState === 'won' && !isDialogueOpen}
+                                isOpen={gameState === 'win' && !isDialogueOpen}
                                 message={'Protocole complété avec succès.'}
                                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                                 durationUnit={'ms'}
                             />
 
-                            {gameState === 'won' && (
+                            {gameState === 'win' && (
                                 <div className="my-6 space-y-6 text-center">
                                     <AlphaSuccess message={'Protocole complété avec succès.'} />
                                     <AlphaButton onClick={startGame}>Recommencer</AlphaButton>

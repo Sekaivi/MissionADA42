@@ -1,12 +1,12 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import { CodingPuzzle, CodingPuzzleGameState } from '@/components/puzzles/CodingPuzzle';
+import { CodingPuzzle, CodingPuzzlePhases } from '@/components/puzzles/CodingPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<CodingPuzzleGameState, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<CodingPuzzlePhases, DialogueLine[]>> = {
     win: [
         say(
             CHARACTERS.harry,

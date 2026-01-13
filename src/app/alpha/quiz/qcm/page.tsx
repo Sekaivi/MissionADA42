@@ -1,6 +1,6 @@
 'use client';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import QuizGame, { Question, QuizScenarioStep } from '@/components/puzzles/QuizGame';
+import QuizGame, { Question, QuizPuzzlePhases } from '@/components/puzzles/QuizGame';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -83,8 +83,8 @@ const QUESTIONS_MMI: Question[] = [
     },
 ];
 
-const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
-    init: [
+const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
+    intro: [
         say(
             CHARACTERS.fabien,
             'Ah, bonjour à tous, ça fait plaisir de vous voir mobilisés et prêts à aider l’IUT.'

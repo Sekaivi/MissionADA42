@@ -1,6 +1,6 @@
 'use client';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
-import QuizGame, { Question } from '@/components/puzzles/QuizGame';
+import QuizGame, { Question, QuizPuzzlePhases } from '@/components/puzzles/QuizGame';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -14,10 +14,8 @@ const QUESTIONS_MMI: Question[] = [
     },
 ];
 
-export type QCMScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
-
-const SCRIPTS: Partial<Record<QCMScenarioStep, DialogueLine[]>> = {
-    init: [say(CHARACTERS.unknown, 'Décodez-moi ça !')],
+const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
+    intro: [say(CHARACTERS.unknown, 'Décodez-moi ça !')],
     win: [
         say(
             CHARACTERS.unknown,

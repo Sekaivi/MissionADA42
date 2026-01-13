@@ -3,10 +3,7 @@
 import React from 'react';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import RebuildPuzzle, {
-    Piece,
-    RebuildPuzzleScenarioStep,
-} from '@/components/puzzles/RebuildPuzzle';
+import RebuildPuzzle, { Piece, RebuildPuzzlePhase } from '@/components/puzzles/RebuildPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -24,14 +21,14 @@ const FINGERPRINT_PIECES: Piece[] = [
     { id: 'f3', src: '/images/crime-2027374_1280 3.png' },
 ];
 
-const SCRIPTS: Partial<Record<RebuildPuzzleScenarioStep, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<RebuildPuzzlePhase, DialogueLine[]>> = {
     intro: [
         say(
             CHARACTERS.fabien,
             "Reconstruis l'empreinte du suspect à l'aide des fragments d'image en bas de page."
         ),
     ],
-    success: [say(CHARACTERS.fabien, 'Bien vuuu')],
+    win: [say(CHARACTERS.fabien, 'Bien vuuu')],
 };
 
 export default function RebuildPuzzlePage() {

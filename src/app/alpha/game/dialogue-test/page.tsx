@@ -6,14 +6,16 @@ import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { DialogueBox } from '@/components/dialogueBox';
+import { PuzzlePhases } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
 import { CHARACTERS } from '@/data/characters';
-import { useGameScenario } from '@/hooks/useGameScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-export type BioScenarioStep = 'intro' | 'breach' | 'error_too_many' | 'success';
+export type DialoguePuzzlePhases = PuzzlePhases | 'breach';
 
-const BIO_SCRIPTS: Partial<Record<BioScenarioStep, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<DialoguePuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(CHARACTERS.harry, "Reconstitue l'empreinte digitale pour déverrouiller l'accès."),
         say(CHARACTERS.harry, 'Je te souhaite bonne chance hihihi !', { emotion: 'happy' }),
@@ -21,12 +23,24 @@ const BIO_SCRIPTS: Partial<Record<BioScenarioStep, DialogueLine[]>> = {
         say(CHARACTERS.harry, 'Il en aura bien besoin...'),
     ],
     breach: [say(CHARACTERS.fabien, "Tu fais n'importe quoi, les fragments ne collent pas !")],
-    success: [say(CHARACTERS.harry, 'Oh non ! Tu as réussi...', { emotion: 'scared' })],
+    win: [say(CHARACTERS.harry, 'Oh non ! Tu as réussi...', { emotion: 'scared' })],
 };
 
 export default function DialogueTest() {
-    const { isDialogueOpen, currentScript, triggerPhase, onDialogueComplete } =
-        useGameScenario<BioScenarioStep>(BIO_SCRIPTS);
+    const { gameState, isDialogueOpen, currentScript, triggerPhase, onDialogueComplete } =
+        useGameScenario<DialoguePuzzlePhases>(SCRIPTS);
+
+    useScenarioTransition(gameState, isDialogueOpen, {
+        idle: () => {
+            triggerPhase('intro');
+        },
+        win: () => {
+            setTimeout(
+                () => window.alert('exécuter le onSolve'),
+                SCENARIO.defaultTimeBeforeNextStep
+            );
+        },
+    });
 
     useEffect(() => {
         triggerPhase('intro');
@@ -46,7 +60,7 @@ export default function DialogueTest() {
                         Simuler Breach
                     </AlphaButton>
 
-                    <AlphaButton onClick={() => triggerPhase('success')} variant="primary">
+                    <AlphaButton onClick={() => triggerPhase('win')} variant="primary">
                         Simuler Victoire
                     </AlphaButton>
                 </div>

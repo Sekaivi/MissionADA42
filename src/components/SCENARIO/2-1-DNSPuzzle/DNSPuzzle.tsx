@@ -1,7 +1,7 @@
 'use client';
 
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
-import QuizGame, { Question, QuizScenarioStep } from '@/components/puzzles/QuizGame';
+import QuizGame, { Question, QuizPuzzlePhases } from '@/components/puzzles/QuizGame';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
@@ -15,8 +15,8 @@ const QUESTIONS_ADMIN: Question[] = [
     },
 ];
 
-const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
-    init: [
+const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
+    intro: [
         say(
             CHARACTERS.unknown,
             'Oups, je crois que mon virus a déjà créé un petit problème DNS. Dommage pour vous ^^'

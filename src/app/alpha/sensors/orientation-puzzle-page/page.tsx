@@ -1,16 +1,13 @@
 'use client';
 
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
-import {
-    OrientationPuzzle,
-    OrientationPuzzleGameState,
-} from '@/components/puzzles/OrientationPuzzle';
+import { OrientationPuzzle, OrientationPuzzlePhases } from '@/components/puzzles/OrientationPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
-const SCRIPTS: Partial<Record<OrientationPuzzleGameState, DialogueLine[]>> = {
-    won: [
+const SCRIPTS: Partial<Record<OrientationPuzzlePhases, DialogueLine[]>> = {
+    win: [
         say(
             CHARACTERS.harry,
             'Vous voyez le dev c’est pas si dur, vous faites les acteurs mais vous êtes juste plus flemmards encore que vous n’êtes bêtes…'

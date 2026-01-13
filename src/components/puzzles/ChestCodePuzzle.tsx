@@ -13,15 +13,12 @@ import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { DialogueBox } from '@/components/dialogueBox';
 import MazePuzzle from '@/components/puzzles/MazePuzzle';
 import { PasswordPuzzle } from '@/components/puzzles/PasswordPuzzle';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import QuizGame, { Question } from '@/components/puzzles/QuizGame';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 
-export type ChestCodeScenarioStep =
-    | 'idle'
-    | 'intro'
-    | 'playing'
-    | 'win'
+export type ChestCodePuzzlePhases =
+    | PuzzlePhases
     | 'solved_quiz'
     | 'solved_maze'
     | 'solved_password'
@@ -76,7 +73,7 @@ export default function ChestCodePuzzle({
     solution = [0, 0, 0, 0],
 }: ChestCodePuzzleProps) {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<ChestCodeScenarioStep>(scripts);
+        useGameScenario<ChestCodePuzzlePhases>(scripts);
 
     const [activeGameIndex, setActiveGameIndex] = useState<number | null>(null);
     const [finalInput, setFinalInput] = useState('');

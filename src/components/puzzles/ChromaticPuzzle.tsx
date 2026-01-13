@@ -19,9 +19,9 @@ import { useColorDetection } from '@/hooks/useColorDetection';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { PRESETS } from '@/utils/colorPresets';
 
-import { PuzzlePhase, PuzzleProps } from './PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from './PuzzleRegistry';
 
-export type ChromaticPuzzleScenarioStep = PuzzlePhase | 'memory' | 'scan';
+export type ChromaticPuzzlePhases = PuzzlePhases | 'memory' | 'scan';
 
 const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
@@ -35,7 +35,7 @@ interface ColorPreset {
 interface AlphaSequenceDisplayProps {
     sequence: string[];
     presets: ColorPreset[];
-    gameState: ChromaticPuzzleScenarioStep;
+    gameState: ChromaticPuzzlePhases;
     step: number;
     className?: string;
 }
@@ -93,7 +93,7 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
 
 export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<ChromaticPuzzleScenarioStep>(scripts);
+        useGameScenario<ChromaticPuzzlePhases>(scripts);
 
     const { videoRef, error } = useCamera();
 
@@ -101,7 +101,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
     const activePresets = useMemo(() => GAME_PRESETS, []);
 
     // gestion du typage pour l'affichage (idle -> init)
-    const displayPhase = (gameState === 'idle' ? 'init' : gameState) as ChromaticPuzzleScenarioStep;
+    const displayPhase = (gameState === 'idle' ? 'init' : gameState) as ChromaticPuzzlePhases;
 
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);

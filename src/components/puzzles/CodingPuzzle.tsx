@@ -11,13 +11,13 @@ import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { CodeBlock, TargetSlot } from '@/components/alpha/HUD';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
 import { Difficulty } from '@/types/game';
 
-export type CodingPuzzleGameState = 'intro' | 'playing' | 'win' | 'breach' | 'lockdown';
+export type CodingPuzzlePhases = PuzzlePhases | 'breach' | 'lockdown';
 
 const PUZZLE_CONSTANTS = {
     STARTING_LINES: 3,
@@ -132,7 +132,7 @@ const IntroScreen = ({ difficulty, setDifficulty, onStart }: IntroScreenProps) =
 
 export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<CodingPuzzleGameState>(scripts);
+        useGameScenario<CodingPuzzlePhases>(scripts);
 
     const { data: orientationData, requestPermission, permissionGranted } = useOrientation();
 

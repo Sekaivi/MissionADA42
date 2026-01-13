@@ -14,11 +14,11 @@ import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 
-export type RebuildPuzzleScenarioStep = 'idle' | 'intro' | 'success' | 'error';
+export type RebuildPuzzlePhase = PuzzlePhases;
 
 export type Piece = {
     id: string;
@@ -38,7 +38,7 @@ export default function RebuildPuzzle({
     scripts = {},
 }: RebuildPuzzleProps) {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
-        useGameScenario<RebuildPuzzleScenarioStep>(scripts);
+        useGameScenario<RebuildPuzzlePhase>(scripts);
 
     const [pool, setPool] = useState<Piece[]>([]);
     const [slots, setSlots] = useState<(Piece | null)[]>([]);
@@ -66,13 +66,13 @@ export default function RebuildPuzzle({
             // Rien de spécial à faire ici, le jeu est déjà prêt
             triggerPhase('idle');
         },
-        success: () => {
+        win: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
     });
 
     const handlePoolPieceClick = (piece: Piece) => {
-        if (gameState === 'success') return;
+        if (gameState === 'win') return;
         if (selectedPiece?.id === piece.id) {
             setSelectedPiece(null);
         } else {
@@ -81,7 +81,7 @@ export default function RebuildPuzzle({
     };
 
     const handleSlotClick = (index: number) => {
-        if (gameState === 'success') return;
+        if (gameState === 'win') return;
 
         const currentSlotPiece = slots[index];
 
@@ -114,7 +114,7 @@ export default function RebuildPuzzle({
     const checkCombination = () => {
         // Vérifie si tous les slots sont remplis
         if (slots.some((s) => s === null)) {
-            triggerPhase('error');
+            triggerPhase('lose');
             setTimeout(() => triggerPhase('idle'), 1000);
             return;
         }
@@ -123,10 +123,10 @@ export default function RebuildPuzzle({
         const isCorrect = slots.every((piece, index) => piece?.id === correctOrder[index]);
 
         if (isCorrect) {
-            triggerPhase('success');
-            // La transition 'success' gérée par useScenarioTransition appellera onSolve
+            triggerPhase('win');
+            // La transition 'win' gérée par useScenarioTransition appellera onSolve
         } else {
-            triggerPhase('error');
+            triggerPhase('lose');
             setTimeout(() => triggerPhase('idle'), 1500);
         }
     };
@@ -136,10 +136,10 @@ export default function RebuildPuzzle({
     let buttonVariant: AlphaButtonVariants = 'primary';
     let buttonText = 'ANALYSER';
 
-    if (gameState === 'success') {
+    if (gameState === 'win') {
         buttonVariant = 'primary';
         buttonText = 'ACCÈS AUTORISÉ';
-    } else if (gameState === 'error') {
+    } else if (gameState === 'lose') {
         buttonVariant = 'danger';
         buttonText = 'ERREUR DE RECONSTITUTION';
     }
@@ -153,7 +153,7 @@ export default function RebuildPuzzle({
             />
 
             <AlphaModal
-                isOpen={gameState === 'success' && !isDialogueOpen}
+                isOpen={gameState === 'win' && !isDialogueOpen}
                 title={'Succès'}
                 message="Epreuve passée avec succès"
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
@@ -167,9 +167,9 @@ export default function RebuildPuzzle({
                 <div
                     className={clsx(
                         'relative w-56 overflow-hidden rounded border-2 transition-all duration-300',
-                        gameState === 'success'
+                        gameState === 'win'
                             ? 'border-brand-emerald shadow-[0_0_15px_var(--color-brand-emerald)]'
-                            : gameState === 'error'
+                            : gameState === 'lose'
                               ? 'border-brand-error shadow-[0_0_15px_var(--color-brand-error)]'
                               : 'border-surface bg-surface-highlight'
                     )}
@@ -211,10 +211,10 @@ export default function RebuildPuzzle({
                     ))}
                 </div>
 
-                {gameState === 'success' && <AlphaSuccess message={'Séquence validée !'} />}
-                {gameState === 'error' && <AlphaError message={'Séquence incorrecte !'} />}
+                {gameState === 'win' && <AlphaSuccess message={'Séquence validée !'} />}
+                {gameState === 'lose' && <AlphaError message={'Séquence incorrecte !'} />}
 
-                {gameState !== 'error' && gameState !== 'success' && (
+                {gameState !== 'lose' && gameState !== 'win' && (
                     <AlphaButton onClick={checkCombination} variant={buttonVariant}>
                         {buttonText}
                     </AlphaButton>
