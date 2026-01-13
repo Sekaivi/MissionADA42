@@ -8,15 +8,15 @@ export const SCENARIO: GameScenario = {
     defaultTimeBeforeNextStep: 3000,
     steps: [
         {
-            id: 'step_1',
-            title: 'QCM',
+            id: 'step_1_1',
+            title: 'Texte simple',
             description: '',
             componentId: 'qcm-puzzle',
             solution: '',
             hints: [],
         },
         {
-            id: 'step_2',
+            id: 'step_1_2',
             title: 'Jeu de rotation',
             description: '',
             componentId: 'spin-puzzle',
@@ -24,13 +24,27 @@ export const SCENARIO: GameScenario = {
             hints: [],
         },
         {
-            id: 'step_3',
+            id: 'step_1_3',
             title: 'Jeu des couleurs',
             description: '',
             componentId: 'chromatic-puzzle',
             solution: '',
             hints: [],
         },
+        {
+            // etape 1 enigme 4 : code morse -> quizGame type text. Image morse dans le gdrive
+            id: 'step_1_4',
+            title: 'Code morse',
+            description: '',
+            componentId: 'morse-puzzle',
+            solution: '',
+            hints: [],
+        },
+
+        // étape 2 énigme 1 : DNS : 4 post-it pour trouver le code : QuizGame type number
+
+        // et2 en2 : IDE (mayssa)
+
         {
             id: 'step_4',
             title: 'Jeu de code',
@@ -39,6 +53,11 @@ export const SCENARIO: GameScenario = {
             solution: '',
             hints: [],
         },
+
+        // et3 en1 : post-it code : QuizGame type number
+
+        // et3 en2 : Firewall (micro souffler)
+
         {
             id: 'step_5',
             title: "Séquence d'orientation",
@@ -47,6 +66,13 @@ export const SCENARIO: GameScenario = {
             solution: '',
             hints: [],
         },
+
+        // et3 en4 : GPS (mess précisant que iPhone marche mais pas Android)
+
+        // et4 en1a 1b 1c 1d : ChestCode
+
+        // fin : mettre le code trouvé dans la clef de Jacquot
+
         {
             id: 'step_win',
             title: 'Victoire',
