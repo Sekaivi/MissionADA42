@@ -18,6 +18,7 @@ import { DialogueBox } from '@/components/dialogueBox';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
+import { normalizeText } from '@/utils/textUtils';
 
 export type QuizScenarioStep = 'idle' | 'init' | 'playing' | 'win';
 
@@ -430,7 +431,13 @@ const CodeGame = ({
     );
 };
 
-export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }: QuizGameProps) {
+export default function QuizGame({
+    questions,
+    onSolve,
+    isSolved,
+    scripts = {},
+    modalConfig,
+}: QuizGameProps) {
     const {
         gameState: phase,
         triggerPhase,
@@ -485,10 +492,26 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
     };
 
     const validateAnswer = (userAnswer: string | number | string[]) => {
-        const isCorrect =
-            currentQ.type === 'sort'
-                ? JSON.stringify(userAnswer) === JSON.stringify(currentQ.answer)
-                : String(userAnswer).toLowerCase() === String(currentQ.answer).toLowerCase();
+        let isCorrect;
+
+        // Cas 1 : Tri (Tableau)
+        if (currentQ.type === 'sort' && Array.isArray(userAnswer)) {
+            isCorrect = JSON.stringify(userAnswer) === JSON.stringify(currentQ.answer);
+        }
+        // Cas 2 : Réponse textuelle
+        else {
+            const normalizedUserAnswer = normalizeText(userAnswer as string | number);
+
+            if (Array.isArray(currentQ.answer)) {
+                // check si la réponse utilisateur est dans le tableau des réponses acceptées
+                isCorrect = currentQ.answer.some(
+                    (ans) => normalizeText(ans) === normalizedUserAnswer
+                );
+            } else {
+                // comparaison simple
+                isCorrect = normalizedUserAnswer === normalizeText(currentQ.answer);
+            }
+        }
 
         if (isCorrect) {
             setStatus('correct');
@@ -497,7 +520,9 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
             setStatus('incorrect');
             setTimeout(() => {
                 setStatus('idle');
-                setSelectedOptionId(null);
+                if (currentQ.type !== 'text') {
+                    setSelectedOptionId(null);
+                }
             }, 1000);
         }
     };
@@ -517,10 +542,12 @@ export default function QuizGame({ questions, onSolve, isSolved, scripts = {} }:
                 script={currentScript}
                 onComplete={onDialogueComplete}
             />
+
             <AlphaModal
                 isOpen={phase === 'win' && !isDialogueOpen}
                 variant={'success'}
-                message={'Puzzle validé'}
+                title={modalConfig?.title || 'Puzzle validé'}
+                message={modalConfig?.message || ''}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
             />

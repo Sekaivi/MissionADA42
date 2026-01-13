@@ -141,7 +141,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                     className={`${theme.bg} border-b p-2 text-center ${theme.border}`}
                                 >
                                     <p
-                                        className={`text-[10px] font-black tracking-[0.2em] uppercase ${theme.primary}`}
+                                        className={`text-xs font-black tracking-[0.2em] uppercase ${theme.primary}`}
                                     >
                                         {title || variant.toUpperCase()}
                                     </p>

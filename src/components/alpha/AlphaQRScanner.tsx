@@ -8,6 +8,7 @@ import { AlphaCard } from '@/components/alpha/AlphaCard';
 import FeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { PuzzlePhase } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 
 interface AlphaQRScannerProps extends PuzzleProps {
@@ -18,7 +19,7 @@ export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
     const elementId = 'reader-stream';
 
     const [lastResult, setLastResult] = useState<string | null>(null);
-    const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [scanStatus, setScanStatus] = useState<PuzzlePhase>('idle');
 
     const lastResultRef = useRef<string | null>(null);
     const onResultRef = useRef(onSolve);
@@ -67,14 +68,14 @@ export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
                         setLastResult(decodedText);
 
                         if (decodedText.trim() === target.trim()) {
-                            setScanStatus('success');
+                            setScanStatus('win');
 
                             setTimeout(() => {
                                 onResultRef.current();
                                 html5QrCode.pause();
                             }, SCENARIO.defaultTimeBeforeNextStep);
                         } else {
-                            setScanStatus('error');
+                            setScanStatus('lose');
                             if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
                             errorTimeoutRef.current = setTimeout(() => {
                                 setScanStatus('idle');
@@ -107,11 +108,11 @@ export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
     let feedbackType: 'info' | 'success' | 'error' = 'info';
     let containerBorderClass = 'border-brand-emerald/20';
 
-    if (scanStatus === 'success') {
+    if (scanStatus === 'win') {
         feedbackMessage = 'CIBLE VERROUILLÉE';
         feedbackType = 'success';
         containerBorderClass = 'border-brand-emerald';
-    } else if (scanStatus === 'error') {
+    } else if (scanStatus === 'lose') {
         feedbackMessage = 'SIGNAL NON RECONNU';
         feedbackType = 'error';
         containerBorderClass = 'border-brand-error';
@@ -135,7 +136,7 @@ export const AlphaQRScanner = ({ onSolve, target }: AlphaQRScannerProps) => {
 
                 <div
                     className={`h-16 overflow-hidden rounded border border-white/10 bg-black/40 p-2 font-mono text-xs break-all transition-colors ${
-                        scanStatus === 'error' ? 'text-brand-error' : 'text-brand-emerald'
+                        scanStatus === 'lose' ? 'text-brand-error' : 'text-brand-emerald'
                     }`}
                 >
                     <span className="mr-2 opacity-50">[DATA]:</span>

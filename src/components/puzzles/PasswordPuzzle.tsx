@@ -17,7 +17,7 @@ import { PASSWORD_RULES } from '@/utils/passwordRules';
 
 export type PasswordPuzzleScenarioStep = 'idle' | 'intro' | 'playing' | 'win';
 
-export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
+export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {}, modalConfig }: PuzzleProps) => {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<PasswordPuzzleScenarioStep>(scripts);
 
@@ -109,8 +109,8 @@ export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps)
 
             <AlphaModal
                 isOpen={gameState === 'win' && !isDialogueOpen}
-                title={'Succès'}
-                message="Epreuve passée avec succès"
+                title={modalConfig?.title || 'Succès'}
+                message={modalConfig?.message || 'Epreuve passée avec succès'}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
             />

@@ -7,7 +7,7 @@ import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
 const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
-    init: [
+    intro: [
         say(
             CHARACTERS.harry,
             'Bienvenue ! Je te mets au défi de retenir la séquence de couleur qui arrive et de trouver des objets autour de toi pour les scanner !'

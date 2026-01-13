@@ -15,7 +15,7 @@ interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
     requestPermission?: () => Promise<'granted' | 'denied'>;
 }
 
-export default function MazePuzzle({ onSolve }: PuzzleProps) {
+export default function MazePuzzle({ onSolve, modalConfig }: PuzzleProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const requestRef = useRef<number | null>(null);
     const timerRef = useRef<number | null>(null);
@@ -319,8 +319,8 @@ export default function MazePuzzle({ onSolve }: PuzzleProps) {
                         <AlphaModal
                             isOpen={gameStatus === 'won'}
                             variant="success"
-                            title="Labyrinthe"
-                            message="Epreuve passée avec succès"
+                            title={modalConfig?.title || 'Labyrinthe'}
+                            message={modalConfig?.message || 'Epreuve passée avec succès'}
                             autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                             durationUnit={'ms'}
                         />

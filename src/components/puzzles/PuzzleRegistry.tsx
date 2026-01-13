@@ -16,6 +16,7 @@ import GpsPuzzle from '@/components/SCENARIO/3-4-GpsPuzzle/GpsPuzzle';
 import ChestCodePuzzleS4E1 from '@/components/SCENARIO/4-1-ChestCodePuzzle/ChestCodePuzzle';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
+import { ModalConfig } from '@/types/modal';
 
 export interface PuzzleProps<T extends string = string> {
     onSolve: () => void;
@@ -23,7 +24,10 @@ export interface PuzzleProps<T extends string = string> {
     data?: GameState;
     scripts?: Partial<Record<T, DialogueLine[]>>;
     sequence?: [];
+    modalConfig?: ModalConfig;
 }
+
+export type PuzzlePhase = 'idle' | 'intro' | 'playing' | 'win' | 'lose';
 
 const formatDuration = (ms: number) => {
     if (!ms || ms < 0) return '0m 0s';

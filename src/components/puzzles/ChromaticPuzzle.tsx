@@ -19,9 +19,9 @@ import { useColorDetection } from '@/hooks/useColorDetection';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { PRESETS } from '@/utils/colorPresets';
 
-import { PuzzleProps } from './PuzzleRegistry';
+import { PuzzlePhase, PuzzleProps } from './PuzzleRegistry';
 
-export type ChromaticPuzzleScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
+export type ChromaticPuzzleScenarioStep = PuzzlePhase | 'memory' | 'scan';
 
 const GAME_PRESETS = [PRESETS.ROUGE];
 const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
@@ -35,7 +35,7 @@ interface ColorPreset {
 interface AlphaSequenceDisplayProps {
     sequence: string[];
     presets: ColorPreset[];
-    phase: ChromaticPuzzleScenarioStep;
+    gameState: ChromaticPuzzleScenarioStep;
     step: number;
     className?: string;
 }
@@ -43,7 +43,7 @@ interface AlphaSequenceDisplayProps {
 export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
     sequence,
     presets,
-    phase,
+    gameState,
     step,
     className,
 }) => {
@@ -53,9 +53,9 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
                 const preset = presets.find((p) => p.id === colorId);
                 if (!preset) return null;
 
-                const isMemory = phase === 'memory';
+                const isMemory = gameState === 'memory';
                 const isCompleted = index < step && !isMemory;
-                const isActive = index === step && phase === 'scan';
+                const isActive = index === step && gameState === 'scan';
                 const isPending = !isMemory && !isCompleted && !isActive;
 
                 const dynamicStyle: React.CSSProperties =
@@ -92,13 +92,8 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
 };
 
 export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
-    const {
-        gameState: phase,
-        triggerPhase,
-        isDialogueOpen,
-        currentScript,
-        onDialogueComplete,
-    } = useGameScenario<ChromaticPuzzleScenarioStep>(scripts);
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<ChromaticPuzzleScenarioStep>(scripts);
 
     const { videoRef, error } = useCamera();
 
@@ -106,7 +101,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
     const activePresets = useMemo(() => GAME_PRESETS, []);
 
     // gestion du typage pour l'affichage (idle -> init)
-    const displayPhase = (phase === 'idle' ? 'init' : phase) as ChromaticPuzzleScenarioStep;
+    const displayPhase = (gameState === 'idle' ? 'init' : gameState) as ChromaticPuzzleScenarioStep;
 
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);
@@ -115,7 +110,12 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
     const [isValidating, setIsValidating] = useState(false);
     const processingRef = useRef(false);
 
-    const { detectedId } = useColorDetection(videoRef, activePresets, phase === 'scan', scanConfig);
+    const { detectedId } = useColorDetection(
+        videoRef,
+        activePresets,
+        gameState === 'scan',
+        scanConfig
+    );
 
     const generateSequence = useCallback(() => {
         const availableIds = GAME_PRESETS.map((p) => p.id);
@@ -139,7 +139,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
 
     // timer
     useEffect(() => {
-        if (phase !== 'memory') return;
+        if (gameState !== 'memory') return;
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
@@ -152,13 +152,13 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [phase, triggerPhase]);
+    }, [gameState, triggerPhase]);
 
     // validation de la couleur détectée
     useEffect(() => {
         let timer: NodeJS.Timeout;
 
-        if (phase === 'scan' && detectedId && !processingRef.current) {
+        if (gameState === 'scan' && detectedId && !processingRef.current) {
             const expectedId = sequence[step];
 
             if (detectedId === expectedId) {
@@ -190,23 +190,23 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
         return () => {
             clearTimeout(timer);
             if (processingRef.current) {
-                if (phase === 'scan') {
+                if (gameState === 'scan') {
                     setFeedbackMsg('Analyse interrompue (mouvement détecté)');
                 }
                 processingRef.current = false;
                 setIsValidating(false);
             }
         };
-    }, [detectedId, phase, sequence, step, onSolve, triggerPhase]);
+    }, [detectedId, gameState, sequence, step, onSolve, triggerPhase]);
 
     // init
     useEffect(() => {
-        triggerPhase('init');
+        triggerPhase('intro');
     }, [triggerPhase]);
 
     // transitions automatiques après dialogues
-    useScenarioTransition(phase, isDialogueOpen, {
-        init: startGame,
+    useScenarioTransition(gameState, isDialogueOpen, {
+        intro: startGame,
         win: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
         },
@@ -224,7 +224,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
             />
 
             <AlphaModal
-                isOpen={phase === 'win' && !isDialogueOpen}
+                isOpen={gameState === 'win' && !isDialogueOpen}
                 title={'Succès'}
                 message="Epreuve passée avec succès"
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
@@ -235,26 +235,26 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                 <AlphaSequenceDisplay
                     sequence={sequence}
                     presets={GAME_PRESETS}
-                    phase={displayPhase}
+                    gameState={displayPhase}
                     step={step}
                     className="mb-6"
                 />
 
                 <AlphaFeedbackPill
                     message={feedbackMsg}
-                    type={phase === 'win' ? 'success' : 'info'}
-                    isLoading={phase === 'init' || (isValidating && phase !== 'win')}
+                    type={gameState === 'win' ? 'success' : 'info'}
+                    isLoading={gameState === 'intro' || (isValidating && gameState !== 'win')}
                 />
             </AlphaCard>
 
-            {phase !== 'win' && (
+            {gameState !== 'win' && (
                 <AlphaCard>
                     <AlphaVideoContainer
-                        scanSettings={phase === 'scan' ? scanConfig : undefined}
-                        label={phase === 'scan' ? 'SCAN EN COURS' : 'ATTENTE'}
+                        scanSettings={gameState === 'scan' ? scanConfig : undefined}
+                        label={gameState === 'scan' ? 'SCAN EN COURS' : 'ATTENTE'}
                         videoRef={videoRef}
                     >
-                        {detectedId && phase === 'scan' && (
+                        {detectedId && gameState === 'scan' && (
                             <div className="absolute right-0 bottom-4 left-0 text-center">
                                 <span
                                     className="border-border rounded border bg-black/80 px-3 py-1 font-bold text-white shadow-lg backdrop-blur-sm"
@@ -273,7 +273,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                 </AlphaCard>
             )}
 
-            {(phase === 'scan' || phase === 'win') && !isDialogueOpen && (
+            {(gameState === 'scan' || gameState === 'win') && !isDialogueOpen && (
                 <div className="flex justify-center">
                     <AlphaButton onClick={startGame}>Réinitialiser la séquence</AlphaButton>
                 </div>

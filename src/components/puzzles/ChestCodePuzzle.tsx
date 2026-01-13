@@ -181,15 +181,28 @@ export default function ChestCodePuzzle({
             isSolved: activeGameIndex !== null && modules[activeGameIndex].status === 'solved',
         };
 
+        const successModal = {
+            title: 'Module validé',
+            message: 'Une clé de déchiffrement a été débloquée !',
+        };
+
         switch (activeGameIndex) {
             case 0:
-                return <QuizGame questions={QUESTION} {...commonProps} />;
+                return (
+                    <QuizGame modalConfig={successModal} questions={QUESTION} {...commonProps} />
+                );
             case 1:
-                return <MazePuzzle {...commonProps} />;
+                return <MazePuzzle modalConfig={successModal} {...commonProps} />;
             case 2:
-                return <PasswordPuzzle {...commonProps} />;
+                return <PasswordPuzzle modalConfig={successModal} {...commonProps} />;
             case 3:
-                return <QuizGame questions={TEST_QUESTIONS} {...commonProps} />;
+                return (
+                    <QuizGame
+                        modalConfig={successModal}
+                        questions={TEST_QUESTIONS}
+                        {...commonProps}
+                    />
+                );
             default:
                 return null;
         }

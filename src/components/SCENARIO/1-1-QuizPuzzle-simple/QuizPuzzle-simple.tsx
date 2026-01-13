@@ -9,7 +9,7 @@ const QUESTIONS_MMI: Question[] = [
     {
         type: 'text',
         question: 'Quelle est la particularité de la formation M.M.I ?',
-        answer: 'Pluridisciplinarité',
+        answer: ['pluridisciplinarité', 'pluridisciplinaire'],
     },
 ];
 

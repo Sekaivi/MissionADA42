@@ -1,6 +1,6 @@
-import { GameScenario } from '@/types/scenario';
+import { Scenario } from '@/types/scenario';
 
-export const SCENARIO: GameScenario = {
+export const SCENARIO: Scenario = {
     id: 'scenario_alpha_01',
     name: 'Protocole Alpha',
     description: 'Première incursion dans le système.',
