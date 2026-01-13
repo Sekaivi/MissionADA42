@@ -36,10 +36,10 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
 
     // Sélection du bon heading
     const heading = useMemo(() => {
-        if (data.speed !== null && data.speed > 1 && data.gpsHeading !== null) {
-            return data.gpsHeading; // heading GPS fiable en mouvement
+        if (data.speed && data.speed > 1 && data.gpsHeading !== null) {
+            return data.gpsHeading;
         }
-        return orientation.heading; // sinon boussole
+        return orientation.heading ?? null;
     }, [data.speed, data.gpsHeading, orientation.heading]);
 
     // Compass
