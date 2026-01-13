@@ -14,6 +14,7 @@ interface AlphaVideoContainerProps {
     videoRef?: RefObject<HTMLVideoElement | null>; // pour les video natives
     qrMountRef?: RefObject<HTMLDivElement | null>; // pour le scanner QR
     qrElementId?: string; // id requis par la lib html5-qrcode
+    isMirrored?: boolean; // gérer l'effet miroir
 }
 
 export const AlphaVideoContainer = ({
@@ -24,6 +25,7 @@ export const AlphaVideoContainer = ({
     videoRef,
     qrMountRef,
     qrElementId,
+    isMirrored = false,
 }: AlphaVideoContainerProps) => {
     return (
         <div
@@ -40,7 +42,10 @@ export const AlphaVideoContainer = ({
                     autoPlay
                     playsInline
                     muted
-                    className={'h-full w-full scale-x-[-1] object-cover'}
+                    className={clsx(
+                        'h-full w-full transform-gpu object-cover',
+                        isMirrored && 'rotate-y-180'
+                    )}
                 />
             )}
 
@@ -48,16 +53,16 @@ export const AlphaVideoContainer = ({
             {qrMountRef && (
                 <div
                     id={qrElementId}
-                    ref={qrMountRef}
-                    // la lib QR injecte sa propre video
-                    className={
-                        'h-full w-full overflow-hidden [&_video]:!h-full [&_video]:!w-full [&_video]:scale-x-[-1] [&_video]:!object-cover'
-                    }
+                    ref={qrMountRef} // la lib QR injecte sa propre video
+                    className={clsx(
+                        'h-full w-full overflow-hidden [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover',
+                        isMirrored && '[&_video]:rotate-y-180'
+                    )}
                 />
             )}
 
             <div className="border-brand-emerald/30 text-brand-emerald absolute top-2 left-2 z-30 rounded border bg-black/70 px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
-                {label}
+                {label} {isMirrored ? '(MIRROR)' : ''}
             </div>
 
             {/* overlay de visée (ScanSettings) */}
