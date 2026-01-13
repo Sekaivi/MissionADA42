@@ -11,7 +11,10 @@ import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 export default function AlphaGeolocationDebug() {
-    const { data, error, permissionGranted, requestPermission } = useGeolocation(45.2031, 5.702213);
+    const { data, error, permissionGranted, requestPermission } = useGeolocation(
+        45.20365424982078,
+        5.7013579371490986
+    );
 
     useEffect(() => {
         requestPermission();

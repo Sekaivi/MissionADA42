@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOrientation } from '@/hooks/useOrientation';
 import { angleToDirection8, computeBearing, computeDistance } from '@/utils/geo';
+import { OrientationData } from '@/types/orientation';
+import { useOrientation } from '@/hooks/useOrientation';
 
 export interface GeolocationData {
     latitude: number | null;
@@ -16,9 +17,13 @@ export interface GeolocationData {
     distance: number | null;
 }
 
-export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
-    const { data: orientation } = useOrientation();
-
+export function useGeolocation(
+    targetLat = 45.2031,
+    targetLong = 5.702213,
+    externalOrientation?: OrientationData
+) {
+    const internalOrientation = useOrientation();
+    const orientation = externalOrientation || internalOrientation.data;
     const [data, setData] = useState<GeolocationData>({
         latitude: null,
         longitude: null,
@@ -36,11 +41,11 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
 
     // Sélection du bon heading
     const heading = useMemo(() => {
-        if (data.speed && data.speed > 1 && data.gpsHeading !== null) {
+        if (data.gpsHeading !== null && data.speed !== null && data.speed > 2) {
             return data.gpsHeading;
         }
-        return orientation.heading ?? null;
-    }, [data.speed, data.gpsHeading, orientation.heading]);
+        return orientation.heading;
+    }, [data.gpsHeading, data.speed, orientation.heading]);
 
     // Compass
     const compass = useMemo(() => {
@@ -49,13 +54,12 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
             data.longitude === null ||
             heading === null ||
             data.accuracy === null ||
-            data.accuracy > 50
+            data.accuracy > 100
         ) {
             return null;
         }
 
         const bearing = computeBearing(data.latitude, data.longitude, targetLat, targetLong);
-
         const relativeAngle = (bearing - heading + 360) % 360;
 
         return {
@@ -63,7 +67,7 @@ export function useGeolocation(targetLat = 45.2031, targetLong = 5.702213) {
             relativeAngle,
             arrow: angleToDirection8(relativeAngle),
         };
-    }, [data, heading, targetLat, targetLong]);
+    }, [data.latitude, data.longitude, data.accuracy, heading, targetLat, targetLong]);
 
     const onSuccess = useCallback(
         (position: GeolocationPosition) => {
