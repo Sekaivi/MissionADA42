@@ -1,342 +1,496 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+    ClockIcon,
+    DevicePhoneMobileIcon,
+    ExclamationTriangleIcon,
+    ShieldCheckIcon,
+} from '@heroicons/react/24/solid';
 import { clsx } from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
+import FeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaPuzzleHeader } from '@/components/alpha/AlphaGameHeader';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
-import { AlphaTitle } from '@/components/alpha/AlphaTitle';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { DialogueBox } from '@/components/dialogueBox';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
+import { useOrientation } from '@/hooks/useOrientation';
 
-interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
-    requestPermission?: () => Promise<'granted' | 'denied'>;
+// --- TYPES ---
+
+export type MazePuzzlePhases = PuzzlePhases | 'gameover';
+
+interface WallConfig {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    maxH: number;
+    speed: number;
+    direction: string;
+    initialY: number;
 }
 
-export default function MazePuzzle({ onSolve, modalConfig }: PuzzleProps) {
+const GAME_DIMENSIONS = { width: 300, height: 400 };
+
+// Configuration du niveau (Restaurée depuis le code de référence)
+const LEVEL_CONFIG = {
+    time: 60,
+    start: { x: 20, y: 10 },
+    target: { x: 260, y: 350, w: 40, h: 50 },
+    walls: [
+        { x: 60, y: 0, w: 20, h: 0, maxH: 370, speed: 5, direction: 'down', initialY: 0 },
+        { x: 180, y: 0, w: 20, h: 0, maxH: 370, speed: 5, direction: 'down', initialY: 0 },
+        { x: 120, y: 400, w: 20, h: 0, maxH: 370, speed: 5, direction: 'up', initialY: 400 },
+        { x: 240, y: 400, w: 20, h: 0, maxH: 370, speed: 5, direction: 'up', initialY: 400 },
+    ],
+};
+
+interface GameState {
+    player: { x: number; y: number; w: number; h: number };
+    walls: WallConfig[];
+    vx: number;
+    vy: number;
+    lastTime: number;
+    isLocked: boolean;
+    hitFlash: number;
+}
+
+export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfig }: PuzzleProps) {
+    const {
+        gameState: phase,
+        triggerPhase,
+        isDialogueOpen,
+        currentScript,
+        onDialogueComplete,
+    } = useGameScenario<MazePuzzlePhases>(scripts);
+
+    const { data: orientation, requestPermission, permissionGranted } = useOrientation();
+    const calibrationOffset = useRef({ beta: 0, gamma: 0 });
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestRef = useRef<number | null>(null);
-    const timerRef = useRef<number | null>(null);
+    const [timeLeft, setTimeLeft] = useState(LEVEL_CONFIG.time);
+    const [isStabilizing, setIsStabilizing] = useState(false);
 
-    // --- ÉTATS UI (CORRIGÉS) ---
-    const [timeLeft, setTimeLeft] = useState(70);
-    const [gameStatus, setGameStatus] = useState<'idle' | 'playing' | 'won' | 'lost'>('idle');
+    // Ref pour éviter les re-renders inutiles lors de la mise à jour de isStabilizing
+    const isStabilizingRef = useRef(false);
 
-    // 1. Initialisation Lazy : On vérifie l'environnement une seule fois au démarrage
-    const [needsPermission, setNeedsPermission] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        const deviceEvent = DeviceOrientationEvent as unknown as DeviceOrientationEventiOS;
-        return typeof deviceEvent.requestPermission === 'function';
-    });
-
-    // 2. Initialisation Lazy
-    const [permissionGranted, setPermissionGranted] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        const deviceEvent = DeviceOrientationEvent as unknown as DeviceOrientationEventiOS;
-        // Si pas de fonction requestPermission (Android/PC), c'est accordé par défaut
-        return typeof deviceEvent.requestPermission !== 'function';
-    });
-
-    // État du jeu
-    const gameState = useRef({
-        player: { x: 20, y: 10, w: 20, h: 20 },
-        target: { x: 250, y: 320, w: 40, h: 40 },
-        walls: [
-            { x: 60, y: 0, w: 20, h: 10, maxH: 370, speed: 2, direction: 'down', initialY: 0 },
-            { x: 180, y: 0, w: 20, h: 10, maxH: 370, speed: 4, direction: 'down', initialY: 0 },
-            { x: 120, y: 400, w: 20, h: 10, maxH: 380, speed: 2.5, direction: 'up', initialY: 400 },
-            { x: 240, y: 400, w: 20, h: 10, maxH: 380, speed: 4.5, direction: 'up', initialY: 400 },
-        ],
+    const gameState = useRef<GameState>({
+        player: { x: -100, y: -100, w: 20, h: 20 },
+        walls: [],
         vx: 0,
         vy: 0,
-        keys: { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false },
+        lastTime: 0,
+        isLocked: true,
+        hitFlash: 0,
     });
 
-    // --- DEFINITION DES FONCTIONS ---
+    const phaseRef = useRef(phase);
+    useEffect(() => {
+        phaseRef.current = phase;
+    }, [phase]);
 
-    const stopGame = () => {
-        if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
-        if (timerRef.current !== null) window.clearInterval(timerRef.current);
-    };
+    // --- LOGIQUE ---
 
-    const handleGameOver = (win: boolean) => {
-        stopGame();
-        setGameStatus(win ? 'won' : 'lost');
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate(win ? [100, 50, 100] : [400]);
-        }
-
-        if (win) {
-            window.setTimeout(() => {
-                onSolve();
-            }, SCENARIO.defaultDuration);
-        }
-    };
-
-    const gameLoop = () => {
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!canvas || !ctx) return;
-
+    const initLevel = useCallback(() => {
         const state = gameState.current;
-        const width = canvas.width;
-        const height = canvas.height;
+        state.player.x = LEVEL_CONFIG.start.x;
+        state.player.y = LEVEL_CONFIG.start.y;
+        state.vx = 0;
+        state.vy = 0;
+        state.isLocked = true;
 
-        // 1. Physique (Murs)
-        state.walls.forEach((w) => {
-            if (w.h < w.maxH) {
-                w.h += w.speed;
-                if (w.direction === 'up') w.y -= w.speed;
-            }
-        });
-
-        // 2. Physique (Joueur)
-        let dx = state.vx;
-        let dy = state.vy;
-
-        if (state.keys.ArrowUp) dy = -3;
-        if (state.keys.ArrowDown) dy = 3;
-        if (state.keys.ArrowLeft) dx = -3;
-        if (state.keys.ArrowRight) dx = 3;
-
-        state.player.x += dx;
-        state.player.y += dy;
-
-        // Bornes
-        if (state.player.x < 0) state.player.x = 0;
-        if (state.player.y < 0) state.player.y = 0;
-        if (state.player.x + state.player.w > width) state.player.x = width - state.player.w;
-        if (state.player.y + state.player.h > height) state.player.y = height - state.player.h;
-
-        // 3. Collisions Murs
-        let hitWall = false;
-        for (const w of state.walls) {
-            if (
-                state.player.x < w.x + w.w &&
-                state.player.x + state.player.w > w.x &&
-                state.player.y < w.y + w.h &&
-                state.player.y + state.player.h > w.y
-            ) {
-                hitWall = true;
-            }
-        }
-
-        if (hitWall) {
-            handleGameOver(false);
-            return;
-        }
-
-        // 4. Victoire
-        if (
-            state.player.x < state.target.x + state.target.w &&
-            state.player.x + state.player.w > state.target.x &&
-            state.player.y < state.target.y + state.target.h &&
-            state.player.y + state.player.h > state.target.y
-        ) {
-            handleGameOver(true);
-            return;
-        }
-
-        // 5. Rendu
-        ctx.clearRect(0, 0, width, height);
-
-        // Zone cible
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 2;
-        ctx.fillRect(state.target.x, state.target.y, state.target.w, state.target.h);
-        ctx.strokeRect(state.target.x, state.target.y, state.target.w, state.target.h);
-
-        // Murs
-        state.walls.forEach((w) => {
-            const grad = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
-            grad.addColorStop(0, '#ef4444');
-            grad.addColorStop(1, '#7f1d1d');
-            ctx.fillStyle = grad;
-            ctx.fillRect(w.x, w.y, w.w, w.h);
-        });
-
-        // Joueur
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 10;
-        ctx.fillRect(state.player.x, state.player.y, state.player.w, state.player.h);
-        ctx.shadowBlur = 0;
-
-        requestRef.current = requestAnimationFrame(gameLoop);
-    };
-
-    const startGame = () => {
-        setGameStatus('playing');
-        setTimeLeft(70);
-
-        gameState.current.player = { x: 20, y: 10, w: 20, h: 20 };
-        gameState.current.vx = 0;
-        gameState.current.vy = 0;
-        gameState.current.walls.forEach((w) => {
-            w.h = 10;
+        state.walls = JSON.parse(JSON.stringify(LEVEL_CONFIG.walls));
+        // Typage explicite ici pour éviter l'erreur linter
+        state.walls.forEach((w: WallConfig) => {
+            w.h = 0;
             w.y = w.initialY;
         });
 
-        if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
-        requestRef.current = requestAnimationFrame(gameLoop);
+        if (
+            phaseRef.current === 'idle' ||
+            phaseRef.current === 'gameover' ||
+            phaseRef.current === 'intro'
+        ) {
+            setTimeLeft(LEVEL_CONFIG.time);
+        }
 
-        if (timerRef.current !== null) window.clearInterval(timerRef.current);
+        setIsStabilizing(true);
+        isStabilizingRef.current = true;
+    }, []);
 
-        timerRef.current = window.setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    handleGameOver(false);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+    const handleStart = async () => {
+        await requestPermission();
+        initLevel();
+        triggerPhase('intro');
     };
 
-    const requestAccess = async () => {
-        const deviceEvent = DeviceOrientationEvent as unknown as DeviceOrientationEventiOS;
-        if (typeof deviceEvent.requestPermission === 'function') {
-            try {
-                const response = await deviceEvent.requestPermission();
-                if (response === 'granted') {
-                    setPermissionGranted(true);
-                    setNeedsPermission(false);
-                } else {
-                    alert('Permission requise pour jouer.');
-                }
-            } catch (e) {
-                console.error(e);
-            }
+    const resetPlayerPosition = () => {
+        const state = gameState.current;
+        state.player.x = LEVEL_CONFIG.start.x;
+        state.player.y = LEVEL_CONFIG.start.y;
+        state.vx = 0;
+        state.vy = 0;
+        state.hitFlash = 10;
+    };
+
+    useScenarioTransition(phase, isDialogueOpen, {
+        idle: () => {
+            if (!isSolved) triggerPhase('idle');
+        },
+        intro: () => {
+            triggerPhase('playing');
+        },
+        gameover: () => {
+            initLevel();
+            triggerPhase('playing');
+        },
+        win: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
+
+    const handleCalibrate = () => {
+        if (orientation) {
+            calibrationOffset.current = {
+                beta: orientation.beta || 0,
+                gamma: orientation.gamma || 0,
+            };
+            if (navigator.vibrate) navigator.vibrate(50);
         }
     };
 
-    // --- EFFECTS ---
+    // --- GAME LOOP ---
 
-    // Setup initial : On ne garde QUE le nettoyage.
-    // La détection d'iOS est déjà faite dans les useState() plus haut.
-    useEffect(() => {
-        return () => stopGame();
+    const update = useCallback(
+        (timestamp: number) => {
+            const state = gameState.current;
+            const currentPhase = phaseRef.current;
+            const { width, height } = GAME_DIMENSIONS;
+
+            if (currentPhase !== 'playing') return;
+
+            if (state.hitFlash > 0) state.hitFlash--;
+
+            // 1. Animation Murs
+            let wallsMoving = false;
+            state.walls.forEach((w) => {
+                if (w.h < w.maxH) {
+                    wallsMoving = true;
+                    w.h += w.speed;
+                    if (w.direction === 'up') w.y -= w.speed;
+                }
+            });
+
+            // Gestion de l'état "Stabilisation" sans useEffect
+            if (wallsMoving !== isStabilizingRef.current) {
+                isStabilizingRef.current = wallsMoving;
+                setIsStabilizing(wallsMoving);
+            }
+
+            if (wallsMoving) {
+                state.isLocked = true;
+                state.lastTime = timestamp;
+                return;
+            } else {
+                state.isLocked = false;
+            }
+
+            // 2. Timer
+            if (timestamp - state.lastTime >= 1000) {
+                setTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        setTimeout(() => triggerPhase('gameover'), 0);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+                state.lastTime = timestamp;
+            } else if (state.lastTime === 0) {
+                state.lastTime = timestamp;
+            }
+
+            // 3. Physique
+            const beta = (orientation?.beta || 0) - calibrationOffset.current.beta;
+            const gamma = (orientation?.gamma || 0) - calibrationOffset.current.gamma;
+
+            state.vx = gamma / 5;
+            state.vy = beta / 5;
+
+            state.player.x += state.vx;
+            state.player.y += state.vy;
+
+            state.player.x = Math.max(0, Math.min(width - state.player.w, state.player.x));
+            state.player.y = Math.max(0, Math.min(height - state.player.h, state.player.y));
+
+            // 4. Collisions
+            for (const w of state.walls) {
+                if (
+                    state.player.x < w.x + w.w &&
+                    state.player.x + state.player.w > w.x &&
+                    state.player.y < w.y + w.h &&
+                    state.player.y + state.player.h > w.y
+                ) {
+                    if (navigator.vibrate) navigator.vibrate(200);
+                    resetPlayerPosition();
+                    return;
+                }
+            }
+
+            // 5. Victoire
+            const target = LEVEL_CONFIG.target;
+            if (
+                state.player.x < target.x + target.w &&
+                state.player.x + state.player.w > target.x &&
+                state.player.y < target.y + target.h &&
+                state.player.y + state.player.h > target.y
+            ) {
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                setTimeout(() => triggerPhase('win'), 0);
+            }
+        },
+        [orientation, triggerPhase]
+    );
+
+    // --- DRAW LOOP ---
+
+    const draw = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+        const { walls, player, isLocked, hitFlash } = gameState.current;
+        const target = LEVEL_CONFIG.target;
+        const currentPhase = phaseRef.current;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (currentPhase === 'idle') return;
+
+        if (currentPhase === 'intro') {
+            ctx.globalAlpha = 0.5;
+        } else {
+            ctx.globalAlpha = 1;
+        }
+
+        if (hitFlash > 0) {
+            ctx.fillStyle = `rgba(239, 68, 68, ${hitFlash / 10})`;
+            ctx.fillRect(0, 0, GAME_DIMENSIONS.width, GAME_DIMENSIONS.height);
+        }
+
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(0, 0, GAME_DIMENSIONS.width, GAME_DIMENSIONS.height);
+
+        ctx.fillStyle = '#FFF';
+        ctx.shadowColor = '#FFF';
+        ctx.shadowBlur = 15;
+        ctx.fillRect(target.x, target.y, target.w, target.h);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText('EXIT', target.x + 10, target.y + 20);
+
+        walls.forEach((w) => {
+            const grad = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+            grad.addColorStop(0, '#ff0000');
+            grad.addColorStop(1, '#ff5555');
+            ctx.fillStyle = grad;
+            ctx.shadowColor = '#f00';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(w.x, w.y, w.w, w.h);
+        });
+        ctx.shadowBlur = 0;
+
+        if (isLocked) {
+            ctx.fillStyle = '#555';
+        } else {
+            ctx.fillStyle = '#FFF';
+            ctx.shadowColor = '#FFF';
+            ctx.shadowBlur = 20;
+        }
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
     }, []);
 
     useEffect(() => {
-        const handleOrientation = (e: DeviceOrientationEvent) => {
-            if (gameStatus !== 'playing') return;
-            gameState.current.vx = (e.gamma || 0) / 5;
-            gameState.current.vy = (e.beta || 0) / 5;
-        };
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (gameState.current.keys.hasOwnProperty(e.key)) {
-                gameState.current.keys[e.key as keyof typeof gameState.current.keys] = true;
+        let animationFrameId: number;
+        const loop = (time: number) => {
+            const canvas = canvasRef.current;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    update(time);
+                    draw(ctx, canvas);
+                }
             }
+            animationFrameId = requestAnimationFrame(loop);
         };
+        animationFrameId = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [update, draw]);
 
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (gameState.current.keys.hasOwnProperty(e.key)) {
-                gameState.current.keys[e.key as keyof typeof gameState.current.keys] = false;
-            }
-        };
-
-        window.addEventListener('deviceorientation', handleOrientation);
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-
-        return () => {
-            window.removeEventListener('deviceorientation', handleOrientation);
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [gameStatus, permissionGranted]);
-
-    const handleStartClick = () => {
-        if (needsPermission && !permissionGranted) {
-            requestAccess();
-        } else {
-            startGame();
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = GAME_DIMENSIONS.width * dpr;
+            canvas.height = GAME_DIMENSIONS.height * dpr;
+            const ctx = canvas.getContext('2d');
+            if (ctx) ctx.scale(dpr, dpr);
         }
-    };
+    }, []);
+
+    if (isSolved)
+        return (
+            <AlphaModal
+                isOpen={true}
+                variant="success"
+                title={modalConfig?.title || 'Terminé'}
+                message={modalConfig?.message || 'Module désactivé.'}
+            />
+        );
 
     return (
-        <div className="flex h-full w-full flex-col items-center gap-4 text-center">
-            <AlphaPuzzleHeader
-                left={
-                    <span className={clsx(timeLeft < 10 && 'text-brand-error animate-pulse')}>
-                        TIME: {timeLeft}s
-                    </span>
-                }
-                right={`GYRO_SENSOR: ${permissionGranted ? 'ON' : 'OFF'}`}
+        <div className="mx-auto w-full max-w-md">
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
             />
 
-            <div className="group relative">
-                {gameStatus == 'playing' && (
-                    <canvas
-                        ref={canvasRef}
-                        width={300}
-                        height={400}
-                        className={clsx(
-                            'rounded-lg border-2 shadow-[0_0_20px_var(--color-muted)]',
-                            gameStatus === 'playing'
-                                ? 'border-brand-emerald shadow-[0_0_15px_var(--color-brand-emerald)]'
-                                : 'border-border'
+            <AlphaModal
+                isOpen={phase === 'win' && !isDialogueOpen}
+                variant={'success'}
+                title={modalConfig?.title || 'Puzzle validé'}
+                message={modalConfig?.message || ''}
+                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
+                durationUnit={'ms'}
+            />
+
+            <AlphaPuzzleHeader
+                className="mb-4"
+                left={
+                    <div className="flex items-center gap-2">
+                        {phase === 'win' ? (
+                            <ShieldCheckIcon className="text-brand-emerald h-5 w-5" />
+                        ) : (
+                            <ExclamationTriangleIcon className="text-brand-error h-5 w-5 animate-pulse" />
                         )}
-                    />
-                )}
+                        <span
+                            className={clsx(
+                                'text-sm font-bold tracking-wider',
+                                phase === 'win' ? 'text-brand-emerald' : 'text-brand-error'
+                            )}
+                        >
+                            {phase === 'playing' ? 'ACTIVE' : 'STANDBY'}
+                        </span>
+                    </div>
+                }
+                right={
+                    <div className="flex items-center gap-2 text-white/80">
+                        <ClockIcon className="h-4 w-4" />
+                        <span
+                            className={clsx(
+                                'font-mono text-lg font-bold',
+                                timeLeft < 15 && 'text-brand-error animate-pulse'
+                            )}
+                        >
+                            {timeLeft}s
+                        </span>
+                    </div>
+                }
+            />
 
-                {/* OVERLAY ÉCRANS */}
-                {gameStatus !== 'playing' && (
-                    <>
-                        {gameStatus === 'idle' && (
-                            <>
-                                <AlphaTitle>DÉSARMORÇAGE</AlphaTitle>
-                                <p className="text-muted-foreground mb-6">
-                                    Incline ton appareil pour guider le fusible (carré blanc) vers
-                                    la zone sécurisée.
-                                </p>
-
-                                {needsPermission && !permissionGranted ? (
-                                    <AlphaButton className={'mx-auto'} onClick={requestAccess}>
-                                        ACTIVER CAPTEURS
-                                    </AlphaButton>
-                                ) : (
-                                    <AlphaButton className={'mx-auto'} onClick={handleStartClick}>
-                                        LANCER SÉQUENCE
-                                    </AlphaButton>
+            <AlphaCard className="border-brand-emerald/30 relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-black/50 p-0">
+                <AnimatePresence>
+                    {(phase === 'win' || phase === 'gameover' || phase === 'idle') &&
+                        !isDialogueOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 p-6 backdrop-blur-sm"
+                            >
+                                {phase === 'idle' && (
+                                    <div className="text-center">
+                                        <h2 className="mb-2 text-2xl font-bold text-white">
+                                            GYRO-LABYRINTHE
+                                        </h2>
+                                        <p className="text-muted-foreground mb-6 text-sm">
+                                            Guidez le fusible blanc vers la zone "EXIT".
+                                            <br />
+                                            <span className="text-xs opacity-70">
+                                                (Inclinez l'appareil pour jouer)
+                                            </span>
+                                        </p>
+                                        {!permissionGranted ? (
+                                            <AlphaButton
+                                                onClick={handleStart}
+                                                variant="primary"
+                                                className="animate-pulse"
+                                            >
+                                                <DevicePhoneMobileIcon className="mr-2 h-5 w-5" />
+                                                ACTIVER & JOUER
+                                            </AlphaButton>
+                                        ) : (
+                                            <AlphaButton onClick={() => triggerPhase('intro')}>
+                                                LANCER SÉQUENCE
+                                            </AlphaButton>
+                                        )}
+                                    </div>
                                 )}
-                            </>
-                        )}
 
-                        {gameStatus === 'won' && (
-                            <div className="text-brand-emerald flex animate-pulse flex-col items-center">
-                                <span className="mb-2 text-4xl">✓</span>
-                                <span className="text-lg font-bold tracking-widest">SUCCÈS</span>
-                                <span className="mt-2 text-xs">Redirection...</span>
-                            </div>
-                        )}
+                                {phase === 'win' && (
+                                    <div className="text-center">
+                                        <h2 className="text-brand-emerald mb-4 text-2xl font-black">
+                                            SUCCÈS
+                                        </h2>
+                                    </div>
+                                )}
 
-                        <AlphaModal
-                            isOpen={gameStatus === 'won'}
-                            variant="success"
-                            title={modalConfig?.title || 'Labyrinthe'}
-                            message={modalConfig?.message || 'Epreuve passée avec succès'}
-                            autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
-                            durationUnit={'ms'}
-                        />
-
-                        {gameStatus === 'lost' && (
-                            <div className="text-brand-error flex flex-col items-center">
-                                <span className="mb-2 text-4xl">✕</span>
-                                <span className="text-lg font-bold tracking-widest">ÉCHEC</span>
-                                <button
-                                    onClick={handleStartClick}
-                                    className="border-brand-error text-brand-error hover:bg-brand-error mt-6 rounded border px-6 py-2 text-sm transition-colors hover:text-white"
-                                >
-                                    RÉINITIALISER
-                                </button>
-                            </div>
+                                {phase === 'gameover' && (
+                                    <div className="text-center">
+                                        <h2 className="text-brand-error mb-4 text-2xl font-black">
+                                            TEMPS ÉCOULÉ
+                                        </h2>
+                                    </div>
+                                )}
+                            </motion.div>
                         )}
+                </AnimatePresence>
+
+                <canvas ref={canvasRef} className="h-full w-full object-contain" />
+            </AlphaCard>
+
+            <div className="mt-4 space-y-3">
+                {permissionGranted && phase === 'playing' && (
+                    <>
+                        <div className="flex gap-2">
+                            <AlphaButton
+                                fullWidth
+                                variant="secondary"
+                                onClick={handleCalibrate}
+                                className="opacity-60 transition-opacity hover:opacity-100"
+                            >
+                                <DevicePhoneMobileIcon className="mr-2 h-5 w-5" />
+                                Recalibrer position
+                            </AlphaButton>
+                        </div>
+                        <div className="flex justify-center">
+                            <FeedbackPill
+                                message={
+                                    isStabilizing
+                                        ? 'INITIALISATION SYSTÈME...'
+                                        : 'INCLINEZ POUR GUIDER'
+                                }
+                                type={isStabilizing ? 'error' : 'info'}
+                                pulse
+                            />
+                        </div>
                     </>
                 )}
             </div>
