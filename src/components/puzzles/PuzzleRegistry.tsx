@@ -2,9 +2,10 @@ import React from 'react';
 
 import { StarIcon, TrophyIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
-import QcmPuzzle1 from '@/components/SCENARIO/1-QcmGame/QcmPuzzle';
-import SpinPuzzle2 from '@/components/SCENARIO/2-SpinPuzzle/SpinPuzzle';
-import ChromaticPuzzle3 from '@/components/SCENARIO/3-ChromaticGame/ChromaticPuzzle';
+import QuizPuzzleSimple from '@/components/SCENARIO/1-1-QuizPuzzle-simple/QuizPuzzle-simple';
+import SpinPuzzleS1E2 from '@/components/SCENARIO/1-2-SpinPuzzle/SpinPuzzle';
+import ChromaticPuzzleS1E3 from '@/components/SCENARIO/1-3-ChromaticGame/ChromaticPuzzle';
+import QuizGameMorse from '@/components/SCENARIO/1-4-QuizGame-morse/QuizGame-morse';
 import CodingPuzzle4 from '@/components/SCENARIO/4-CodingPuzzle/CodingPuzzle';
 import OrientationPuzzle5 from '@/components/SCENARIO/5-OrientationPuzzle/OrientationPuzzle';
 import { DialogueLine } from '@/types/dialogue';
@@ -123,10 +124,11 @@ export const DefeatScreen = () => (
 );
 
 export const PUZZLE_COMPONENTS = {
-    'qcm-puzzle': QcmPuzzle1,
-    'spin-puzzle': SpinPuzzle2,
-    'chromatic-puzzle': ChromaticPuzzle3,
+    'qcm-puzzle': QuizPuzzleSimple,
+    'spin-puzzle': SpinPuzzleS1E2,
+    'chromatic-puzzle': ChromaticPuzzleS1E3,
     'coding-puzzle': CodingPuzzle4,
+    'morse-puzzle': QuizGameMorse,
     'orientation-puzzle': OrientationPuzzle5,
 
     'victory-screen': VictoryScreen,

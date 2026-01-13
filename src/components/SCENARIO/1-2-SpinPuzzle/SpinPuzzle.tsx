@@ -14,6 +14,6 @@ const SCRIPTS: Partial<Record<SpinPuzzleScenarioStep, DialogueLine[]>> = {
     ],
 };
 
-export default function SpinPuzzle2({ onSolve, isSolved }: PuzzleProps) {
+export default function SpinPuzzleS1E2({ onSolve, isSolved }: PuzzleProps) {
     return <SpinPuzzle scripts={SCRIPTS} onSolve={onSolve} isSolved={isSolved} />;
 }

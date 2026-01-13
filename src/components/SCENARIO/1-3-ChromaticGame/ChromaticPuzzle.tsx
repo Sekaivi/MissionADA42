@@ -19,6 +19,6 @@ const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
     ],
 };
 
-export default function ChromaticPuzzle3({ onSolve, isSolved }: PuzzleProps) {
+export default function ChromaticPuzzleS1E3ChromaticPuzzleS1E3({ onSolve, isSolved }: PuzzleProps) {
     return <ChromaticPuzzle scripts={SCRIPTS} onSolve={onSolve} isSolved={isSolved} />;
 }
