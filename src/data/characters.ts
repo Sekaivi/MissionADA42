@@ -46,4 +46,12 @@ export const CHARACTERS: Record<string, Character> = {
         },
         defaultSide: 'right',
     },
+    goguey: {
+        id: 'goguey',
+        name: 'Alix Goguey',
+        avatars: {
+            default: '/images/avatars/alixgoguey.jpg',
+        },
+        defaultSide: 'right',
+    },
 };
