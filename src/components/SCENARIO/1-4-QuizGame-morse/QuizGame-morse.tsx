@@ -17,8 +17,13 @@ const QUESTIONS_MMI: Question[] = [
 export type QCMScenarioStep = 'idle' | 'init' | 'memory' | 'scan' | 'win';
 
 const SCRIPTS: Partial<Record<QCMScenarioStep, DialogueLine[]>> = {
-    init: [say(CHARACTERS.unknown, 'init text')],
-    win: [say(CHARACTERS.unknown, 'win text')],
+    init: [say(CHARACTERS.unknown, 'Décodez-moi ça !')],
+    win: [
+        say(
+            CHARACTERS.unknown,
+            "Je vous ai peut-être sous-estimés... Quoi qu'il en soit, rendez-vous dans la salle que vous avez décodée, et on verra si vous êtes si forts que vous le prétendez."
+        ),
+    ],
 };
 
 export default function QuizGameMorse({ isSolved, onSolve }: PuzzleProps) {

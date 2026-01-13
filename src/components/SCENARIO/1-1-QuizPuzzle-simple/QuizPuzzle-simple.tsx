@@ -58,6 +58,9 @@ const SCRIPTS: Partial<Record<QCMScenarioStep, DialogueLine[]>> = {
             'Si on l’attrape, il subira les conséquences de ses actes, et je m’en assurerai personnellement.',
             {}
         ),
+
+        // rajouter goguey quand l'interface debug sera implémentée
+
         say(CHARACTERS.unknown, 'Bienvenue ! HAHAHAHAHA !'),
         say(
             CHARACTERS.unknown,

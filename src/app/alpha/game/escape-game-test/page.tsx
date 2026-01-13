@@ -506,7 +506,7 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
 
             {!gameState?.pendingProposal && (
                 <div
-                    className={`mb-8`} // ${isHost ? 'border-border border-t border-dashed pt-6' : ''}
+                    className={`space-y-8`} // ${isHost ? 'border-border border-t border-dashed pt-6' : ''}
                 >
                     {isHost && !isGameWon && (
                         <h4 className="text-muted mb-4 text-center text-xs font-bold uppercase">

@@ -41,12 +41,27 @@ export const SCENARIO: GameScenario = {
             hints: [],
         },
 
-        // étape 2 énigme 1 : DNS : 4 post-it pour trouver le code : QuizGame type number
-
-        // et2 en2 : IDE (mayssa)
-
         {
-            id: 'step_4',
+            // étape 2 énigme 1 : DNS : 4 post-it pour trouver le code : QuizGame type number
+            id: 'step_2_1',
+            title: 'DNS',
+            description: '',
+            componentId: 'dns-puzzle',
+            solution: '',
+            hints: [],
+        },
+        {
+            // et2 en2 : IDE (mayssa)
+
+            id: 'step_2_2',
+            title: 'IDE',
+            description: '',
+            componentId: 'ide-puzzle',
+            solution: '',
+            hints: [],
+        },
+        {
+            id: 'step_2_3',
             title: 'Jeu de code',
             description: '',
             componentId: 'coding-puzzle',
@@ -54,12 +69,27 @@ export const SCENARIO: GameScenario = {
             hints: [],
         },
 
-        // et3 en1 : post-it code : QuizGame type number
-
-        // et3 en2 : Firewall (micro souffler)
+        {
+            // et3 en1 : post-it code : QuizGame type number
+            id: 'step_3_1',
+            title: 'Post-it',
+            description: '',
+            componentId: 'post-it-puzzle',
+            solution: '',
+            hints: [],
+        },
+        {
+            // et3 en2 : Firewall (micro souffler)
+            id: 'step_3_Z',
+            title: 'Pare-feu',
+            description: '',
+            componentId: 'firewall-puzzle',
+            solution: '',
+            hints: [],
+        },
 
         {
-            id: 'step_5',
+            id: 'step_3_3',
             title: "Séquence d'orientation",
             description: '',
             componentId: 'orientation-puzzle',
@@ -70,6 +100,14 @@ export const SCENARIO: GameScenario = {
         // et3 en4 : GPS (mess précisant que iPhone marche mais pas Android)
 
         // et4 en1a 1b 1c 1d : ChestCode
+        {
+            id: 'step_4_1',
+            title: 'Coffre-fort',
+            description: '',
+            componentId: 'chest-puzzle',
+            solution: '',
+            hints: [],
+        },
 
         // fin : mettre le code trouvé dans la clef de Jacquot
 

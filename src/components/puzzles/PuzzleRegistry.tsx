@@ -6,8 +6,14 @@ import QuizPuzzleSimple from '@/components/SCENARIO/1-1-QuizPuzzle-simple/QuizPu
 import SpinPuzzleS1E2 from '@/components/SCENARIO/1-2-SpinPuzzle/SpinPuzzle';
 import ChromaticPuzzleS1E3 from '@/components/SCENARIO/1-3-ChromaticGame/ChromaticPuzzle';
 import QuizGameMorse from '@/components/SCENARIO/1-4-QuizGame-morse/QuizGame-morse';
-import CodingPuzzle4 from '@/components/SCENARIO/4-CodingPuzzle/CodingPuzzle';
-import OrientationPuzzle5 from '@/components/SCENARIO/5-OrientationPuzzle/OrientationPuzzle';
+import DNSPuzzle from '@/components/SCENARIO/2-1-DNSPuzzle/DNSPuzzle';
+import IDEPuzzle from '@/components/SCENARIO/2-2-IDEPuzzle/IDEPuzzle';
+import CodingPuzzleS2E3 from '@/components/SCENARIO/2-3-CodingPuzzle/CodingPuzzle';
+import SecretCodePostIt from '@/components/SCENARIO/3-1-SecretCode-post-it/SecretCode-post-it';
+import FirewallPuzzle from '@/components/SCENARIO/3-2-FirewallPuzzle/FirewallPuzzle';
+import OrientationPuzzleS3E3 from '@/components/SCENARIO/3-3-OrientationPuzzle/OrientationPuzzle';
+import GpsPuzzle from '@/components/SCENARIO/3-4-GpsPuzzle/GpsPuzzle';
+import ChestCodePuzzleS4E1 from '@/components/SCENARIO/4-1-ChestCodePuzzle/ChestCodePuzzle';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 
@@ -124,12 +130,25 @@ export const DefeatScreen = () => (
 );
 
 export const PUZZLE_COMPONENTS = {
+    // étape 1
     'qcm-puzzle': QuizPuzzleSimple,
     'spin-puzzle': SpinPuzzleS1E2,
     'chromatic-puzzle': ChromaticPuzzleS1E3,
-    'coding-puzzle': CodingPuzzle4,
     'morse-puzzle': QuizGameMorse,
-    'orientation-puzzle': OrientationPuzzle5,
+
+    // étape 2
+    'dns-puzzle': DNSPuzzle,
+    'ide-puzzle': IDEPuzzle,
+    'coding-puzzle': CodingPuzzleS2E3,
+
+    // étape 3
+    'post-it-puzzle': SecretCodePostIt,
+    'firewall-puzzle': FirewallPuzzle,
+    'orientation-puzzle': OrientationPuzzleS3E3,
+    'gps-puzzle': GpsPuzzle,
+
+    // étape 4
+    'chest-puzzle': ChestCodePuzzleS4E1,
 
     'victory-screen': VictoryScreen,
 };

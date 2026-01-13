@@ -26,14 +26,9 @@ const SCRIPTS: Partial<Record<CodingPuzzleGameState, DialogueLine[]>> = {
             CHARACTERS.unknown,
             'Je parie que n’importe lequel d’entre vous serait incapable de coder un virus pareil même après la 3e année, alors bonne chance pour retrouver la clé USB !'
         ),
-        say(CHARACTERS.paj, 'Vous êtes meilleurs qu’en hébergement...'),
-        say(
-            CHARACTERS.paj,
-            'Bon, c’est une bonne chose de faite, on a évité de peu la catastrophe. Maintenant on va rétablir la couche de sécurité primaire...'
-        ),
     ],
 };
 
-export default function CodingPuzzle4({ onSolve, isSolved }: PuzzleProps) {
+export default function CodingPuzzleS2E3({ onSolve, isSolved }: PuzzleProps) {
     return <CodingPuzzle scripts={SCRIPTS} onSolve={onSolve} isSolved={isSolved} />;
 }

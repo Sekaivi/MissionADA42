@@ -18,28 +18,28 @@ const SCRIPTS: Partial<Record<QuizScenarioStep, DialogueLine[]>> = {
     init: [
         say(
             CHARACTERS.paj,
-            'Merde ! On dirait que son puzzle s’arrête ici, décidément il aura décidé de nous faire chier jusqu’au bout celui-là…'
+            'Merde ! On dirait que son puzzle s’arrête ici, décidément il aura décidé de nous faire chier jusqu’au bout celui-là...'
         ),
-        say(CHARACTERS.goguey, '-de nous embêter il voulait dire…'),
+        say(CHARACTERS.goguey, '-de nous embêter il voulait dire...'),
         say(
             CHARACTERS.goguey,
             'Bref, on va devoir improviser pour retrouver la clé. Commencez par inspecter la pièce, avec un peu de chance vous la trouverez peut-être.'
         ),
         say(
             CHARACTERS.goguey,
-            'Et puis, s’il vous a amené ici c’est sûrement pas pour rien. Si vous trouvez quoi que ce soit faites-nous signe.'
+            'Et puis, s’il vous a amené ici ce n’est sûrement pas pour rien. Si vous trouvez quoi que ce soit, faites-nous signe.'
         ),
     ],
     win: [
         say(CHARACTERS.goguey, 'On dirait une clé d’accès au pare-feu, je vais essayer.'),
         say(
             CHARACTERS.goguey,
-            'Super ! ça a marché, bon le pare-feu est pas mal endommagé, si on veut maximiser nos chances de faire fonctionner l’antivirus plus tard il faut commencer par le stabiliser à nouveau.'
+            'Super, ça a marché ! Bon, le pare-feu est pas mal endommagé, si on veut maximiser nos chances de faire fonctionner l’antivirus plus tard, il faut commencer par le stabiliser à nouveau.'
         ),
     ],
 };
 
-export default function AdminAccessPage({ isSolved, onSolve }: PuzzleProps) {
+export default function SecretCodePostIt({ isSolved, onSolve }: PuzzleProps) {
     return (
         <QuizGame
             scripts={SCRIPTS}

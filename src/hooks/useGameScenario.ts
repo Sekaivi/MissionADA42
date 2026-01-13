@@ -1,4 +1,4 @@
-// hooks/useGameScenario.ts
+// src/hooks/useGameScenario.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialogueLine } from '@/types/dialogue';
@@ -19,12 +19,14 @@ export const useGameScenario = <T extends string>(scripts: Partial<Record<T, Dia
     // On passe la clé (ex: 'intro') qui DOIT exister dans les scripts fournis
     const triggerPhase = useCallback((phase: T) => {
         const selectedScript = scriptsRef.current[phase];
-
         setGameState(phase);
 
         if (selectedScript && selectedScript.length > 0) {
             setCurrentScript(selectedScript);
             setIsDialogueOpen(true);
+        } else {
+            setIsDialogueOpen(false);
+            setCurrentScript([]);
         }
     }, []);
 
@@ -47,7 +49,7 @@ export const useGameScenario = <T extends string>(scripts: Partial<Record<T, Dia
 export const useScenarioTransition = <T extends string>(
     currentPhase: T | 'idle',
     isDialogueOpen: boolean,
-    transitions: Partial<Record<T, () => void>>
+    transitions: Partial<Record<T | 'idle', () => void>>
 ) => {
     const transitionsRef = useRef(transitions);
 
@@ -55,14 +57,10 @@ export const useScenarioTransition = <T extends string>(
         transitionsRef.current = transitions;
     });
 
-    // surveille la fermeture du dialogue
     useEffect(() => {
-        if (!isDialogueOpen && currentPhase !== 'idle') {
-            const action = transitionsRef.current[currentPhase as T];
-            if (action) {
-                action();
-            }
+        if (!isDialogueOpen) {
+            const action = transitionsRef.current[currentPhase];
+            if (action) action();
         }
-        // on ne déclenche que si la phase change ou si le dialogue s'ouvre/ferme
     }, [currentPhase, isDialogueOpen]);
 };

@@ -12,10 +12,6 @@ const SCRIPTS: Partial<Record<ChromaticPuzzleScenarioStep, DialogueLine[]>> = {
     win: [
         say(CHARACTERS.unknown, "C'est bien, vous grandissez vite à ce que je vois !"),
         say(CHARACTERS.unknown, 'Bon maintenant, on va voir ce dont vous êtes vraiment capables.'),
-        say(
-            CHARACTERS.unknown,
-            'Je me sens tellement magnanime que je vous laisse choisir la difficulté de la prochaine énigme.'
-        ),
     ],
 };
 
