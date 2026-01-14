@@ -1,0 +1,13 @@
+import React from 'react';
+
+import type { Metadata } from 'next';
+
+import ClientLayout from '@/app/ClientLayout';
+
+export const metadata: Metadata = {
+    title: 'Debug',
+};
+
+export default function DebugLayout({ children }: { children: React.ReactNode }) {
+    return <ClientLayout variant="dark">{children}</ClientLayout>;
+}
