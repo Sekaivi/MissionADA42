@@ -1,68 +1,32 @@
 'use client';
 
-import React from 'react';
+import GpsGame, {GpsPuzzlePhases} from '@/components/puzzles/GpsGame';
+import {DialogueLine} from "@/types/dialogue";
+import {say} from "@/utils/dialogueUtils";
+import {CHARACTERS} from "@/data/characters";
+import {PuzzleProps} from "@/components/puzzles/PuzzleRegistry";
 
-import { AlphaModal } from '@/components/alpha/AlphaModal';
-import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
-import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
-import { SCENARIO } from '@/data/alphaScenario';
-import { CHARACTERS } from '@/data/characters';
-import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
-import { DialogueLine } from '@/types/dialogue';
-import { say } from '@/utils/dialogueUtils';
 
-export type DialoguePuzzlePhases = PuzzlePhases;
-
-const SCRIPTS: Partial<Record<DialoguePuzzlePhases, DialogueLine[]>> = {
+const SCRIPTS: Partial<Record<GpsPuzzlePhases, DialogueLine[]>> = {
     intro: [
-        say(
-            CHARACTERS.fabien,
-            'On a réussi à localiser d’où provient le signal de son puzzle, j’imagine que la suite de son épreuve se passe là-bas.'
-        ),
-        say(
-            CHARACTERS.fabien,
-            'Allez encore un peu de détermination et je réfléchirai à vous mettre une note bonus en Intégration.'
-        ),
+        say(CHARACTERS.fabien, "On a réussi à localiser d’où provient le signal de son puzzle, j’imagine que la suite de son épreuve se passe là-bas."),
+        say(CHARACTERS.fabien, "Allez encore un peu de détermination et je réfléchirai à vous mettre une note bonus en Intégration."),
+        say(CHARACTERS.paj, "J'aurais jamais cru dire ça mais pour une fois le petit GPS qu'on vous a préparé ne marche que sur iOS..."),
+        say(CHARACTERS.paj, "Donc si quelqu'un est sur un téléphone avec iOS, suivez-le ! Et pour le reste..."),
+        say(CHARACTERS.paj, "... Et bah démerdez-vous."),
     ],
-};
+    win: [
+        say(CHARACTERS.fabien, "Vous êtes assez près maintenant, c'est bien de la salle 132 dont provient le signal.")
+    ],
+}
 
-export default function GpsPuzzle({ isSolved, onSolve }: PuzzleProps) {
-    const { gameState, isDialogueOpen, currentScript, triggerPhase, onDialogueComplete } =
-        useGameScenario<DialoguePuzzlePhases>(SCRIPTS);
 
-    useScenarioTransition(gameState, isDialogueOpen, {
-        idle: () => {
-            triggerPhase('intro');
-        },
-        intro: () => {
-            triggerPhase('win');
-        },
-        win: () => {
-            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
-        },
-    });
-
-    if (isSolved) return <AlphaSuccess message={'GPS validé'} />;
-
+export default function GpsPuzzle({isSolved, onSolve}: PuzzleProps) {
     return (
-        <>
-            <DialogueBox
-                isOpen={isDialogueOpen}
-                script={currentScript}
-                onComplete={onDialogueComplete}
-            />
-
-            <AlphaModal
-                isOpen={gameState === 'win' && !isDialogueOpen}
-                title={'Succès'}
-                message="Epreuve passée avec succès"
-                subMessage={
-                    "Ce puzzle n'a pas encore été implémenté, vous avez seulement lu les dialogues associés"
-                }
-                autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
-                durationUnit={'ms'}
-            />
-        </>
+        <GpsGame
+            scripts={SCRIPTS}
+            onSolve={onSolve}
+            isSolved={isSolved}
+        />
     );
 }

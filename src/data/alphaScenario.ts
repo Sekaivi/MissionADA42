@@ -80,7 +80,7 @@ export const SCENARIO: Scenario = {
         },
         {
             // et3 en2 : Firewall (micro souffler)
-            id: 'step_3_Z',
+            id: 'step_3_2',
             title: 'Pare-feu',
             description: '',
             componentId: 'firewall-puzzle',
@@ -97,7 +97,14 @@ export const SCENARIO: Scenario = {
             hints: [],
         },
 
-        // et3 en4 : GPS (mess précisant que iPhone marche mais pas Android)
+        {
+            id: 'step_3_4',
+            title: "GPS",
+            description: '',
+            componentId: 'gps-puzzle',
+            solution: '',
+            hints: [],
+        },
 
         // et4 en1a 1b 1c 1d : ChestCode
         {
