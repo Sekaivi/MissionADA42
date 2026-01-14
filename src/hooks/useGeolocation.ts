@@ -18,8 +18,8 @@ export interface GeolocationData {
 }
 
 export function useGeolocation(
-    targetLat,
-    targetLong,
+    targetLat: number = 0,
+    targetLong: number = 0,
     externalOrientation?: OrientationData
 ) {
     const internalOrientation = useOrientation();
@@ -125,9 +125,7 @@ export function useGeolocation(
 
         return () => {
             if (watchId.current !== null) {
-                if (typeof watchId.current === 'number') {
-                    navigator.geolocation.clearWatch(watchId.current);
-                }
+                navigator.geolocation.clearWatch(watchId.current);
             }
         };
     }, [permissionGranted, onSuccess, onError]);

@@ -99,7 +99,7 @@ export const SCENARIO: Scenario = {
 
         {
             id: 'step_3_4',
-            title: "GPS",
+            title: 'GPS',
             description: '',
             componentId: 'gps-puzzle',
             solution: '',
