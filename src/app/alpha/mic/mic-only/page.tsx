@@ -7,7 +7,7 @@ import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { useMicrophone } from '@/hooks/useMicrophone';
 
 export default function MicrophoneDebug() {
-    const { data, isCalibrated, permissionGranted, error, requestPermission, startCalibration } =
+    const { data, permissionGranted, error, requestPermission } =
         useMicrophone();
 
     return (
@@ -48,25 +48,6 @@ export default function MicrophoneDebug() {
                                     {data.isBlowing ? 'OUI' : 'NON'}
                                 </span>
                             </div>
-                        </div>
-                    </AlphaCard>
-
-                    <AlphaCard title="Statut Calibration">
-                        <div className="flex flex-col items-center gap-4">
-                            <div
-                                className={`rounded border px-3 py-1 text-sm ${isCalibrated ? 'border-emerald-500 text-emerald-500' : 'border-orange-500 text-orange-500'}`}
-                            >
-                                {isCalibrated ? 'CALIBRÉ' : 'NON CALIBRÉ / EN COURS'}
-                            </div>
-
-                            <AlphaButton variant="secondary" onClick={startCalibration}>
-                                Relancer Calibration (5s)
-                            </AlphaButton>
-
-                            <p className="text-center text-xs text-neutral-500">
-                                Restez silencieux pendant la calibration pour fixer le seuil
-                                ambiant.
-                            </p>
                         </div>
                     </AlphaCard>
                 </AlphaGrid>
