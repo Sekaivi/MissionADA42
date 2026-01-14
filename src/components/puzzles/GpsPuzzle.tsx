@@ -27,7 +27,7 @@ export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
         permissionGranted: locationGranted,
         requestPermission: requestLocationPermission,
         error: locationError,
-    } = useGeolocation(45.20365424982078, 5.7013579371490986, orientation);
+    } = useGeolocation(45.20372213834273, 5.701471833458243, orientation);
 
     useEffect(() => {
         if (

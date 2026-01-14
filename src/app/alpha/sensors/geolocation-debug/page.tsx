@@ -12,8 +12,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 
 export default function AlphaGeolocationDebug() {
     const { data, error, permissionGranted, requestPermission } = useGeolocation(
-        45.20365424982078,
-        5.7013579371490986
+        45.20372213834273,
+        5.701471833458243
     );
 
     useEffect(() => {

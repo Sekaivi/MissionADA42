@@ -18,8 +18,8 @@ export interface GeolocationData {
 }
 
 export function useGeolocation(
-    targetLat = 45.2031,
-    targetLong = 5.702213,
+    targetLat = 45.20372213834273,
+    targetLong = 5.701471833458243,
     externalOrientation?: OrientationData
 ) {
     const internalOrientation = useOrientation();
