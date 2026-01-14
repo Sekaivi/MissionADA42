@@ -24,7 +24,7 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'fabien',
         name: 'Fabien Romanens',
         avatars: {
-            default: '/images/avatars/fabos.jpeg',
+            default: '/images/avatars/fabienromanens.jpg',
             shocked: '/images/avatars/fabos_shocked.jpeg',
         },
         defaultSide: 'right',
