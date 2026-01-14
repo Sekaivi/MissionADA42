@@ -62,7 +62,6 @@ const CORRECT_ANSWERS = {
     marquee: ['none', 'paused'],
 };
 
-// La "moulinette" qui recrée la structure que tes composants attendent
 const t = (
     badCl: string,
     goodCl: string = 'hidden',
@@ -92,7 +91,6 @@ const page_themes: PageThemes = {
     ),
     fakeLink: t('font-serif text-purple-700 underline font-bold', 'text-black text-[12px]'),
 
-    // Éléments avec du style spécifique (animation ou background)
     website: t(
         "font-['Comic_Sans_MS',_cursive] p-4 rounded-b-2xl bg-repeat bg-[length:100%_100%,25rem]",
         'p-4 rounded-b-2xl bg-white',
@@ -136,21 +134,21 @@ const ide_fields = [
     {
         id: 'bg',
         comment: '/* 3. Couleur de fond du site */',
-        element: '.fake-website-content',
+        element: '.content',
         attribut: 'background-color',
         placeholder: 'cyan',
     },
     {
         id: 'zIndex',
         comment: '/* 3. Ajuster la profondeur pour voir le texte caché */',
-        element: '.image-covering-container',
+        element: '.bad-image',
         attribut: 'z-index',
         placeholder: '999',
     },
     {
         id: 'marquee',
         comment: "/* 4. Stopper l'enfer du scroll */",
-        element: '.marquee-content',
+        element: '.very-annoying-text',
         attribut: 'animation',
         placeholder: '--',
     },
