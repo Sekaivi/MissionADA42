@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
@@ -9,11 +9,31 @@ import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { DialogueBox } from '@/components/dialogueBox';
+import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
+import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useOrientation } from '@/hooks/useOrientation';
 
-export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
+export type GpsPuzzlePhases = PuzzlePhases;
+
+export default function GpsGame({ onSolve, isSolved, scripts = {} }: PuzzleProps) {
+    const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
+        useGameScenario<GpsPuzzlePhases>(scripts);
+
+    useScenarioTransition(gameState, isDialogueOpen, {
+        idle: () => {
+            triggerPhase('intro');
+        },
+        intro: () => {
+            triggerPhase('playing');
+        },
+        win: () => {
+            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+        },
+    });
+
     const {
         data: orientation,
         permissionGranted: orientationGranted,
@@ -36,9 +56,9 @@ export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
             geolocation.accuracy != null &&
             geolocation.accuracy < 15
         ) {
-            onSolve();
+            triggerPhase('win');
         }
-    }, [geolocation.distance, geolocation.accuracy, onSolve]);
+    }, [geolocation.distance, geolocation.accuracy, triggerPhase]);
 
     if (isSolved) {
         return (
@@ -55,6 +75,12 @@ export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
     return (
         <>
             <div className="space-y-4">
+                <DialogueBox
+                    isOpen={isDialogueOpen}
+                    script={currentScript}
+                    onComplete={onDialogueComplete}
+                />
+
                 {!orientationGranted && (
                     <div className="border-border bg-surface rounded-lg border p-8 text-center">
                         <p className="text-muted mb-4">Autorisation requise pour la boussole</p>
@@ -95,7 +121,7 @@ export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
 
                     {/* DEBUG */}
                     <AlphaCard title="Données GPS & Cap">
-                        <div className="space-y-2">
+                        <div className="">
                             <AlphaInfoRow
                                 label="Position"
                                 value={
@@ -125,14 +151,6 @@ export default function GpsPuzzle({ onSolve, isSolved }: PuzzleProps) {
                                 value={
                                     geolocation.accuracy !== null
                                         ? `${Math.round(geolocation.accuracy)} m`
-                                        : 'N/A'
-                                }
-                            />
-                            <AlphaInfoRow
-                                label="Distance"
-                                value={
-                                    geolocation.distance !== null
-                                        ? `${Math.round(geolocation.distance)} m`
                                         : 'N/A'
                                 }
                             />
