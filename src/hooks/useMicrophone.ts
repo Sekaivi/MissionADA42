@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MicrophoneData {
+    isAmbient: boolean;
     isBlowing: boolean;
+    isLoud: boolean;
     intensity: number;
     volume: number;
 }
@@ -11,26 +13,22 @@ interface MicrophoneData {
 export function useMicrophone() {
     const [permissionGranted, setPermissionGranted] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isCalibrated, setIsCalibrated] = useState(false);
-    const [data, setData] = useState<MicrophoneData>({ isBlowing: false, intensity: 0, volume: 0 });
+    const [data, setData] = useState<MicrophoneData>({ isAmbient: false, isBlowing: false, isLoud: false, intensity: 0, volume: 0 });
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const dataArrayRef = useRef<Uint8Array | null>(null);
     const rafIdRef = useRef<number | null>(null);
 
-    const isCalibratingRef = useRef(false);
-    const samplesRef = useRef<number[]>([]);
     const thresholdRef = useRef(15); // Seuil par défaut si pas de calibration
+
+    // Définition des paliers
+    const AMBIENT_THRESHOLD = 4;
+    const BLOWING_THRESHOLD = 35;
+    const LOUD_THRESHOLD = 115;
 
     const updateRef = useRef<(() => void) | null>(null);
 
-    const startCalibration = useCallback(() => {
-        console.log('Début de la calibration...');
-        samplesRef.current = [];
-        setIsCalibrated(false);
-        isCalibratingRef.current = true;
-    }, []);
 
     const update = useCallback(() => {
         if (!analyserRef.current || !dataArrayRef.current) return;
@@ -44,29 +42,19 @@ export function useMicrophone() {
             if (amplitude > maxAmplitude) maxAmplitude = amplitude;
         }
 
-        // --- LOGIQUE DE CALIBRATION ---
-        if (isCalibratingRef.current) {
-            samplesRef.current.push(maxAmplitude);
-
-            // On prend 300 échantillons (environ 5 secondes à 60fps)
-            if (samplesRef.current.length >= 300) {
-                const averageNoise =
-                    samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
-                thresholdRef.current = averageNoise + 8;
-
-                isCalibratingRef.current = false;
-                setIsCalibrated(true);
-            }
-        }
-
-        // souffle détecté que si le micro est calibré
-        const isBlowing = !isCalibratingRef.current && maxAmplitude > thresholdRef.current;
-        const intensity = isBlowing ? Math.min(100, (maxAmplitude - thresholdRef.current) * 2) : 0;
+        const isAmbient = maxAmplitude > AMBIENT_THRESHOLD;
+        const isBlowing = maxAmplitude > BLOWING_THRESHOLD;
+        const isLoud = maxAmplitude > LOUD_THRESHOLD;
+        const intensity = isBlowing
+            ? Math.min(100, ((maxAmplitude - BLOWING_THRESHOLD) / (127 - BLOWING_THRESHOLD)) * 100)
+            : 0;
 
         setData({
             volume: maxAmplitude,
-            intensity: intensity,
-            isBlowing: isBlowing,
+            intensity: Math.round(intensity),
+            isAmbient,
+            isBlowing,
+            isLoud
         });
 
         if (updateRef.current) {
@@ -95,7 +83,6 @@ export function useMicrophone() {
 
             setPermissionGranted(true);
             update();
-            startCalibration();
         } catch (err) {
             setError('Accès micro refusé: ' + err);
         }
@@ -112,5 +99,5 @@ export function useMicrophone() {
         updateRef.current = update;
     }, [update]);
 
-    return { data, isCalibrated, permissionGranted, error, requestPermission, startCalibration };
+    return { data, permissionGranted, error, requestPermission };
 }

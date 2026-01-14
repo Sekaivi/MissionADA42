@@ -61,6 +61,7 @@ export default function FirewallGame() {
         isActive: gameState === GAME_STATES.PLAYING,
         orientation: orientationData,
         isBlowing: mic.isBlowing,
+        isLoud: mic.isLoud,
         onWin: () => setGameState(GAME_STATES.WIN),
     });
 
@@ -195,13 +196,13 @@ export default function FirewallGame() {
                                     {/* Le Ventilo */}
                                     <svg
                                         viewBox="0 0 24 24"
-                                        className={`fan-smooth h-16 w-16 ${mic.isBlowing && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
+                                        className={`fan-smooth h-16 w-16 ${(mic.isBlowing || mic.isLoud) && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
                                         fill="none"
                                         stroke="currentColor"
                                         strokeWidth="2"
                                         style={{
                                             // Animation via CSS rotation
-                                            animation: `spin ${mic.isBlowing && isStable ? '0.2s' : '10s'} linear infinite`,
+                                            animation: `spin ${(mic.isBlowing || mic.isLoud) && isStable ? '0.2s' : '10s'} linear infinite`,
                                             transition: 'all 1s ease-out',
                                         }}
                                     >
@@ -223,7 +224,7 @@ export default function FirewallGame() {
                                     </svg>
                                 </div>
                                 <div className="h-4 text-center font-mono text-[10px] tracking-widest">
-                                    {mic.isBlowing ? (
+                                    {(mic.isBlowing || mic.isLoud) ? (
                                         isStable ? (
                                             <span className="animate-pulse text-cyan-400">
                                                 FLUX D'AIR ACTIF
