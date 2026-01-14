@@ -18,12 +18,12 @@ import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 import { ModalConfig } from '@/types/modal';
 
-export interface PuzzleProps<T extends string = string> {
+export interface PuzzleProps<TPhase extends string = string, TConfig = Record<string, unknown>> {
     onSolve: () => void;
     isSolved?: boolean;
     data?: GameState;
-    scripts?: Partial<Record<T, DialogueLine[]>>;
-    sequence?: [];
+    scripts?: Partial<Record<TPhase, DialogueLine[]>>;
+    puzzleConfig?: TConfig;
     modalConfig?: ModalConfig;
 }
 

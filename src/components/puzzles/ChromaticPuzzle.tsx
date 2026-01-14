@@ -17,24 +17,20 @@ import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
-import { PRESETS } from '@/utils/colorPresets';
+import { ColorDefinition } from '@/types/colorDetection';
 
 import { PuzzlePhases, PuzzleProps } from './PuzzleRegistry';
 
 export type ChromaticPuzzlePhases = PuzzlePhases | 'memory' | 'scan';
 
-const GAME_PRESETS = [PRESETS.ROUGE];
-const MEMO_TIME = Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5));
-
-interface ColorPreset {
-    id: string;
-    displayHex: string;
-    name?: string;
+// def type de la config
+interface ChromaticConfig {
+    sequence: ColorDefinition[];
 }
 
 interface AlphaSequenceDisplayProps {
     sequence: string[];
-    presets: ColorPreset[];
+    presets: ColorDefinition[];
     gameState: ChromaticPuzzlePhases;
     step: number;
     className?: string;
@@ -91,16 +87,29 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
     );
 };
 
-export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps) => {
+export const ChromaticPuzzle = ({
+    onSolve,
+    isSolved,
+    scripts = {},
+    puzzleConfig,
+}: PuzzleProps<ChromaticPuzzlePhases, ChromaticConfig>) => {
+    const GAME_PRESETS = useMemo(() => {
+        return puzzleConfig?.sequence || [];
+    }, [puzzleConfig?.sequence]);
+
+    const MEMO_TIME = useMemo(() => {
+        return GAME_PRESETS.length > 0 ? Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5)) : 0;
+    }, [GAME_PRESETS.length]);
+
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<ChromaticPuzzlePhases>(scripts);
 
-    const { videoRef, error } = useCamera();
+    const { videoRef, error, isMirrored } = useCamera('environment');
 
     const scanConfig = useMemo(() => ({ size: 180, xOffset: 0, yOffset: 0 }), []);
-    const activePresets = useMemo(() => GAME_PRESETS, []);
 
-    // gestion du typage pour l'affichage (idle -> init)
+    const activePresets = useMemo(() => GAME_PRESETS, [GAME_PRESETS]);
+
     const displayPhase = (gameState === 'idle' ? 'init' : gameState) as ChromaticPuzzlePhases;
 
     const [sequence, setSequence] = useState<string[]>([]);
@@ -118,13 +127,15 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
     );
 
     const generateSequence = useCallback(() => {
+        if (GAME_PRESETS.length === 0) return; // sécurité
+
         const availableIds = GAME_PRESETS.map((p) => p.id);
         for (let i = availableIds.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [availableIds[i], availableIds[j]] = [availableIds[j], availableIds[i]];
         }
         setSequence(availableIds);
-    }, []);
+    }, [GAME_PRESETS]);
 
     const startGame = useCallback(() => {
         generateSequence();
@@ -135,7 +146,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
 
         processingRef.current = false;
         setIsValidating(false);
-    }, [generateSequence, triggerPhase]);
+    }, [generateSequence, triggerPhase, MEMO_TIME]);
 
     // timer
     useEffect(() => {
@@ -197,12 +208,15 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                 setIsValidating(false);
             }
         };
-    }, [detectedId, gameState, sequence, step, onSolve, triggerPhase]);
+    }, [detectedId, gameState, sequence, step, onSolve, triggerPhase, GAME_PRESETS]);
 
     // init
     useEffect(() => {
-        triggerPhase('intro');
-    }, [triggerPhase]);
+        // ne pas lancer l'intro si pas de config
+        if (GAME_PRESETS.length > 0) {
+            triggerPhase('intro');
+        }
+    }, [triggerPhase, GAME_PRESETS.length]);
 
     // transitions automatiques après dialogues
     useScenarioTransition(gameState, isDialogueOpen, {
@@ -213,6 +227,11 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
     });
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE CHROMATIQUE VALIDÉE'} />;
+
+    // erreur si la config est manquante
+    if (GAME_PRESETS.length === 0)
+        return <AlphaError message="Erreur de configuration : séquence vide" />;
+
     if (error) return <AlphaError message={error} />;
 
     return (
@@ -253,6 +272,7 @@ export const ChromaticPuzzle = ({ onSolve, isSolved, scripts = {} }: PuzzleProps
                         scanSettings={gameState === 'scan' ? scanConfig : undefined}
                         label={gameState === 'scan' ? 'SCAN EN COURS' : 'ATTENTE'}
                         videoRef={videoRef}
+                        isMirrored={isMirrored}
                     >
                         {detectedId && gameState === 'scan' && (
                             <div className="absolute right-0 bottom-4 left-0 text-center">

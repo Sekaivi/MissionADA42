@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import Image from 'next/image';
 
@@ -446,11 +446,10 @@ export default function QuizGame({
         onDialogueComplete,
     } = useGameScenario<QuizPuzzlePhases>(scripts);
 
-    useEffect(() => {
-        triggerPhase('intro');
-    }, [triggerPhase]);
-
     useScenarioTransition(phase, isDialogueOpen, {
+        idle: () => {
+            triggerPhase('intro');
+        },
         intro: () => {
             triggerPhase('playing');
         },

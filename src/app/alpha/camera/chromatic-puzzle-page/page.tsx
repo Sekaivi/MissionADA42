@@ -4,7 +4,12 @@ import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { ChromaticPuzzle, ChromaticPuzzlePhases } from '@/components/puzzles/ChromaticPuzzle';
 import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
+import { PRESETS } from '@/utils/colorPresets';
 import { say } from '@/utils/dialogueUtils';
+
+const puzzleConfig = {
+    sequence: [PRESETS.VERT, PRESETS.BLEU],
+};
 
 const SCRIPTS: Partial<Record<ChromaticPuzzlePhases, DialogueLine[]>> = {
     intro: [
@@ -26,6 +31,7 @@ export default function ChromaticPuzzlePage() {
         <>
             <AlphaHeader title={'Module de Sécurité'} />
             <ChromaticPuzzle
+                puzzleConfig={puzzleConfig}
                 scripts={SCRIPTS}
                 onSolve={() =>
                     window.alert(
