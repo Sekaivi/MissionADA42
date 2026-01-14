@@ -18,12 +18,17 @@ import { useOrientation } from '@/hooks/useOrientation';
 
 export type GpsPuzzlePhases = PuzzlePhases;
 
-interface GpsConfig{
+interface GpsConfig {
     lat: number;
     long: number;
 }
 
-export default function GpsGame({ onSolve, isSolved, scripts = {}, puzzleConfig }: PuzzleProps<GpsPuzzlePhases,GpsConfig>) {
+export default function GpsGame({
+    onSolve,
+    isSolved,
+    scripts = {},
+    puzzleConfig,
+}: PuzzleProps<GpsPuzzlePhases, GpsConfig>) {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<GpsPuzzlePhases>(scripts);
 
