@@ -18,7 +18,12 @@ import { useOrientation } from '@/hooks/useOrientation';
 
 export type GpsPuzzlePhases = PuzzlePhases;
 
-export default function GpsGame({ onSolve, isSolved, scripts = {} }: PuzzleProps) {
+interface GpsConfig{
+    lat: number;
+    long: number;
+}
+
+export default function GpsGame({ onSolve, isSolved, scripts = {}, puzzleConfig }: PuzzleProps<GpsPuzzlePhases,GpsConfig>) {
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<GpsPuzzlePhases>(scripts);
 
@@ -47,7 +52,7 @@ export default function GpsGame({ onSolve, isSolved, scripts = {} }: PuzzleProps
         permissionGranted: locationGranted,
         requestPermission: requestLocationPermission,
         error: locationError,
-    } = useGeolocation(45.20372213834273, 5.701471833458243, orientation);
+    } = useGeolocation(puzzleConfig?.lat, puzzleConfig?.long, orientation);
 
     useEffect(() => {
         if (

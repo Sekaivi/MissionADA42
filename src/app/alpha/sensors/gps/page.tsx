@@ -6,6 +6,11 @@ import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
+const puzzleConfig = {
+    lat: 45.20372213834273,
+    long: 5.701471833458243
+}
+
 const SCRIPTS: Partial<Record<GpsPuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(
@@ -36,6 +41,7 @@ export default function AlphaGPSPage() {
             <AlphaHeader title="GPS Boussole" subtitle="Navigation directionnelle vers une cible" />
 
             <GpsGame
+                puzzleConfig={puzzleConfig}
                 scripts={SCRIPTS}
                 onSolve={() =>
                     window.alert(
