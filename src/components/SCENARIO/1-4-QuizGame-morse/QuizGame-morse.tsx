@@ -8,9 +8,8 @@ import { say } from '@/utils/dialogueUtils';
 const QUESTIONS_MMI: Question[] = [
     {
         type: 'text',
-        question: '',
+        question: '... --.- .-.. .-.. . .---- .---- ^',
         answer: 'SALLE115',
-        image: '/images/morse_etape1_enigme4.png',
     },
 ];
 
