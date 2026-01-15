@@ -8,7 +8,7 @@ import CircularTimer from '@/components/ui/CircularTimer';
 import FeatureCard from '@/components/ui/FeatureCard';
 import InfoCard from '@/components/ui/InfoCard';
 
-export default function Home() {
+export default function Homepage() {
     const router = useRouter();
 
     const startDebug = () => {

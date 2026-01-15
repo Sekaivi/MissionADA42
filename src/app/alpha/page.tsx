@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 
 import {
     ArrowPathIcon,
+    ArrowsRightLeftIcon,
     CameraIcon,
     ChatBubbleLeftIcon,
     CommandLineIcon,
@@ -88,6 +89,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 title: 'Debug GPS',
                 subtitle: 'Valide, construit sur des composants et hooks réutilisables',
                 icon: MapPinIcon,
+            },
+            {
+                href: '/alpha/sensors/shake-debug',
+                title: 'Shake',
+                subtitle: '',
+                icon: ArrowsRightLeftIcon,
             },
             {
                 href: '/alpha/sensors/gps',
