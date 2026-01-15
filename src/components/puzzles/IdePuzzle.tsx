@@ -7,7 +7,6 @@ import { PlayIcon } from '@heroicons/react/24/outline';
 import { AnimatePresence } from 'framer-motion';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
-import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { AlphaWindow } from '@/components/alpha/AlphaWindow';
@@ -469,10 +468,6 @@ export default function IdePuzzle({ isSolved, onSolve, scripts = {} }: PuzzlePro
                 message="Epreuve passée avec succès"
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}
-            />
-            <AlphaHeader
-                title={'Du CSS de qualité'}
-                subtitle={'Nettoyez ce code pour rendre le site utilisable.'}
             />
 
             <DialogueBox
