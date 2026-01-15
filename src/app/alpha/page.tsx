@@ -41,6 +41,18 @@ const ALPHA_MODULES: ModuleGroup[] = [
         headerColor: 'text-brand-blue',
         items: [
             {
+                href: '/alpha/camera/qr-code',
+                title: '> MODULE QR Code',
+                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
+                icon: QrCodeIcon,
+            },
+            {
+                href: '/alpha/camera/color-scanner-module',
+                title: '> MODULE SCANNER COULEUR',
+                subtitle: 'Valide',
+                icon: SwatchIcon,
+            },
+            {
                 href: '/alpha/camera/camera-only',
                 title: 'Accès au flux vidéo brut',
                 subtitle: 'Valide, construit sur des composants et hooks réutilisables',
@@ -59,12 +71,6 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 icon: EyeIcon,
             },
             {
-                href: '/alpha/camera/qr-code',
-                title: 'Scanner QR Code',
-                subtitle: 'Valide, construit sur des composants et hooks réutilisables',
-                icon: QrCodeIcon,
-            },
-            {
                 href: '/alpha/camera/chromatic-puzzle-page',
                 title: 'Jeu de mémorisation de couleurs',
                 subtitle: 'Basé sur le composant ChromaticPuzzle valide. Supporte les dialogues.',
@@ -78,6 +84,12 @@ const ALPHA_MODULES: ModuleGroup[] = [
         icon: DevicePhoneMobileIcon,
         headerColor: 'text-brand-purple',
         items: [
+            {
+                href: '/alpha/sensors/gyroscope-module',
+                title: '> MODULE GYROSCOPE',
+                subtitle: 'Valide',
+                icon: CubeTransparentIcon,
+            },
             {
                 href: '/alpha/sensors/orientation',
                 title: 'Calibrage gyroscopique',

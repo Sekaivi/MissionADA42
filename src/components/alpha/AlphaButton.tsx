@@ -4,7 +4,7 @@ import React from 'react';
 
 import clsx from 'clsx';
 
-export type AlphaButtonVariants = 'primary' | 'secondary' | 'danger' | 'ghost';
+export type AlphaButtonVariants = 'primary' | 'secondary' | 'danger' | 'ghost' | 'warning';
 
 interface AlphaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: AlphaButtonVariants;
@@ -31,7 +31,9 @@ export const AlphaButton = ({
             'border-brand-emerald text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald hover:text-black',
         secondary:
             'border-border text-muted hover:border-foreground-highlight hover:text-foreground-highlight bg-transparent',
-        danger: 'border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white',
+        danger: 'border-brand-error text-brand-error bg-brand-error/10 hover:bg-brand-error hover:text-white',
+        warning:
+            'border-brand-orange text-brand-orange bg-brand-orange/10 hover:bg-brand-orange hover:text-white',
         ghost: 'border-transparent text-muted hover:text-brand-emerald hover:bg-white/5',
     };
 
@@ -51,7 +53,7 @@ export const AlphaButton = ({
             disabled={disabled || isLoading}
             className={clsx(
                 // base
-                'relative flex cursor-pointer items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200',
+                'relative flex cursor-pointer items-center justify-center rounded border font-mono font-medium tracking-wider uppercase transition-all duration-200 select-none',
                 // focus accessibility
                 'focus-visible:ring-brand-emerald/50 focus-visible:ring-2 focus-visible:outline-none',
                 // animation de clic (seulement si actif)
