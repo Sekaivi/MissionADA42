@@ -54,4 +54,12 @@ export const CHARACTERS: Record<string, Character> = {
         },
         defaultSide: 'right',
     },
+    beatlesBOB: {
+        id: 'beatlesBOB',
+        name: 'beatlesBOB',
+        avatars: {
+            default: '/images/avatars/beatlesBOB.webp',
+        },
+        defaultSide: 'right',
+    },
 };
