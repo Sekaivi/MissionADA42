@@ -7,12 +7,12 @@ import { OrientationData } from '@/types/orientation';
 interface FirewallLogicProps {
     isActive: boolean;
     orientation: OrientationData;
-    isLoud: boolean;
     isBlowing: boolean;
+    intensity: number ;
     onWin: () => void;
 }
 
-export function useFirewallLogic({ isActive, orientation, isBlowing , isLoud, onWin }: FirewallLogicProps) {
+export function useFirewallLogic({ isActive, orientation, isBlowing, intensity , onWin }: FirewallLogicProps) {
     const [temp, setTemp] = useState(200);
     const [stabilityProgress, setStabilityProgress] = useState(0);
 
@@ -20,7 +20,7 @@ export function useFirewallLogic({ isActive, orientation, isBlowing , isLoud, on
         isActive,
         orientation,
         isBlowing,
-        isLoud,
+        intensity,
         onWin,
         lastPos: { beta: 0, gamma: 0 },
         stabilityStartTime: null as number | null,
@@ -30,7 +30,7 @@ export function useFirewallLogic({ isActive, orientation, isBlowing , isLoud, on
         stateRef.current.isActive = isActive;
         stateRef.current.orientation = orientation;
         stateRef.current.isBlowing = isBlowing;
-        stateRef.current.isLoud = isLoud ;
+        stateRef.current.intensity = intensity ;
         stateRef.current.onWin = onWin;
     });
 
@@ -68,8 +68,8 @@ export function useFirewallLogic({ isActive, orientation, isBlowing , isLoud, on
             setTemp((prev) => {
                 let nextTemp = prev + 0.15;
 
-                if (isCurrentlyStable && ( current.isBlowing || current.isLoud)) {
-                    nextTemp -= 4;
+                if (isCurrentlyStable && current.isBlowing) {
+                    nextTemp -= (current.intensity / 25);
                 }
 
                 if (nextTemp <= 50) {

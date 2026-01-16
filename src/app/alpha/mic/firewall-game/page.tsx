@@ -54,14 +54,14 @@ export default function FirewallGame() {
 
     // CAPTEURS
     const { data: orientationData } = useOrientation();
-    const { data: mic, requestPermission } = useMicrophone();
+    const { data: mic, requestPermission } = useMicrophone(35); // threshold à passer en paramètre
 
     // LOGIQUE DE JEU
     const { temp, stabilityProgress, isStable } = useFirewallLogic({
         isActive: gameState === GAME_STATES.PLAYING,
         orientation: orientationData,
         isBlowing: mic.isBlowing,
-        isLoud: mic.isLoud,
+        intensity: mic.intensity,
         onWin: () => setGameState(GAME_STATES.WIN),
     });
 
@@ -196,13 +196,13 @@ export default function FirewallGame() {
                                     {/* Le Ventilo */}
                                     <svg
                                         viewBox="0 0 24 24"
-                                        className={`fan-smooth h-16 w-16 ${(mic.isBlowing || mic.isLoud) && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
+                                        className={`fan-smooth h-16 w-16 ${mic.isBlowing && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
                                         fill="none"
                                         stroke="currentColor"
                                         strokeWidth="2"
                                         style={{
                                             // Animation via CSS rotation
-                                            animation: `spin ${(mic.isBlowing || mic.isLoud) && isStable ? '0.2s' : '10s'} linear infinite`,
+                                            animation: `spin ${mic.isBlowing && isStable ? '0.2s' : '10s'} linear infinite`,
                                             transition: 'all 1s ease-out',
                                         }}
                                     >
@@ -224,7 +224,7 @@ export default function FirewallGame() {
                                     </svg>
                                 </div>
                                 <div className="h-4 text-center font-mono text-[10px] tracking-widest">
-                                    {(mic.isBlowing || mic.isLoud) ? (
+                                    {mic.isBlowing ? (
                                         isStable ? (
                                             <span className="animate-pulse text-cyan-400">
                                                 FLUX D'AIR ACTIF
