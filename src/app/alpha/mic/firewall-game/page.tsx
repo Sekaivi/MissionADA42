@@ -53,8 +53,8 @@ export default function FirewallGame() {
     const [gameState, setGameState] = useState<GameStatus>(GAME_STATES.IDLE);
 
     // CAPTEURS
-    const { data: orientationData } = useOrientation();
-    const { data: mic, requestPermission } = useMicrophone(35); // threshold à passer en paramètre
+    const { data: orientationData , requestPermission: requestOrientation } = useOrientation();
+    const { data: mic, requestPermission: requestMic } = useMicrophone(35); // threshold à passer en paramètre
 
     // LOGIQUE DE JEU
     const { temp, stabilityProgress, isStable } = useFirewallLogic({
@@ -66,7 +66,8 @@ export default function FirewallGame() {
     });
 
     const onStart = async () => {
-        await requestPermission();
+        await requestMic();
+        await requestOrientation() ;
         setGameState(GAME_STATES.PLAYING);
     };
 
