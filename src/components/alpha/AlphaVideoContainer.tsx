@@ -1,20 +1,22 @@
 import React, { ReactNode, RefObject } from 'react';
 
 import clsx from 'clsx';
+import { motion } from 'framer-motion';
 
 import { ScanZoneSettings } from '@/types/colorDetection';
 
+export type ScanStatus = 'idle' | 'scanning' | 'detected' | 'success' | 'error' | 'warning';
+
 interface AlphaVideoContainerProps {
-    children?: ReactNode; // pour les overlays (textes, cadres spécifiques)
+    children?: ReactNode;
     scanSettings?: ScanZoneSettings;
     label?: string;
     className?: string;
-
-    // gestion intégrée de la vidéo
-    videoRef?: RefObject<HTMLVideoElement | null>; // pour les video natives
-    qrMountRef?: RefObject<HTMLDivElement | null>; // pour le scanner QR
-    qrElementId?: string; // id requis par la lib html5-qrcode
-    isMirrored?: boolean; // gérer l'effet miroir
+    scanStatus?: ScanStatus;
+    videoRef?: RefObject<HTMLVideoElement | null>;
+    qrMountRef?: RefObject<HTMLDivElement | null>;
+    qrElementId?: string;
+    isMirrored?: boolean;
 }
 
 export const AlphaVideoContainer = ({
@@ -26,12 +28,52 @@ export const AlphaVideoContainer = ({
     qrMountRef,
     qrElementId,
     isMirrored = false,
+    scanStatus = 'idle',
 }: AlphaVideoContainerProps) => {
+    const variants = {
+        idle: {
+            scale: 1,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 2,
+            borderStyle: 'dashed',
+        },
+        scanning: {
+            scale: 0.95,
+            borderColor: 'var(--color-brand-blue)',
+            borderWidth: 4,
+            borderStyle: 'solid',
+        },
+        detected: {
+            scale: 1.15,
+            borderColor: '#ffffff',
+            borderWidth: 3,
+            borderStyle: 'solid',
+            boxShadow: '0 0 20px rgba(255,255,255,0.4)',
+        },
+        success: {
+            scale: 1.2,
+            borderColor: 'var(--color-brand-emerald)',
+            borderWidth: 4,
+            borderStyle: 'solid',
+        },
+        error: {
+            scale: 1.1,
+            borderColor: 'var(--color-brand-error)',
+            borderWidth: 4,
+            borderStyle: 'solid',
+        },
+        warning: {
+            scale: 1.05,
+            borderColor: 'var(--color-brand-orange)',
+            borderWidth: 4,
+            borderStyle: 'dashed',
+        },
+    };
     return (
         <div
             className={clsx(
-                'group relative aspect-video w-full overflow-hidden rounded-lg border-2 bg-black shadow-2xl transition-colors duration-300',
-                !className?.includes('border-') && 'border-border',
+                'group relative w-full rounded-lg border bg-black transition-colors duration-300',
+                'border-border h-full min-h-[300px]',
                 className
             )}
         >
@@ -43,7 +85,7 @@ export const AlphaVideoContainer = ({
                     playsInline
                     muted
                     className={clsx(
-                        'h-full w-full transform-gpu object-cover',
+                        'absolute inset-0 h-full w-full transform-gpu object-cover',
                         isMirrored && 'rotate-y-180'
                     )}
                 />
@@ -53,35 +95,51 @@ export const AlphaVideoContainer = ({
             {qrMountRef && (
                 <div
                     id={qrElementId}
-                    ref={qrMountRef} // la lib QR injecte sa propre video
+                    ref={qrMountRef}
                     className={clsx(
-                        'h-full w-full overflow-hidden [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover',
+                        'h-full w-full overflow-hidden',
                         isMirrored && '[&_video]:rotate-y-180'
                     )}
                 />
             )}
 
-            <div className="border-brand-emerald/30 text-brand-emerald absolute top-2 left-2 z-30 rounded border bg-black/70 px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
-                {label} {isMirrored ? '(MIRROR)' : ''}
+            {/* label en haut à gauche */}
+            <div className="border-brand-emerald/30 text-brand-emerald bg-surface/50 pointer-events-none absolute top-2 left-2 z-30 rounded border px-2 py-1 text-xs font-bold backdrop-blur-sm">
+                {label}
             </div>
 
             {/* overlay de visée (ScanSettings) */}
             {scanSettings && (
                 <div
-                    className="pointer-events-none absolute top-1/2 left-1/2 z-10 box-border rounded-lg border-2 border-dashed border-white/50 transition-all group-hover:border-white/80"
+                    className="pointer-events-none absolute top-0 left-0"
                     style={{
+                        // 1. Le conteneur parent gère UNIQUEMENT la position (x, y)
+                        // Cela évite le conflit avec le "scale" de l'enfant
                         width: `${scanSettings.size}px`,
                         height: `${scanSettings.size}px`,
-                        transform: `translate(calc(-50% + ${scanSettings.xOffset || 0}px), calc(-50% + ${scanSettings.yOffset || 0}px))`,
+                        left: '50%',
+                        top: '50%',
+                        marginLeft: `-${scanSettings.size / 2}px`, // Centrage CSS classique pour éviter translate()
+                        marginTop: `-${scanSettings.size / 2}px`,
+                        transform: `translate(${scanSettings.xOffset || 0}px, ${scanSettings.yOffset || 0}px)`,
                     }}
-                />
+                >
+                    <motion.div
+                        className="h-full w-full rounded-lg"
+                        initial="idle"
+                        animate={scanStatus}
+                        variants={variants}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    />
+                </div>
             )}
 
+            {/* scanlines décoratives */}
             <div
                 className={`pointer-events-none absolute inset-0 z-20 bg-[linear-gradient(rgba(16,185,129,0)_50%,rgba(16,185,129,0.1)_50%)] bg-[length:100%_4px] opacity-20`}
             />
 
-            {/* overlays spécifiques */}
+            {/* overlays supplémentaires */}
             {children}
         </div>
     );

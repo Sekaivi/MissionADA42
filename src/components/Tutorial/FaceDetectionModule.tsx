@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { CheckCircleIcon, UserIcon } from '@heroicons/react/24/solid';
+import { ArrowPathIcon, CheckCircleIcon, UserIcon } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
 
-import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
@@ -15,8 +15,8 @@ import { SCENARIO } from '@/data/alphaScenario';
 import { useCamera } from '@/hooks/useCamera';
 
 export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }) => {
-    const { videoRef, error: cameraError } = useCamera();
-    // type la ref pour accepter le module importé ou null
+    const { videoRef, error: cameraError, toggleCamera, activeFacingMode } = useCamera();
+
     const faceApiRef = useRef<typeof import('@vladmandic/face-api') | null>(null);
 
     const [isModelLoaded, setIsModelLoaded] = useState(false);
@@ -33,7 +33,6 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
                 const faceapi = await import('@vladmandic/face-api');
                 faceApiRef.current = faceapi;
 
-                // chargement modèle
                 const MODEL_URL = '/models';
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 
@@ -49,7 +48,6 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
             }
         };
 
-        // délai pour laisser le temps au composant de s'afficher avant de charger l'IA
         const t = setTimeout(initFaceApi, 100);
 
         return () => {
@@ -65,8 +63,14 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
         const faceapi = faceApiRef.current;
 
         const interval = setInterval(async () => {
-            // vérifications de sécurité vidéo
-            if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) return;
+            // si la caméra est en train de switch
+            if (
+                !videoRef.current ||
+                videoRef.current.paused ||
+                videoRef.current.ended ||
+                videoRef.current.readyState < 2
+            )
+                return;
 
             try {
                 const options = new faceapi.TinyFaceDetectorOptions({
@@ -92,9 +96,11 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
 
     if (isSolved) {
         return (
-            <div className="rounded-xl border border-green-500 bg-green-900/20 p-6 text-center">
-                <CheckCircleIcon className="mx-auto mb-4 h-16 w-16 text-green-500" />
-                <h2 className="text-xl font-bold text-green-400">IDENTITÉ BIOMÉTRIQUE CONFIRMÉE</h2>
+            <div className="border-brand-emerald bg-brand-emerald/20 rounded-xl border p-6 text-center">
+                <CheckCircleIcon className="text-brand-emerald mx-auto mb-4 h-16 w-16" />
+                <h2 className="text-brand-emerald text-xl font-bold">
+                    IDENTITÉ BIOMÉTRIQUE CONFIRMÉE
+                </h2>
             </div>
         );
     }
@@ -115,27 +121,31 @@ export const FaceDetectionModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }
                 durationUnit={'ms'}
             />
 
-            <AlphaCard title="Identification Biométrique">
-                <AlphaFeedbackPill
-                    message={feedbackMsg}
-                    isLoading={!isModelLoaded}
-                    type={isValidating ? 'success' : 'info'}
-                />
+            <AlphaFeedbackPill
+                message={feedbackMsg}
+                isLoading={!isModelLoaded}
+                type={isValidating ? 'success' : 'info'}
+            />
 
-                <AlphaVideoContainer videoRef={videoRef}>
-                    {/* effet de scan si l'ia tourne */}
-                    {!isValidating && isModelLoaded && (
-                        <>
-                            <motion.div
-                                className="border-brand-blue/60 to-brand-blue/20 pointer-events-none absolute inset-0 z-10 border-b-2 bg-gradient-to-b from-transparent"
-                                animate={{ top: ['-10%', '110%'] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                            />
-                            <div className="border-brand-blue/30 pointer-events-none absolute inset-0 z-0 m-8 rounded-lg border-2 border-dashed" />
-                        </>
-                    )}
-                </AlphaVideoContainer>
-            </AlphaCard>
+            <AlphaVideoContainer videoRef={videoRef} isMirrored={activeFacingMode === 'user'}>
+                <div className={'absolute top-4 right-4'}>
+                    <AlphaButton onClick={toggleCamera} variant="primary" className="!p-2">
+                        <ArrowPathIcon className="h-5 w-5" />
+                    </AlphaButton>
+                </div>
+
+                {/* effet de scan si l'ia tourne */}
+                {!isValidating && isModelLoaded && (
+                    <>
+                        <motion.div
+                            className="border-brand-blue/60 to-brand-blue/20 pointer-events-none absolute inset-0 z-10 border-b-2 bg-gradient-to-b from-transparent"
+                            animate={{ top: ['-10%', '110%'] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        />
+                        <div className="border-brand-blue/30 pointer-events-none absolute inset-0 z-0 m-8 rounded-lg border-2 border-dashed" />
+                    </>
+                )}
+            </AlphaVideoContainer>
         </div>
     );
 };

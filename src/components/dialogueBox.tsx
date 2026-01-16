@@ -15,9 +15,15 @@ interface DialogueBoxProps {
     script: DialogueLine[];
     onComplete: () => void;
     isOpen: boolean;
+    position?: 'top' | 'bottom';
 }
 
-export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, isOpen }) => {
+export const DialogueBox: React.FC<DialogueBoxProps> = ({
+    script,
+    onComplete,
+    isOpen,
+    position = 'bottom',
+}) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -71,6 +77,13 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, handleInteraction]);
 
+    const positionClasses = clsx(
+        'fixed inset-0 z-[100] flex justify-center p-4 bg-black/20',
+        position === 'bottom' ? 'items-end pb-8' : 'items-start pt-8'
+    );
+
+    const initialY = position === 'bottom' ? 50 : -50;
+
     return (
         <AnimatePresence>
             {isOpen && currentLine && (
@@ -79,14 +92,19 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({ script, onComplete, is
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.3 } }}
-                    className="fixed inset-0 z-50 m-0 flex items-end justify-center bg-black/50 px-4 pb-8"
+                    className={positionClasses}
                     onClick={handleInteraction}
                 >
                     <motion.div
                         key={`dialogue-session-${script[0]?.id}`}
-                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        initial={{ opacity: 0, y: initialY, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95, transition: { duration: 0.2 } }}
+                        exit={{
+                            opacity: 0,
+                            y: initialY,
+                            scale: 0.95,
+                            transition: { duration: 0.2 },
+                        }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         className="border-border bg-surface pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 p-6 shadow-2xl backdrop-blur-md"
                         onClick={handleInteraction}

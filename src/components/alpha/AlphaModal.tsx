@@ -22,6 +22,7 @@ interface AlphaModalProps {
     message?: string;
     subMessage?: string;
     Icon?: React.ElementType;
+    hideIcon?: boolean;
     children?: React.ReactNode;
 
     /** durée avant fermeture automatique */
@@ -69,11 +70,12 @@ const THEME_CONFIG = {
 
 export const AlphaModal: React.FC<AlphaModalProps> = ({
     isOpen,
-    variant = 'success',
+    variant = 'info',
     title,
     message,
     subMessage,
     Icon,
+    hideIcon = false,
     children,
     autoCloseDuration,
     durationUnit = 's',
@@ -148,14 +150,16 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                 </div>
 
                                 <div className="flex flex-col items-center p-8 text-center">
-                                    <div className="relative mb-6">
-                                        <div
-                                            className={`absolute inset-0 ${theme.glow} animate-pulse rounded-full blur-xl`}
-                                        />
-                                        <DisplayIcon
-                                            className={`relative h-16 w-16 ${theme.primary}`}
-                                        />
-                                    </div>
+                                    {!hideIcon && (
+                                        <div className="relative mb-6">
+                                            <div
+                                                className={`absolute inset-0 ${theme.glow} animate-pulse rounded-full blur-xl`}
+                                            />
+                                            <DisplayIcon
+                                                className={`relative h-16 w-16 ${theme.primary}`}
+                                            />
+                                        </div>
+                                    )}
 
                                     {message && (
                                         <h3 className="text-foreground mb-2 text-xl font-bold">

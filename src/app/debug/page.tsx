@@ -18,7 +18,7 @@ import { AlphaScanlines } from '@/components/alpha/AlphaScanlines';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
 import { useDebogageGame } from '@/hooks/useDebogageGame';
 
-export default function Debogage() {
+export default function DebugPage() {
     const { isSuccess, input, setInput, messages, hintLevel, handleVerify, handleHelp } =
         useDebogageGame();
 
