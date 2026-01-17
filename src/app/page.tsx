@@ -11,7 +11,7 @@ import Homepage from '@/app/test/homepage';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { DialogueBox } from '@/components/dialogueBox';
-import { PuzzlePhases } from '@/components/puzzles/PuzzleRegistry';
+import {ModuleAction, PuzzlePhases} from '@/components/puzzles/PuzzleRegistry';
 import { EscapeGameProvider, useEscapeGame } from '@/context/EscapeGameContext';
 import { CHARACTERS } from '@/data/characters';
 import { ModuleId } from '@/data/modules';
@@ -246,6 +246,7 @@ const GameContent = () => {
     };
 
     // GESTION DES RÉSULTATS DES MODULES
+    const [lastModuleAction, setLastModuleAction] = useState<ModuleAction | null>(null);
     const handleModuleSuccess = (id: ModuleId, result?: any) => {
         const isGameMode = (tutorialPhase as string) === 'debug_all_validated';
 
@@ -261,19 +262,19 @@ const GameContent = () => {
 
         // logique de jeu => mode libre
         if (isGameMode) {
-            console.log(`[GAME] Module ${id} used. Result:`, result);
-
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate(50);
-            }
+            console.log(`[GAME] Module ${id} used.`);
+            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
 
             if (logic) {
-                // envoie les données au moteur de jeu
-                const payload = result ? JSON.stringify(result) : 'OK';
-                logic.submitProposal(pseudo, `MODULE_ACTION:${id}:${payload}`);
+                logic.submitModuleAction(id, result);
             }
 
-            // EN JEU : ON NE FERME PAS LA MODALE AUTOMATIQUEMENT
+            // màj locale pour réactivité immédiate
+            setLastModuleAction({
+                id,
+                data: result,
+                timestamp: Date.now()
+            });
         }
     };
 
@@ -299,9 +300,14 @@ const GameContent = () => {
         'debug_go_to_modules',
     ].includes((tutorialPhase as string) || '');
 
-    const handleMultiplayerPuzzleSolve = () => {
+    // on accepte les arguments optionnels du onSolve
+    const handleMultiplayerPuzzleSolve = (id?: string, data?: any) => {
         if (logic && currentMultiplayerStep) {
-            logic.submitProposal(pseudo, `Solution pour "${currentMultiplayerStep.title}"`);
+            // si le puzzle envoie des données spécifiques (ex: un code trouvé), on l'ajoute
+            const payload = data ? ` : ${JSON.stringify(data)}` : '';
+            const source = id ? `[${id}] ` : '';
+
+            logic.submitProposal(pseudo, `${source}Solution pour "${currentMultiplayerStep.title}"${payload}`);
         }
     };
 
@@ -368,6 +374,7 @@ const GameContent = () => {
                                 isPlayerReady={isPlayerReady}
                                 onVoteReady={() => logic?.voteReady()}
                                 isHost={isHost}
+                                lastModuleAction={lastModuleAction}
                             />
                         ) : (
                             <GameLobby />

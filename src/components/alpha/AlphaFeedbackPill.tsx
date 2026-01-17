@@ -1,6 +1,6 @@
 import React from 'react';
 
-type FeedbackType = 'success' | 'error' | 'info';
+type FeedbackType = 'success' | 'error' | 'info' | 'warning';
 
 interface FeedbackPillProps {
     message: string;
@@ -21,6 +21,7 @@ const FeedbackPill: React.FC<FeedbackPillProps> = ({
 
     const variants = {
         success: 'border-brand-emerald text-brand-emerald bg-brand-emerald/10',
+        warning: 'border-brand-orange text-brand-orange bg-brand-orange/10',
         error: 'border-brand-error text-brand-error bg-brand-red/10',
         info: 'border-brand-blue text-brand-blue bg-brand-blue/20',
     };

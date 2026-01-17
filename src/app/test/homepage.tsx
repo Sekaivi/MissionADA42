@@ -8,7 +8,7 @@ import { clsx } from 'clsx';
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
-import { PUZZLE_COMPONENTS, PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
+import {ModuleAction, PUZZLE_COMPONENTS, PuzzleComponentId} from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState } from '@/types/game';
 
@@ -24,6 +24,7 @@ interface HomepageProps {
     onVoteReady?: () => void;
     isPlayerReady?: boolean;
     isHost?: boolean;
+    lastModuleAction?: ModuleAction | null;
 }
 
 const formatTime = (seconds: number) => {
@@ -50,6 +51,7 @@ export default function Homepage({
     onVoteReady,
     isPlayerReady,
     isHost = false,
+    lastModuleAction
 }: HomepageProps) {
     const isGameActive = !!missionStatus;
 
@@ -172,6 +174,7 @@ export default function Homepage({
                                     onSolve={onPuzzleSolve || (() => {})}
                                     isSolved={false}
                                     data={gameState || undefined}
+                                    lastModuleAction={lastModuleAction}
                                 />
                             ) : (
                                 <div className="text-muted flex flex-col items-center justify-center text-center">

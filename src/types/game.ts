@@ -29,6 +29,13 @@ export interface ValidationRequest {
     timestamp: number;
 }
 
+export interface ModuleActionEvent {
+    id: string; // ex: 'color_scanner'
+    payload: string; // ex: 'RED'
+    playerId: string;
+    timestamp: number;
+}
+
 export interface GameState {
     step: number;
     message: string;
@@ -36,6 +43,7 @@ export interface GameState {
     players: Player[];
     history: HistoryEntry[];
     pendingProposal: PendingProposal | null;
+    lastModuleAction?: ModuleActionEvent | null;
     validationRequest?: ValidationRequest | null;
     lastUpdate: number;
     lastStepTime?: number;

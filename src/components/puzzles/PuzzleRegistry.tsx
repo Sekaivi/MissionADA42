@@ -19,13 +19,20 @@ import { GameState, HistoryEntry } from '@/types/game';
 import { ModalConfig } from '@/types/modal';
 import {ModuleId} from "@/data/modules";
 
+export interface ModuleAction {
+    id: ModuleId;
+    data: any;
+    timestamp: number;
+}
+
 export interface PuzzleProps<TPhase extends string = string, TConfig = Record<string, unknown>> {
-    onSolve: (id: ModuleId, data?: any) => void;
+    onSolve: (id?: string | ModuleId, data?: any) => void;
     isSolved?: boolean;
     data?: GameState;
     scripts?: Partial<Record<TPhase, DialogueLine[]>>;
     puzzleConfig?: TConfig;
     modalConfig?: ModalConfig;
+    lastModuleAction?: ModuleAction | null;
 }
 
 export type PuzzlePhases = 'idle' | 'intro' | 'playing' | 'win' | 'lose';

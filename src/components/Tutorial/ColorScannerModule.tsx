@@ -21,7 +21,9 @@ import { useColorDetection } from '@/hooks/useColorDetection';
 import { ColorDefinition } from '@/types/colorDetection';
 import { PRESETS } from '@/utils/colorPresets';
 
-interface ColorScannerProps extends PuzzleProps {
+interface ColorScannerProps {
+    onSolve: (detectedColor: ColorDefinition) => void;
+    isSolved?: boolean;
     targetColorId?: string;
     onFail?: () => void;
     sequenceHistory?: string[];
@@ -151,7 +153,7 @@ export const ColorScannerModule: React.FC<ColorScannerProps> = ({
                             if (navigator.vibrate) navigator.vibrate(200);
 
                             setTimeout(() => {
-                                onSolve();
+                                onSolve(detectedPreset);
                             }, 0);
 
                             setTimeout(() => setIsValidating(false), 1500);

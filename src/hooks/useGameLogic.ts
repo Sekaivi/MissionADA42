@@ -44,6 +44,7 @@ export const useGameLogic = (
                 pendingProposal: null,
                 validationRequest: null,
                 lastUpdate: now,
+                lastModuleAction: null
             });
         }
     }, [isHost, gameState, updateState, playerId, pseudo]);
@@ -86,18 +87,42 @@ export const useGameLogic = (
 
     // ACTIONS DE JEU
 
-    // soumettre proposition
-    const submitProposal = async (playerName: string, label: string) => {
-        if(!gameState) return;
+    // action technique d'un module => ne notifie pas l'hôte, met juste à jour l'état pour les puzzles
+    const submitModuleAction = async (moduleId: string, payload: any) => {
+        if (!gameState) return;
 
-        // si c'est l'hôte ou si le joueur est seul dans la partie
+        await updateState({
+            ...gameState,
+            lastModuleAction: {
+                id: moduleId,
+                payload: typeof payload === 'string' ? payload : JSON.stringify(payload),
+                playerId,
+                timestamp: Date.now()
+            },
+            // on ne touche pas à pendingProposal
+            lastUpdate: Date.now()
+        });
+    };
+
+    // soumettre proposition => notifie l'hôte ou valide direct
+    const submitProposal = async (playerName: string, label: string) => {
+        if (!gameState) return;
+
         const isPlayingSolo = gameState.players.length === 1;
 
+        // si c'est une action technique
+        if (label.startsWith('MODULE_ACTION:')) {
+            const parts = label.split(':');
+            // parts[0] = MODULE_ACTION, parts[1] = id, parts[2] = payload
+            if (parts.length >= 3) {
+                await submitModuleAction(parts[1], parts.slice(2).join(':'));
+                return;
+            }
+        }
+
         if (isHost || isPlayingSolo) {
-            // bypass la demande de validation et on lance directement le vote de groupe (passage direct)
             await initiateNextStep();
         } else {
-            // sinon, demande de validation à l'hôte
             await updateState({
                 ...gameState,
                 pendingProposal: { playerId, playerName, actionLabel: label, timestamp: Date.now() },
@@ -170,6 +195,7 @@ export const useGameLogic = (
             lastUpdate: now,
             validationRequest: null,
             pendingProposal: null,
+            lastModuleAction: null
         });
     };
 
@@ -242,5 +268,6 @@ export const useGameLogic = (
         initiateNextStep,
         voteReady,
         confirmNextStep,
+        submitModuleAction
     };
 };
