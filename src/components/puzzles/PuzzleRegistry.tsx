@@ -17,9 +17,10 @@ import ChestCodePuzzleS4E1 from '@/components/SCENARIO/4-1-ChestCodePuzzle/Chest
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 import { ModalConfig } from '@/types/modal';
+import {ModuleId} from "@/data/modules";
 
 export interface PuzzleProps<TPhase extends string = string, TConfig = Record<string, unknown>> {
-    onSolve: () => void;
+    onSolve: (id: ModuleId, data?: any) => void;
     isSolved?: boolean;
     data?: GameState;
     scripts?: Partial<Record<TPhase, DialogueLine[]>>;

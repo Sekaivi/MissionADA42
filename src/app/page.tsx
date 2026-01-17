@@ -19,6 +19,7 @@ import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario'
 import { useShake } from '@/hooks/useShake';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
+import ClientLayout from "@/app/ClientLayout";
 
 export type GamePhases =
     | PuzzlePhases
@@ -198,7 +199,7 @@ const GameContent = () => {
         },
     });
 
-    // validation des modules
+    // validation des modules (Unlock during Tuto)
     useEffect(() => {
         if (
             !isAlternateView ||
@@ -244,9 +245,36 @@ const GameContent = () => {
         }
     };
 
-    const handleModuleSuccess = (id: ModuleId) => {
-        setValidatedModules((prev) => [...prev, id]);
-        setTestingModule(null);
+    // GESTION DES RÉSULTATS DES MODULES
+    const handleModuleSuccess = (id: ModuleId, result?: any) => {
+        const isGameMode = (tutorialPhase as string) === 'debug_all_validated';
+
+        // tutoriel
+        if (!isGameMode) {
+            if (!validatedModules.includes(id)) {
+                setValidatedModules((prev) => [...prev, id]);
+            }
+            // ferme automatiquement pour valider l'étape et passer à la suivante
+            setTestingModule(null);
+            return;
+        }
+
+        // logique de jeu => mode libre
+        if (isGameMode) {
+            console.log(`[GAME] Module ${id} used. Result:`, result);
+
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            if (logic) {
+                // envoie les données au moteur de jeu
+                const payload = result ? JSON.stringify(result) : 'OK';
+                logic.submitProposal(pseudo, `MODULE_ACTION:${id}:${payload}`);
+            }
+
+            // EN JEU : ON NE FERME PAS LA MODALE AUTOMATIQUEMENT
+        }
     };
 
     const highlightedElement = useMemo(() => {
@@ -297,10 +325,15 @@ const GameContent = () => {
                 />
             )}
 
+            {/* Note : ModuleTestModal doit être capable de renvoyer des données via onSuccess
+                Exemple: onSuccess={(id, data) => handleModuleSuccess(id, data)}
+            */}
             <ModuleTestModal
                 moduleId={testingModule}
                 onClose={() => setTestingModule(null)}
-                onSuccess={handleModuleSuccess}
+                onSuccess={(id, data) => handleModuleSuccess(id, data)}
+                // C'est un tuto SI on n'est PAS encore à l'étape 'debug_all_validated'
+                isTutorial={(tutorialPhase as string) !== 'debug_all_validated'}
             />
 
             <AlphaModal
@@ -320,40 +353,45 @@ const GameContent = () => {
             </AlphaModal>
 
             <div className={!isAlternateView ? '_HOMEPAGE_CONTENT' : 'hidden'}>
-                {(tutorialPhase as string) === 'debug_all_validated' ? (
-                    isConnected ? (
-                        <Homepage
-                            missionStatus={currentMultiplayerStep?.title}
-                            missionStep={multiplayerState?.step}
-                            isTimerRunning={shouldTimerRun}
-                            notificationCount={multiplayerState?.step ? 1 : 0}
-                            activePuzzleId={activePuzzleId}
-                            gameState={multiplayerState || null}
-                            onPuzzleSolve={handleMultiplayerPuzzleSolve}
-                            isValidationPending={isValidationPending}
-                            isPlayerReady={isPlayerReady}
-                            onVoteReady={() => logic?.voteReady()}
-                            isHost={isHost}
-                        />
+                <ClientLayout variant={'light'}>
+                    {(tutorialPhase as string) === 'debug_all_validated' ? (
+                        isConnected ? (
+                            <Homepage
+                                missionStatus={currentMultiplayerStep?.title}
+                                missionStep={multiplayerState?.step}
+                                isTimerRunning={shouldTimerRun}
+                                notificationCount={multiplayerState?.step ? 1 : 0}
+                                activePuzzleId={activePuzzleId}
+                                gameState={multiplayerState || null}
+                                onPuzzleSolve={handleMultiplayerPuzzleSolve}
+                                isValidationPending={isValidationPending}
+                                isPlayerReady={isPlayerReady}
+                                onVoteReady={() => logic?.voteReady()}
+                                isHost={isHost}
+                            />
+                        ) : (
+                            <GameLobby />
+                        )
                     ) : (
-                        <GameLobby />
-                    )
-                ) : (
-                    <Homepage />
-                )}
+                        <Homepage />
+                    )}
+                </ClientLayout>
             </div>
 
             <div className={isAlternateView ? '_DEBUG_CONTENT' : 'hidden'}>
-                <DebugPage
-                    currentTab={currentTab}
-                    onTabChange={handleTabChange}
-                    validatedModules={validatedModules}
-                    highlightedElement={highlightedElement}
-                    onModuleClick={setTestingModule}
-                    isHost={isHost}
-                    gameLogic={logic}
-                    activeExternalPuzzle={activePuzzleId}
-                />
+                <ClientLayout variant={'dark'}>
+
+                    <DebugPage
+                        currentTab={currentTab}
+                        onTabChange={handleTabChange}
+                        validatedModules={validatedModules}
+                        highlightedElement={highlightedElement}
+                        onModuleClick={setTestingModule}
+                        isHost={isHost}
+                        gameLogic={logic}
+                        activeExternalPuzzle={activePuzzleId}
+                    />
+                </ClientLayout>
             </div>
         </>
     );

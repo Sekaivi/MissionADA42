@@ -13,98 +13,123 @@ import { MODULES, ModuleId } from '@/data/modules';
 interface ModuleTestModalProps {
     moduleId: ModuleId | null;
     onClose: () => void;
-    onSuccess: (id: ModuleId) => void;
+    onSuccess: (id: ModuleId, data?: any) => void;
+    isTutorial?: boolean;
 }
 
-export const ModuleTestModal = ({ moduleId, onClose, onSuccess }: ModuleTestModalProps) => {
-    // État pour la simulation des autres modules
-    const [isSimulating, setIsSimulating] = useState(false);
+export const ModuleTestModal = ({
+                                    moduleId,
+                                    onClose,
+                                    onSuccess,
+                                    isTutorial = false // par défaut false (mode libre)
+                                }: ModuleTestModalProps) => {
 
+    const [isSimulating, setIsSimulating] = useState(false);
     const moduleConfig = MODULES.find((m) => m.id === moduleId);
 
     if (!moduleConfig || !moduleId) return null;
 
-    // Fonction de simulation pour les modules pas encore codés
+    // Simulation pour les modules non-implémentés
     const startSimulation = () => {
         setIsSimulating(true);
         setTimeout(() => {
             setIsSimulating(false);
-            onSuccess(moduleId);
+            onSuccess(moduleId, { simulated: true });
         }, 500);
     };
 
     const renderContent = () => {
-        // Reconnaissance Faciale
-        // if (moduleId === 'facial_recognition') {
-        //     return (
-        //         <FaceDetectionModule
-        //             isSolved={false}
-        //             onSolve={() => onSuccess('facial_recognition')}
-        //         />
-        //     );
-        // }
-        //
-        // // Scanner de couleurs
-        // if (moduleId === 'color_scanner') {
-        //     return (
-        //         <>
-        //             <p className="text-muted mb-4 text-center text-sm">
-        //                 Calibration requise : Veuillez scanner un élément{' '}
-        //                 <span className="font-bold text-red-500">ROUGE</span>.
-        //             </p>
-        //
-        //             <ColorScannerModule
-        //                 isSolved={false}
-        //                 targetColorId="red"
-        //                 onSolve={() => onSuccess('color_scanner')}
-        //                 sequenceHistory={[]}
-        //             />
-        //         </>
-        //     );
-        // }
-        //
-        // // QR Scanner
-        // if (moduleId === 'qr_scanner') {
-        //     return (
-        //         <>
-        //             <p className="text-muted mb-4 text-center text-sm">
-        //                 Calibration : Scannez{' '}
-        //                 <span className="font-bold">n'importe quel QR Code</span> valide.
-        //             </p>
-        //
-        //             <AlphaQRScanner
-        //                 onScan={(code) => {
-        //                     if (code.length > 0) {
-        //                         onSuccess('qr_scanner');
-        //                         return true;
-        //                     }
-        //                     return false;
-        //                 }}
-        //                 onSolve={() => onSuccess('qr_scanner')}
-        //             />
-        //         </>
-        //     );
-        // }
-        //
-        // // gyroscope
-        // if (moduleId === 'gyroscope') {
-        //     return (
-        //         <>
-        //             <p className="text-muted mb-4 text-center text-sm">
-        //                 Calibration : Maintenez votre téléphone{' '}
-        //                 <span className="text-brand-emerald font-bold">parfaitement à plat</span>.
-        //             </p>
-        //
-        //             <GyroscopeModule
-        //                 onSolve={() => {
-        //                     onSuccess('gyroscope');
-        //                 }}
-        //             />
-        //         </>
-        //     );
-        // }
+        if (moduleId === 'facial_recognition') {
+            return (
+                <FaceDetectionModule
+                    isSolved={false}
+                    // en mode jeu, on renvoie l'ID du visage détecté
+                    onSolve={(detectedFace) => onSuccess('facial_recognition', detectedFace)}
+                />
+            );
+        }
 
-        // simuler le reste
+        if (moduleId === 'color_scanner') {
+            return (
+                <>
+                    {isTutorial ? (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Calibration requise : Veuillez scanner un élément{' '}
+                            <span className="font-bold text-red-500">ROUGE</span>.
+                        </p>
+                    ) : (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Analyseur de spectre actif. Scannez une couleur pour l'enregistrer.
+                        </p>
+                    )}
+
+                    <ColorScannerModule
+                        isSolved={false}
+                        // en tuto on vise le rouge, sinon on accepte tout (null/undefined)
+                        targetColorId={isTutorial ? "red" : undefined}
+                        // on renvoie la couleur détectée
+                        onSolve={(color) => onSuccess('color_scanner', color)}
+                        sequenceHistory={[]}
+                    />
+                </>
+            );
+        }
+
+        if (moduleId === 'qr_scanner') {
+            return (
+                <>
+                    {isTutorial ? (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Calibration : Scannez{' '}
+                            <span className="font-bold">n'importe quel QR Code</span> valide.
+                        </p>
+                    ) : (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Décodeur universel prêt. En attente de cible.
+                        </p>
+                    )}
+
+                    <AlphaQRScanner
+                        onScan={(code) => {
+                            if (code && code.length > 0) {
+                                // renvoie le contenu du QR Code
+                                onSuccess('qr_scanner', code);
+                                return true;
+                            }
+                            return false;
+                        }}
+                        // Fallback
+                        onSolve={() => onSuccess('qr_scanner', "QR_DETECTED")}
+                    />
+                </>
+            );
+        }
+
+        if (moduleId === 'gyroscope') {
+            return (
+                <>
+                    {isTutorial ? (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Calibration : Maintenez votre téléphone{' '}
+                            <span className="text-brand-emerald font-bold">parfaitement à plat</span>.
+                        </p>
+                    ) : (
+                        <p className="text-muted mb-4 text-center text-sm">
+                            Capteur d'orientation actif.
+                        </p>
+                    )}
+
+                    <GyroscopeModule
+                        onSolve={(orientationData) => {
+                            // renvoyer les données brutes
+                            onSuccess('gyroscope', orientationData);
+                        }}
+                    />
+                </>
+            );
+        }
+
+        // MODULES SIMULÉS (MICROPHONE, ETC)
         return (
             <div className="flex flex-col items-center gap-6 py-4">
                 <div
@@ -121,21 +146,21 @@ export const ModuleTestModal = ({ moduleId, onClose, onSuccess }: ModuleTestModa
                     </p>
                 ) : (
                     <AlphaButton onClick={startSimulation} size="lg" variant="primary">
-                        Lancer le Diagnostic
+                        {isTutorial ? "Lancer le Diagnostic" : "Activer le Module"}
                     </AlphaButton>
                 )}
             </div>
         );
     };
 
-    // cache la description par défaut pour FaceID et ColorScanner car ils ont leur propre UI
+    // on masque la description statique pour les modules visuels complexes
     const hideDescription = ['facial_recognition', 'color_scanner'].includes(moduleId);
 
     return (
         <AlphaModal
             isOpen={!!moduleId}
-            title={`Test : ${moduleConfig.label}`}
-            message={hideDescription ? undefined : moduleConfig.description}
+            title={isTutorial ? `Calibration : ${moduleConfig.label}` : `Module : ${moduleConfig.label}`}
+            message={hideDescription ? undefined : (isTutorial ? moduleConfig.description : undefined)}
             onClose={onClose}
             hideIcon
         >

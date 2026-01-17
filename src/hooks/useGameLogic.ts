@@ -78,11 +78,7 @@ export const useGameLogic = (
             const readyPlayers = gameState.validationRequest.readyPlayers.length;
 
             if (totalPlayers > 0 && readyPlayers >= totalPlayers) {
-                // délai pour voir la barre à 100%
-                const timer = setTimeout(() => {
-                    confirmNextStep();
-                }, 1000);
-                return () => clearTimeout(timer);
+                confirmNextStep();
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,12 +88,22 @@ export const useGameLogic = (
 
     // soumettre proposition
     const submitProposal = async (playerName: string, label: string) => {
-        if (!gameState) return;
-        await updateState({
-            ...gameState,
-            pendingProposal: { playerId, playerName, actionLabel: label, timestamp: Date.now() },
-            lastUpdate: Date.now(),
-        });
+        if(!gameState) return;
+
+        // si c'est l'hôte ou si le joueur est seul dans la partie
+        const isPlayingSolo = gameState.players.length === 1;
+
+        if (isHost || isPlayingSolo) {
+            // bypass la demande de validation et on lance directement le vote de groupe (passage direct)
+            await initiateNextStep();
+        } else {
+            // sinon, demande de validation à l'hôte
+            await updateState({
+                ...gameState,
+                pendingProposal: { playerId, playerName, actionLabel: label, timestamp: Date.now() },
+                lastUpdate: Date.now()
+            });
+        }
     };
 
     // rejeter proposition
