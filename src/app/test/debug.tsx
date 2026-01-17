@@ -32,7 +32,6 @@ interface DebugPageProps {
     highlightedElement?: string | null;
     validatedModules: ModuleId[];
     onModuleClick: (id: ModuleId) => void;
-    isHost?: boolean;
     gameLogic?: ReturnType<typeof useGameLogic> | null;
     activeExternalPuzzle?: string | null;
 }
@@ -43,12 +42,13 @@ export default function DebugPage({
     highlightedElement,
     validatedModules,
     onModuleClick,
-    isHost = false,
     gameLogic,
     activeExternalPuzzle,
 }: DebugPageProps) {
     const { logout, playerId, gameCode } = useEscapeGame();
     const [isLeaving, setIsLeaving] = useState(false);
+
+    const isHost = gameLogic?.isHost ?? false;
 
     // données validation
     const validationRequest = gameLogic?.gameState?.validationRequest;
@@ -61,19 +61,17 @@ export default function DebugPage({
 
     const handleSafeLogout = async () => {
         setIsLeaving(true);
-        if (gameLogic && gameLogic.gameState) {
-            const currentPlayers = gameLogic.gameState.players || [];
-            const nextPlayers = currentPlayers.filter((p) => p.id !== playerId);
-            if (isHost && nextPlayers.length > 0) {
-                const updatedPlayers = nextPlayers.map((p, i) =>
-                    i === 0 ? { ...p, isGM: true } : p
-                );
-                await gameLogic.updateState({ ...gameLogic.gameState, players: updatedPlayers });
-            } else {
-                await gameLogic.updateState({ ...gameLogic.gameState, players: nextPlayers });
+        try {
+            // on tente la promotion
+            if (gameLogic) {
+                await gameLogic.leaveGame();
             }
+        } catch (e) {
+            console.error("Erreur lors de la sauvegarde du départ", e);
+        } finally {
+            logout();
+            setIsLeaving(false);
         }
-        logout();
     };
 
     const isModuleLocked = (id: ModuleId) => {
@@ -236,15 +234,17 @@ export default function DebugPage({
                         </div>
                     </AlphaCard>
 
-                    <AlphaButton
-                        onClick={handleSafeLogout}
-                        disabled={isLeaving}
-                        variant={'danger'}
-                        fullWidth
-                    >
-                        <ArrowRightEndOnRectangleIcon className="h-4 w-4" />{' '}
-                        {isLeaving ? 'Déconnexion...' : 'Quitter'}
-                    </AlphaButton>
+                    {gameLogic && (
+                        <AlphaButton
+                            onClick={handleSafeLogout}
+                            disabled={isLeaving}
+                            variant={'danger'}
+                            fullWidth
+                        >
+                            <ArrowRightEndOnRectangleIcon className="h-4 w-4" />{' '}
+                            {isLeaving ? 'Déconnexion...' : 'Quitter'}
+                        </AlphaButton>
+                    )}
                 </div>
             )}
 
@@ -256,6 +256,7 @@ export default function DebugPage({
                         const isLocked = isModuleLocked(mod.id);
                         const isActiveInGame = activeExternalPuzzle === mod.id;
                         return (
+                            // TODO: checker ici pour remettre les highlights pendant le tuto
                             // <button key={mod.id} onClick={() => onModuleClick(mod.id)} disabled={isLocked} className={getHighlightClass(mod.id, `flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${isActiveInGame ? 'bg-brand-purple/20 border-brand-purple text-white' : isValidated ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald opacity-70' : 'border-white/10 bg-neutral-900 text-neutral-300 hover:bg-white/5'}`)}>
                             //     <mod.icon className="h-8 w-8 flex-shrink-0" />
                             //     <div className="flex-1">

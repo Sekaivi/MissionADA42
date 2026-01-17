@@ -2,15 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { PuzzlePieceIcon } from '@heroicons/react/24/outline';
+import {HashtagIcon, PuzzlePieceIcon} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
-import {ModuleAction, PUZZLE_COMPONENTS, PuzzleComponentId} from '@/components/puzzles/PuzzleRegistry';
+import { ModuleAction, PUZZLE_COMPONENTS, PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState } from '@/types/game';
+import { useEscapeGame } from '@/context/EscapeGameContext';
 
 interface HomepageProps {
     missionStatus?: string;
@@ -23,7 +24,6 @@ interface HomepageProps {
     isValidationPending?: boolean;
     onVoteReady?: () => void;
     isPlayerReady?: boolean;
-    isHost?: boolean;
     lastModuleAction?: ModuleAction | null;
 }
 
@@ -34,25 +34,25 @@ const formatTime = (seconds: number) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-const toMs = (timestamp: number | string | undefined) => {
-    if (!timestamp) return 0;
-    const num = Number(timestamp);
-    return isNaN(num) ? 0 : num < 100000000000 ? num * 1000 : num;
-};
-
 export default function Homepage({
-    missionStatus,
-    missionStep,
-    isTimerRunning = false,
-    activePuzzleId,
-    gameState,
-    onPuzzleSolve,
-    isValidationPending,
-    onVoteReady,
-    isPlayerReady,
-    isHost = false,
-    lastModuleAction
-}: HomepageProps) {
+                                     missionStatus,
+                                     missionStep,
+                                     isTimerRunning = false,
+                                     activePuzzleId,
+                                     gameState,
+                                     onPuzzleSolve,
+                                     isValidationPending,
+                                     onVoteReady,
+                                     isPlayerReady,
+                                     lastModuleAction,
+                                 }: HomepageProps) {
+    const { gameCode, logic, playerId } = useEscapeGame();
+
+    const isHost = logic?.isHost || false;
+
+    const timerEndTime = logic?.timerEndTime || 0;
+    const totalDuration = logic?.currentTotalDuration || SCENARIO.defaultDuration;
+
     const isGameActive = !!missionStatus;
 
     const [showModal, setShowModal] = useState(false);
@@ -76,24 +76,11 @@ export default function Homepage({
         setShowModal(false);
     };
 
-    const [currentTime, setCurrentTime] = useState(() => Date.now());
-
-    useEffect(() => {
-        if (!isTimerRunning && !isGameActive) return;
-        const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
-        return () => clearInterval(interval);
-    }, [isTimerRunning, isGameActive]);
-
-    const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
-    const bonusSeconds = (gameState?.bonusTime || 0) * 60;
-    const totalDurationSec = SCENARIO.defaultDuration + bonusSeconds;
-
-    const startMs = toMs(effectiveStartTime);
-    const elapsedMs = startMs > 0 ? currentTime - startMs : 0;
-    const remainingSeconds = Math.max(0, totalDurationSec - Math.floor(elapsedMs / 1000));
-
-    const percentage = Math.min(100, Math.max(0, (remainingSeconds / totalDurationSec) * 100));
+    // on compare la fin prévue par le hook avec maintenant
+    const remainingSeconds = Math.max(0, Math.floor((timerEndTime - Date.now()) / 1000));
+    const percentage = Math.min(100, Math.max(0, (remainingSeconds / totalDuration) * 100));
     const timeString = formatTime(remainingSeconds);
+
     const variant = percentage < 20 ? 'error' : percentage < 50 ? 'warning' : 'success';
 
     // puzzle actif (registre)
@@ -103,6 +90,15 @@ export default function Homepage({
 
     return (
         <>
+            <div className="bg-surface-highlight rounded p-2">
+                <div className="text-muted mb-1 flex items-center gap-1">
+                    <HashtagIcon className="h-3 w-3" /> SESSION
+                </div>
+                <div className="text-brand-emerald font-mono text-2xl font-black tracking-widest">
+                    {gameCode}
+                </div>
+            </div>
+
             <div
                 className={clsx(
                     'mx-auto transition-all duration-500',
@@ -143,7 +139,7 @@ export default function Homepage({
             )}
 
             {/* main content */}
-            <main className={'my-4 space-y-4'}>
+            <div className={'my-4 space-y-4'}>
                 {isGameActive ? (
                     <>
                         {/* modale de validation */}
@@ -191,7 +187,7 @@ export default function Homepage({
                     // mode accueil
                     <>accueil</>
                 )}
-            </main>
+            </div>
         </>
     );
 }

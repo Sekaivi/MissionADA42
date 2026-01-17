@@ -15,11 +15,20 @@ const toMs = (timestamp: number | string | undefined) => {
 
 export const useGameLogic = (
     gameCode: string | null,
-    isHost: boolean,
+    initialIsHost: boolean,
     playerId: string,
     pseudo: string
 ) => {
-    const { gameState, updateState, refresh, error } = useGameSync(gameCode, isHost);
+    const { gameState, updateState, refresh, error } = useGameSync(gameCode, initialIsHost);
+
+    // calcul dynamique du statut 'hôte' en checkant la liste des joueurs actuelle
+    const isHost = useMemo(() => {
+        if (!gameState?.players) return initialIsHost;
+        const me = gameState.players.find((p) => p.id === playerId);
+        return me ? me.isGM : initialIsHost;
+    }, [gameState?.players, playerId, initialIsHost]);
+
+    const [isLeavingState, setIsLeavingState] = useState(false);
 
     const [adminDialogueOpen, setAdminDialogueOpen] = useState(false);
     const [adminScript, setAdminScript] = useState<DialogueLine[]>([]);
@@ -28,9 +37,14 @@ export const useGameLogic = (
     );
     const [currentTime, setCurrentTime] = useState(() => Date.now());
 
+    // si le playerId change (login ou logout), on déverrouille le state 'Leaving'
+    useEffect(() => {
+        setIsLeavingState(false);
+    }, [playerId, gameCode]);
+
     // init auto
     useEffect(() => {
-        if (isHost && gameState && (!gameState.step || gameState.step === 0)) {
+        if (initialIsHost && gameState && (!gameState.step || gameState.step === 0)) {
             const now = Date.now();
             updateState({
                 ...gameState,
@@ -47,11 +61,67 @@ export const useGameLogic = (
                 lastModuleAction: null
             });
         }
-    }, [isHost, gameState, updateState, playerId, pseudo]);
+    }, [initialIsHost, gameState, updateState, playerId, pseudo]);
+
+    const leaveGame = async () => {
+        setIsLeavingState(true);
+        if (!gameState || !gameState.players) return;
+
+        const currentPlayers = gameState.players;
+        const remainingPlayers = currentPlayers.filter((p) => p.id !== playerId);
+
+        // si j'étais le GM et qu'il reste quelqu'un
+        if (isHost && remainingPlayers.length > 0) {
+            // promeut le premier de la liste restante
+            const updatedPlayers = remainingPlayers.map((p, index) =>
+                index === 0 ? { ...p, isGM: true } : p
+            );
+
+            await updateState({
+                ...gameState,
+                players: updatedPlayers,
+                message: "Changement de commandement..."
+            });
+        } else {
+            // sinon je pars juste
+            await updateState({
+                ...gameState,
+                players: remainingPlayers,
+            });
+        }
+    };
+
+    // si l'hôte a crashé sans appeler leaveGame
+    useEffect(() => {
+        if (!gameState || !gameState.players || gameState.players.length === 0) return;
+
+        const hasGM = gameState.players.some((p) => p.isGM);
+
+        if (!hasGM) {
+            // joueur à l'index 0 devient le nouveau chef
+            const firstPlayer = gameState.players[0];
+            const amIFirst = firstPlayer.id === playerId;
+
+            if (amIFirst) {
+                console.log("[AUTO-PROMOTION] Je prends le lead");
+
+                const updatedPlayers = gameState.players.map((p) =>
+                    p.id === playerId ? { ...p, isGM: true } : p
+                );
+
+                // force update
+                updateState({
+                    ...gameState,
+                    players: updatedPlayers,
+                    message: "Signal perdu. Nouveau chef désigné."
+                });
+            }
+        }
+    }, [gameState?.players, playerId, updateState]);
 
     // auto join
     useEffect(() => {
-        if (!isHost && gameState && gameState.players) {
+        if (!isLeavingState && playerId && !initialIsHost && gameState && gameState.players) {
             const amIInList = gameState.players.find((p) => p.id === playerId);
             if (!amIInList) {
                 const now = Date.now();
@@ -64,7 +134,7 @@ export const useGameLogic = (
                 });
             }
         }
-    }, [isHost, gameState, updateState, playerId, pseudo]);
+    }, [initialIsHost, gameState, updateState, playerId, pseudo, isLeavingState]);
 
     // timer
     useEffect(() => {
@@ -120,7 +190,7 @@ export const useGameLogic = (
             }
         }
 
-        if (isHost || isPlayingSolo) {
+        if (initialIsHost || isPlayingSolo) {
             await initiateNextStep();
         } else {
             await updateState({
@@ -241,9 +311,11 @@ export const useGameLogic = (
     const currentScenarioStep = SCENARIO.steps[currentStepIndex];
     const isGameWon = currentScenarioStep?.componentId === 'victory-screen';
     const isTimeUp = !isGameWon && elapsedTime > currentTotalDuration;
+    const theoreticalEndTime = toMs(effectiveStartTime) + currentTotalDuration * 1000;
+    // on borne timerEndTime => il ne peut pas être plus loin que "Maintenant + Durée Max"
     const timerEndTime = isGameWon
         ? gameState?.lastUpdate
-        : toMs(effectiveStartTime) + currentTotalDuration * 1000;
+        : Math.min(theoreticalEndTime, currentTime + currentTotalDuration * 1000);
     const activePuzzleId = currentScenarioStep?.componentId;
 
     return {
@@ -268,6 +340,8 @@ export const useGameLogic = (
         initiateNextStep,
         voteReady,
         confirmNextStep,
-        submitModuleAction
+        submitModuleAction,
+        isHost,
+        leaveGame
     };
 };

@@ -83,8 +83,8 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
 };
 
 const GameContent = () => {
-    // Contexte multijoueur
-    const { isConnected, logic, isHost, pseudo, playerId } = useEscapeGame();
+    // contexte multijoueur
+    const { isConnected, logic, pseudo, playerId } = useEscapeGame();
 
     const multiplayerState = logic?.gameState;
     const currentMultiplayerStep = logic?.currentScenarioStep;
@@ -331,8 +331,8 @@ const GameContent = () => {
                 />
             )}
 
-            {/* Note : ModuleTestModal doit être capable de renvoyer des données via onSuccess
-                Exemple: onSuccess={(id, data) => handleModuleSuccess(id, data)}
+            {/* ModuleTestModal peut renvoyer des données via onSuccess
+                ex : onSuccess={(id, data) => handleModuleSuccess(id, data)}
             */}
             <ModuleTestModal
                 moduleId={testingModule}
@@ -373,7 +373,6 @@ const GameContent = () => {
                                 isValidationPending={isValidationPending}
                                 isPlayerReady={isPlayerReady}
                                 onVoteReady={() => logic?.voteReady()}
-                                isHost={isHost}
                                 lastModuleAction={lastModuleAction}
                             />
                         ) : (
@@ -394,7 +393,6 @@ const GameContent = () => {
                         validatedModules={validatedModules}
                         highlightedElement={highlightedElement}
                         onModuleClick={setTestingModule}
-                        isHost={isHost}
                         gameLogic={logic}
                         activeExternalPuzzle={activePuzzleId}
                     />

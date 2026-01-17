@@ -8,7 +8,7 @@ import { usePlayerSession } from '@/hooks/usePlayerSession';
 
 interface EscapeGameContextType {
     isConnected: boolean;
-    isHost: boolean;
+    initialIsHost: boolean;
     pseudo: string;
     playerId: string;
     gameCode: string | null;
@@ -23,12 +23,12 @@ const EscapeGameContext = createContext<EscapeGameContextType | null>(null);
 export const EscapeGameProvider = ({ children }: { children: ReactNode }) => {
     const { session, saveSession, clearSession, isLoaded } = usePlayerSession();
 
-    const isHost = !!session?.playerId?.startsWith('host-') || !!session?.isPromoted;
+    const initialIsHost = !!session?.playerId?.startsWith('host-') || !!session?.isPromoted;
     const gameCode = session?.gameCode || null;
     const playerId = session?.playerId || '';
     const pseudo = session?.pseudo || '';
 
-    const gameLogic = useGameLogic(gameCode, isHost, playerId, pseudo);
+    const gameLogic = useGameLogic(gameCode, initialIsHost, playerId, pseudo);
 
     const createSessionAsHost = async (pseudo: string) => {
         const hostId = `host-${crypto.randomUUID().slice(0, 8)}`;
@@ -47,7 +47,7 @@ export const EscapeGameProvider = ({ children }: { children: ReactNode }) => {
 
     const value: EscapeGameContextType = {
         isConnected: !!session,
-        isHost,
+        initialIsHost,
         pseudo,
         playerId,
         gameCode,
