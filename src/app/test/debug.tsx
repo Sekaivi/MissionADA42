@@ -1,21 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
-    CheckCircleIcon,
+    ArrowRightEndOnRectangleIcon,
+    BellAlertIcon,
     CommandLineIcon,
     CpuChipIcon,
     FolderOpenIcon,
-    LockClosedIcon,
+    HashtagIcon,
+    ShieldCheckIcon,
+    UserGroupIcon,
 } from '@heroicons/react/24/outline';
+import { PlayIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
+import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaTerminalWrapper } from '@/components/alpha/AlphaTerminalWrapper';
+import { ModuleLink } from '@/components/alpha/ModuleLink';
+import { useEscapeGame } from '@/context/EscapeGameContext';
+import { SCENARIO } from '@/data/alphaScenario';
 import { MODULES, ModuleId } from '@/data/modules';
+import { useGameLogic } from '@/hooks/useGameLogic';
 
-export type DebugTab = 'home' | 'modules' | 'evidence';
+export type DebugTab = 'home' | 'modules' | 'evidence' | 'admin';
 
 interface DebugPageProps {
     currentTab: DebugTab;
@@ -23,6 +32,9 @@ interface DebugPageProps {
     highlightedElement?: string | null;
     validatedModules: ModuleId[];
     onModuleClick: (id: ModuleId) => void;
+    isHost?: boolean;
+    gameLogic?: ReturnType<typeof useGameLogic> | null;
+    activeExternalPuzzle?: string | null;
 }
 
 export default function DebugPage({
@@ -31,10 +43,42 @@ export default function DebugPage({
     highlightedElement,
     validatedModules,
     onModuleClick,
+    isHost = false,
+    gameLogic,
+    activeExternalPuzzle,
 }: DebugPageProps) {
+    const { logout, playerId, gameCode } = useEscapeGame();
+    const [isLeaving, setIsLeaving] = useState(false);
+
+    // données validation
+    const validationRequest = gameLogic?.gameState?.validationRequest;
+    const isReady = validationRequest?.readyPlayers.includes(playerId);
+    const totalPlayers = gameLogic?.gameState?.players?.length || 1;
+    const readyCount = validationRequest?.readyPlayers.length || 0;
+
+    // données proposition
+    const pendingProposal = gameLogic?.gameState?.pendingProposal;
+
+    const handleSafeLogout = async () => {
+        setIsLeaving(true);
+        if (gameLogic && gameLogic.gameState) {
+            const currentPlayers = gameLogic.gameState.players || [];
+            const nextPlayers = currentPlayers.filter((p) => p.id !== playerId);
+            if (isHost && nextPlayers.length > 0) {
+                const updatedPlayers = nextPlayers.map((p, i) =>
+                    i === 0 ? { ...p, isGM: true } : p
+                );
+                await gameLogic.updateState({ ...gameLogic.gameState, players: updatedPlayers });
+            } else {
+                await gameLogic.updateState({ ...gameLogic.gameState, players: nextPlayers });
+            }
+        }
+        logout();
+    };
+
     const isModuleLocked = (id: ModuleId) => {
-        // ordre strict : Face -> Color -> QR -> Gyro -> Mic
-        if (id === 'facial_recognition') return false; // Toujours ouvert
+        if (gameLogic?.gameState && gameLogic.gameState.step > 0) return false;
+        if (id === 'facial_recognition') return false;
         if (id === 'color_scanner') return !validatedModules.includes('facial_recognition');
         if (id === 'qr_scanner') return !validatedModules.includes('color_scanner');
         if (id === 'gyroscope') return !validatedModules.includes('qr_scanner');
@@ -43,7 +87,7 @@ export default function DebugPage({
     };
 
     const getHighlightClass = (id: string, baseClass: string) => {
-        const isHighlighted = highlightedElement === id;
+        const isHighlighted = highlightedElement === id || activeExternalPuzzle === id;
         return clsx(
             baseClass,
             isHighlighted &&
@@ -52,103 +96,291 @@ export default function DebugPage({
     };
 
     return (
-        <div className="animate-in fade-in flex h-full min-h-[70vh] flex-col pb-24">
-            <div className="flex-1 space-y-4 p-4">
-                {currentTab === 'home' && (
-                    <AlphaCard title="Terminal Système">
-                        <AlphaTerminalWrapper>on est là</AlphaTerminalWrapper>
-                    </AlphaCard>
-                )}
+        <>
+            {/* TAB: TERMINAL */}
+            {currentTab === 'home' && (
+                <div className="space-y-4">
+                    {/* infos de session */}
+                    {gameLogic && (
+                        <AlphaCard
+                            title="État du Réseau"
+                            contentClassName={'grid grid-cols-2 gap-4 text-xs'}
+                        >
+                            <div className="bg-surface-highlight rounded p-2">
+                                <div className="text-muted mb-1 flex items-center gap-1">
+                                    <HashtagIcon className="h-3 w-3" /> SESSION
+                                </div>
+                                <div className="text-brand-emerald font-mono text-2xl font-black tracking-widest">
+                                    {gameCode}
+                                </div>
+                            </div>
+                            <div className="bg-surface-highlight rounded p-2">
+                                <div className="text-muted mb-1 flex items-center gap-1">
+                                    <UserGroupIcon className="h-3 w-3" /> AGENTS
+                                </div>
+                                <div className="font-mono">{totalPlayers} Connecté(s)</div>
+                            </div>
+                        </AlphaCard>
+                    )}
 
-                {/* VUE MODULES */}
-                {currentTab === 'modules' && (
-                    <div className="grid grid-cols-1 gap-3">
-                        {MODULES.map((mod) => {
-                            const isValidated = validatedModules.includes(mod.id);
-                            const isLocked = isModuleLocked(mod.id);
-                            return (
-                                <button
-                                    key={mod.id}
-                                    onClick={() => onModuleClick(mod.id)}
-                                    disabled={isValidated || isLocked}
-                                    className={getHighlightClass(
-                                        mod.id,
-                                        `flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${
-                                            isValidated
-                                                ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald opacity-70'
-                                                : 'border-white/10 bg-neutral-900 text-neutral-300 hover:bg-white/5'
-                                        }`
-                                    )}
-                                >
-                                    <mod.icon className="h-8 w-8 flex-shrink-0" />
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 text-sm font-bold">
-                                            {mod.label}
-                                            {isValidated && (
-                                                <CheckCircleIcon className="text-brand-emerald h-4 w-4" />
-                                            )}
-                                        </div>
-                                        <p className="line-clamp-1 text-xs opacity-60">
-                                            {mod.description}
-                                        </p>
+                    {/* logs système + notifs actives */}
+                    <AlphaCard title="Terminal de Commande">
+                        <div className="space-y-4">
+                            {/* notif de proposition (visible par tous, actionnable par l'hôte) */}
+                            {pendingProposal && (
+                                <div className="border-brand-yellow/50 bg-brand-yellow/10 animate-pulse rounded-lg border p-3">
+                                    <div className="text-brand-yellow mb-2 flex items-center gap-2 text-xs font-bold uppercase">
+                                        <BellAlertIcon className="h-4 w-4" /> Signal Détecté
                                     </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
+                                    <div className="mb-2 text-sm">
+                                        <span className="text-brand-yellow font-bold">
+                                            {pendingProposal.playerName}
+                                        </span>{' '}
+                                        propose une solution :
+                                    </div>
+                                    <div className="bg-surface text-muted border-border mb-3 rounded border p-2 text-center font-mono text-xs">
+                                        "{pendingProposal.actionLabel}"
+                                    </div>
 
-                {/* VUE PREUVES */}
-                {currentTab === 'evidence' && (
-                    <AlphaCard title="Pièces à conviction">
-                        <div className="py-10 text-center text-sm text-neutral-500 italic">
-                            <LockClosedIcon className="mx-auto mb-2 h-12 w-12 opacity-50" />
-                            Aucune donnée récupérée pour le moment.
+                                    {isHost ? (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <AlphaButton
+                                                onClick={() => gameLogic?.initiateNextStep()}
+                                                variant="primary"
+                                                size="sm"
+                                            >
+                                                VALIDER (Vote)
+                                            </AlphaButton>
+                                            <AlphaButton
+                                                onClick={() => gameLogic?.rejectProposal()}
+                                                variant="danger"
+                                                size="sm"
+                                            >
+                                                REJETER
+                                            </AlphaButton>
+                                        </div>
+                                    ) : (
+                                        <div className="text-muted text-center text-xs italic">
+                                            En attente de validation par le Host...
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* progress bar validation (visible pendant le vote) */}
+                            {validationRequest && (
+                                <div className="border-brand-emerald/50 bg-brand-emerald/5 rounded-lg border p-3">
+                                    <div className="text-brand-emerald mb-1 flex justify-between text-xs font-bold uppercase">
+                                        <span>Synchronisation Équipe</span>
+                                        <span>
+                                            {readyCount}/{totalPlayers}
+                                        </span>
+                                    </div>
+                                    <div className="bg-surface-highlight mb-2 h-2 w-full overflow-hidden rounded-full">
+                                        <div
+                                            className="bg-brand-emerald h-full transition-all duration-500 ease-out"
+                                            style={{
+                                                width: `${(readyCount / totalPlayers) * 100}%`,
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* actions de vote */}
+                                    <div className="flex justify-center gap-2">
+                                        {!isReady && (
+                                            <AlphaButton
+                                                onClick={() => gameLogic?.voteReady()}
+                                                variant="primary"
+                                                size="sm"
+                                            >
+                                                JE SUIS PRÊT
+                                            </AlphaButton>
+                                        )}
+                                        {isReady && !isHost && (
+                                            <span className="text-brand-emerald animate-pulse text-xs">
+                                                Vote enregistré...
+                                            </span>
+                                        )}
+                                        {/* l'hôte peut encore forcer si besoin, mais l'auto-complete gère le reste */}
+                                        {isHost && (
+                                            <AlphaButton
+                                                onClick={() => gameLogic?.confirmNextStep()}
+                                                variant="secondary"
+                                                size="sm"
+                                            >
+                                                FORCER LE DÉPART
+                                            </AlphaButton>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* historique classique */}
+                            <AlphaTerminalWrapper>
+                                <div className="space-y-1 font-mono text-xs">
+                                    <div className="text-brand-emerald mb-2">
+                                        {'>'} SYSTEM_READY...
+                                    </div>
+                                    {gameLogic?.gameState?.history?.map((entry, i) => (
+                                        <div key={i} className="border-border mb-1 border-l-2 pl-2">
+                                            <span className="text-muted text-xs">
+                                                {new Date(entry.solvedAt).toLocaleTimeString()}
+                                            </span>
+                                            <div className="text-brand-blue">
+                                                [{entry.solverName}] step_{entry.step} OK
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AlphaTerminalWrapper>
                         </div>
                     </AlphaCard>
-                )}
-            </div>
 
-            {/* --- BARRE DE NAVIGATION (FIXED BOTTOM) --- */}
-            <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-white/10 bg-black/95 px-2 py-3 pb-8 backdrop-blur">
+                    <AlphaButton
+                        onClick={handleSafeLogout}
+                        disabled={isLeaving}
+                        variant={'danger'}
+                        fullWidth
+                    >
+                        <ArrowRightEndOnRectangleIcon className="h-4 w-4" />{' '}
+                        {isLeaving ? 'Déconnexion...' : 'Quitter'}
+                    </AlphaButton>
+                </div>
+            )}
+
+            {/* TAB: MODULES */}
+            {currentTab === 'modules' && (
+                <div className="grid grid-cols-1 gap-3">
+                    {MODULES.map((mod) => {
+                        const isValidated = validatedModules.includes(mod.id);
+                        const isLocked = isModuleLocked(mod.id);
+                        const isActiveInGame = activeExternalPuzzle === mod.id;
+                        return (
+                            // <button key={mod.id} onClick={() => onModuleClick(mod.id)} disabled={isLocked} className={getHighlightClass(mod.id, `flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${isActiveInGame ? 'bg-brand-purple/20 border-brand-purple text-white' : isValidated ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald opacity-70' : 'border-white/10 bg-neutral-900 text-neutral-300 hover:bg-white/5'}`)}>
+                            //     <mod.icon className="h-8 w-8 flex-shrink-0" />
+                            //     <div className="flex-1">
+                            //         <div className="flex items-center gap-2 text-sm font-bold">
+                            //             {mod.label}
+                            //             {isValidated && !isActiveInGame && <CheckCircleIcon className="text-brand-emerald h-4 w-4" />}
+                            //             {isActiveInGame && <span className="text-[10px] bg-brand-purple px-1 rounded text-white animate-pulse">REQUIS</span>}
+                            //         </div>
+                            //         <p className="line-clamp-1 text-xs opacity-60">{mod.description}</p>
+                            //     </div>
+                            //     {isLocked && <LockClosedIcon className="h-5 w-5 text-neutral-600" />}
+                            // </button>
+                            <ModuleLink
+                                key={mod.id}
+                                onClick={() => onModuleClick(mod.id)}
+                                title={mod.label}
+                                subtitle={mod.description}
+                                icon={mod.icon}
+                            />
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* TAB: ADMIN */}
+            {currentTab === 'admin' && isHost && gameLogic && (
+                <AlphaCard title="Contrôle Maître du Jeu" className="border-brand-purple">
+                    <div className="space-y-6">
+                        <div className="bg-brand-purple/10 rounded-lg p-4 text-center">
+                            <div className="text-brand-purple text-xs font-bold">État actuel</div>
+                            <div className="text-2xl font-black text-white">
+                                {gameLogic.currentScenarioStep?.title || 'En attente'}
+                            </div>
+                            <div className="text-muted text-xs">
+                                Étape {gameLogic.gameState?.step || 0} / {SCENARIO.steps.length}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-muted text-xs font-bold uppercase">
+                                Actions Force Majeure
+                            </p>
+                            {!validationRequest && (
+                                <AlphaButton
+                                    onClick={() => gameLogic.initiateNextStep()}
+                                    variant="secondary"
+                                >
+                                    <div className="flex items-center justify-center gap-2">
+                                        <PlayIcon className="h-4 w-4" /> SKIPPER L'ÉTAPE (Force)
+                                    </div>
+                                </AlphaButton>
+                            )}
+                        </div>
+                    </div>
+                </AlphaCard>
+            )}
+
+            {/* nav en bas */}
+            <div className="border-border bg-surface fixed right-0 bottom-0 left-0 z-40 border-t px-2 py-3 pb-8">
                 <div className="mx-auto flex max-w-md items-center justify-around gap-2">
-                    {/* BOUTON HOME */}
-                    <button
+                    <NavButton
+                        active={currentTab === 'home'}
                         onClick={() => onTabChange('home')}
-                        className={getHighlightClass(
-                            'nav_home',
-                            `flex flex-1 flex-col items-center justify-center rounded p-2 transition-colors ${currentTab === 'home' ? 'bg-white/10 text-white' : 'text-neutral-500'}`
-                        )}
-                    >
-                        <CommandLineIcon className="mb-1 h-6 w-6" />
-                        <span className="text-[10px] font-bold uppercase">Terminal</span>
-                    </button>
-
-                    {/* BOUTON MODULES */}
-                    <button
+                        icon={CommandLineIcon}
+                        label="Terminal"
+                        highlight={highlightedElement === 'nav_home'}
+                    />
+                    <NavButton
+                        active={currentTab === 'modules'}
                         onClick={() => onTabChange('modules')}
-                        className={getHighlightClass(
-                            'nav_modules',
-                            `flex flex-1 flex-col items-center justify-center rounded p-2 transition-colors ${currentTab === 'modules' ? 'bg-white/10 text-white' : 'text-neutral-500'}`
-                        )}
-                    >
-                        <CpuChipIcon className="mb-1 h-6 w-6" />
-                        <span className="text-[10px] font-bold uppercase">Modules</span>
-                    </button>
-
-                    {/* BOUTON PREUVES */}
-                    <button
+                        icon={CpuChipIcon}
+                        label="Modules"
+                        highlight={highlightedElement === 'nav_modules'}
+                    />
+                    <NavButton
+                        active={currentTab === 'evidence'}
                         onClick={() => onTabChange('evidence')}
-                        className={getHighlightClass(
-                            'nav_evidence',
-                            `flex flex-1 flex-col items-center justify-center rounded p-2 transition-colors ${currentTab === 'evidence' ? 'bg-white/10 text-white' : 'text-neutral-500'}`
-                        )}
-                    >
-                        <FolderOpenIcon className="mb-1 h-6 w-6" />
-                        <span className="text-[10px] font-bold uppercase">Preuves</span>
-                    </button>
+                        icon={FolderOpenIcon}
+                        label="Preuves"
+                        highlight={highlightedElement === 'nav_evidence'}
+                    />
+                    {isHost && (
+                        <NavButton
+                            active={currentTab === 'admin'}
+                            onClick={() => onTabChange('admin')}
+                            icon={ShieldCheckIcon}
+                            label="Admin"
+                            isAdmin
+                        />
+                    )}
                 </div>
             </div>
-        </div>
+        </>
     );
 }
+
+interface NavButtonProps {
+    active: boolean;
+    onClick: () => void;
+    icon: React.ElementType;
+    label: string;
+    highlight?: boolean | null;
+    isAdmin?: boolean;
+}
+
+const NavButton = ({
+    active,
+    onClick,
+    icon: Icon,
+    label,
+    highlight,
+    isAdmin = false,
+}: NavButtonProps) => (
+    <button
+        onClick={onClick}
+        className={clsx(
+            'flex flex-1 flex-col items-center justify-center rounded p-2 transition-colors',
+            active
+                ? isAdmin
+                    ? 'bg-brand-purple/20 text-brand-purple'
+                    : 'bg-surface-highlight'
+                : 'text-muted',
+            highlight && 'ring-brand-purple text-brand-purple animate-pulse ring-1'
+        )}
+    >
+        <Icon className="mb-1 h-6 w-6" />
+        <span className="text-xs font-bold uppercase">{label}</span>
+    </button>
+);

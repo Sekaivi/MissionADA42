@@ -22,6 +22,13 @@ export interface PendingProposal {
     timestamp: number;
 }
 
+export interface ValidationRequest {
+    nextStep: number;
+    triggeredBy: string;
+    readyPlayers: string[]; // IDs des joueurs prêts
+    timestamp: number;
+}
+
 export interface GameState {
     step: number;
     message: string;
@@ -29,6 +36,7 @@ export interface GameState {
     players: Player[];
     history: HistoryEntry[];
     pendingProposal: PendingProposal | null;
+    validationRequest?: ValidationRequest | null;
     lastUpdate: number;
     lastStepTime?: number;
     timestamp?: number;

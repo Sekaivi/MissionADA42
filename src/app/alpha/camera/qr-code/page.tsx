@@ -11,7 +11,9 @@ export default function QRTestPage() {
             <AlphaHeader title={'Module de QR Code'} />
 
             <AlphaQRScanner
-                // target={'https://gricad-gitlab.univ-grenoble-alpes.fr/mmi-students-projects/s5-2026/sae501/groupe-1/sae501-groupe1/-/merge_requests/16'}
+                target={
+                    'https://gricad-gitlab.univ-grenoble-alpes.fr/mmi-students-projects/s5-2026/sae501/groupe-1/sae501-groupe1/-/merge_requests/16'
+                }
                 onScan={(code) => {
                     console.log(code);
                     return true;

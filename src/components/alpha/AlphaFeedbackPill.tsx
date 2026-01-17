@@ -15,7 +15,7 @@ const FeedbackPill: React.FC<FeedbackPillProps> = ({
     type = 'info',
     isLoading = false,
     pulse = false,
-    className,
+    className = '',
 }) => {
     if (!message) return null;
 

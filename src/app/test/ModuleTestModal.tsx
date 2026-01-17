@@ -24,85 +24,85 @@ export const ModuleTestModal = ({ moduleId, onClose, onSuccess }: ModuleTestModa
 
     if (!moduleConfig || !moduleId) return null;
 
-    // Fonction pour les modules pas encore codés (simulation)
+    // Fonction de simulation pour les modules pas encore codés
     const startSimulation = () => {
         setIsSimulating(true);
         setTimeout(() => {
             setIsSimulating(false);
             onSuccess(moduleId);
-        }, 2000);
+        }, 500);
     };
 
     const renderContent = () => {
         // Reconnaissance Faciale
-        if (moduleId === 'facial_recognition') {
-            return (
-                <FaceDetectionModule
-                    isSolved={false}
-                    onSolve={() => onSuccess('facial_recognition')}
-                />
-            );
-        }
-
-        // Scanner de couleurs
-        if (moduleId === 'color_scanner') {
-            return (
-                <>
-                    <p className="text-muted mb-4 text-center text-sm">
-                        Calibration requise : Veuillez scanner un élément{' '}
-                        <span className="font-bold text-red-500">ROUGE</span>.
-                    </p>
-
-                    <ColorScannerModule
-                        isSolved={false}
-                        targetColorId="red"
-                        onSolve={() => onSuccess('color_scanner')}
-                        sequenceHistory={[]}
-                    />
-                </>
-            );
-        }
-
-        // QR Scanner
-        if (moduleId === 'qr_scanner') {
-            return (
-                <>
-                    <p className="text-muted mb-4 text-center text-sm">
-                        Calibration : Scannez{' '}
-                        <span className="font-bold">n'importe quel QR Code</span> valide.
-                    </p>
-
-                    <AlphaQRScanner
-                        onScan={(code) => {
-                            if (code.length > 0) {
-                                onSuccess('qr_scanner');
-                                return true;
-                            }
-                            return false;
-                        }}
-                        onSolve={() => onSuccess('qr_scanner')}
-                    />
-                </>
-            );
-        }
-
-        // gyroscope
-        if (moduleId === 'gyroscope') {
-            return (
-                <>
-                    <p className="text-muted mb-4 text-center text-sm">
-                        Calibration : Maintenez votre téléphone{' '}
-                        <span className="text-brand-emerald font-bold">parfaitement à plat</span>.
-                    </p>
-
-                    <GyroscopeModule
-                        onSolve={() => {
-                            onSuccess('gyroscope');
-                        }}
-                    />
-                </>
-            );
-        }
+        // if (moduleId === 'facial_recognition') {
+        //     return (
+        //         <FaceDetectionModule
+        //             isSolved={false}
+        //             onSolve={() => onSuccess('facial_recognition')}
+        //         />
+        //     );
+        // }
+        //
+        // // Scanner de couleurs
+        // if (moduleId === 'color_scanner') {
+        //     return (
+        //         <>
+        //             <p className="text-muted mb-4 text-center text-sm">
+        //                 Calibration requise : Veuillez scanner un élément{' '}
+        //                 <span className="font-bold text-red-500">ROUGE</span>.
+        //             </p>
+        //
+        //             <ColorScannerModule
+        //                 isSolved={false}
+        //                 targetColorId="red"
+        //                 onSolve={() => onSuccess('color_scanner')}
+        //                 sequenceHistory={[]}
+        //             />
+        //         </>
+        //     );
+        // }
+        //
+        // // QR Scanner
+        // if (moduleId === 'qr_scanner') {
+        //     return (
+        //         <>
+        //             <p className="text-muted mb-4 text-center text-sm">
+        //                 Calibration : Scannez{' '}
+        //                 <span className="font-bold">n'importe quel QR Code</span> valide.
+        //             </p>
+        //
+        //             <AlphaQRScanner
+        //                 onScan={(code) => {
+        //                     if (code.length > 0) {
+        //                         onSuccess('qr_scanner');
+        //                         return true;
+        //                     }
+        //                     return false;
+        //                 }}
+        //                 onSolve={() => onSuccess('qr_scanner')}
+        //             />
+        //         </>
+        //     );
+        // }
+        //
+        // // gyroscope
+        // if (moduleId === 'gyroscope') {
+        //     return (
+        //         <>
+        //             <p className="text-muted mb-4 text-center text-sm">
+        //                 Calibration : Maintenez votre téléphone{' '}
+        //                 <span className="text-brand-emerald font-bold">parfaitement à plat</span>.
+        //             </p>
+        //
+        //             <GyroscopeModule
+        //                 onSolve={() => {
+        //                     onSuccess('gyroscope');
+        //                 }}
+        //             />
+        //         </>
+        //     );
+        // }
 
         // simuler le reste
         return (

@@ -1,0 +1,194 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+
+import { PuzzlePieceIcon } from '@heroicons/react/24/outline';
+import { clsx } from 'clsx';
+
+import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
+import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
+import { PUZZLE_COMPONENTS, PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
+import { SCENARIO } from '@/data/alphaScenario';
+import { GameState } from '@/types/game';
+
+interface HomepageProps {
+    missionStatus?: string;
+    missionStep?: number;
+    isTimerRunning?: boolean;
+    notificationCount?: number;
+    activePuzzleId?: string | null;
+    gameState?: GameState | null;
+    onPuzzleSolve?: () => void;
+    isValidationPending?: boolean;
+    onVoteReady?: () => void;
+    isPlayerReady?: boolean;
+    isHost?: boolean;
+}
+
+const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+const toMs = (timestamp: number | string | undefined) => {
+    if (!timestamp) return 0;
+    const num = Number(timestamp);
+    return isNaN(num) ? 0 : num < 100000000000 ? num * 1000 : num;
+};
+
+export default function Homepage({
+    missionStatus,
+    missionStep,
+    isTimerRunning = false,
+    activePuzzleId,
+    gameState,
+    onPuzzleSolve,
+    isValidationPending,
+    onVoteReady,
+    isPlayerReady,
+    isHost = false,
+}: HomepageProps) {
+    const isGameActive = !!missionStatus;
+
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // ouvre la modale uniquement si une validation commence, qu'on n'est pas l'hôte,
+            // et qu'on n'a pas encore voté
+            if (isValidationPending && !isHost && !isPlayerReady) {
+                setShowModal(true);
+            } else {
+                setShowModal(false);
+            }
+        }, 0);
+
+        return () => clearTimeout(timer);
+    }, [isValidationPending, isHost, isPlayerReady]);
+
+    const handleVoteAndClose = () => {
+        if (onVoteReady) onVoteReady(); // envoie le vote au serveur
+        setShowModal(false);
+    };
+
+    const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+    useEffect(() => {
+        if (!isTimerRunning && !isGameActive) return;
+        const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, [isTimerRunning, isGameActive]);
+
+    const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp;
+    const bonusSeconds = (gameState?.bonusTime || 0) * 60;
+    const totalDurationSec = SCENARIO.defaultDuration + bonusSeconds;
+
+    const startMs = toMs(effectiveStartTime);
+    const elapsedMs = startMs > 0 ? currentTime - startMs : 0;
+    const remainingSeconds = Math.max(0, totalDurationSec - Math.floor(elapsedMs / 1000));
+
+    const percentage = Math.min(100, Math.max(0, (remainingSeconds / totalDurationSec) * 100));
+    const timeString = formatTime(remainingSeconds);
+    const variant = percentage < 20 ? 'error' : percentage < 50 ? 'warning' : 'success';
+
+    // puzzle actif (registre)
+    const ActivePuzzle = activePuzzleId
+        ? PUZZLE_COMPONENTS[activePuzzleId as PuzzleComponentId]
+        : null;
+
+    return (
+        <>
+            <div
+                className={clsx(
+                    'mx-auto transition-all duration-500',
+                    isGameActive
+                        ? 'h-32 w-32 scale-100 opacity-100'
+                        : 'h-0 scale-90 overflow-hidden opacity-0'
+                )}
+            >
+                <AlphaCircularGauge
+                    progress={percentage}
+                    variant={variant}
+                    size="h-32 w-32"
+                    strokeWidth={8}
+                    showGlow={variant === 'error'}
+                >
+                    <div className="text-center">
+                        <div
+                            className={clsx(
+                                'text-2xl font-black tracking-tighter',
+                                variant === 'error'
+                                    ? 'text-brand-error animate-pulse'
+                                    : 'text-muted'
+                            )}
+                        >
+                            {timeString}
+                        </div>
+                        <div className="text-muted text-xs font-bold uppercase">Restant</div>
+                    </div>
+                </AlphaCircularGauge>
+            </div>
+
+            {isGameActive && (
+                <AlphaFeedbackPill
+                    message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
+                    type={isValidationPending ? 'success' : 'info'}
+                    pulse={isValidationPending}
+                />
+            )}
+
+            {/* main content */}
+            <main className={'my-4 space-y-4'}>
+                {isGameActive ? (
+                    <>
+                        {/* modale de validation */}
+                        <AlphaModal
+                            isOpen={showModal}
+                            variant={'success'}
+                            title={"L'équipe se regroupe !"}
+                            message={
+                                "La solution a été validée. Confirmez votre présence pour passer à l'étape suivante."
+                            }
+                            // joueur est prêt => n'affiche plus le bouton (normalement la modale se ferme avant)
+                            actionLabel={!isPlayerReady ? 'JE SUIS PRÊT' : undefined}
+                            onAction={handleVoteAndClose}
+                            onClose={() => setShowModal(false)}
+                        />
+
+                        <h2 className="text-muted text-center text-xs font-bold uppercase">
+                            Mission &bull; Étape {missionStep}
+                        </h2>
+                        <h1 className="text-brand-emerald text-center text-2xl font-black">
+                            {missionStatus}
+                        </h1>
+
+                        {/* ZONE PUZZLE */}
+                        <>
+                            {ActivePuzzle ? (
+                                <ActivePuzzle
+                                    onSolve={onPuzzleSolve || (() => {})}
+                                    isSolved={false}
+                                    data={gameState || undefined}
+                                />
+                            ) : (
+                                <div className="text-muted flex flex-col items-center justify-center text-center">
+                                    <PuzzlePieceIcon className={'h-12 w-12 animate-pulse'} />
+                                    <p className="mt-2 text-sm italic">
+                                        Synchronisation du module...
+                                    </p>
+                                    <span className="font-mono text-xs">ID: {activePuzzleId}</span>
+                                </div>
+                            )}
+                        </>
+                    </>
+                ) : (
+                    // mode accueil
+                    <>accueil</>
+                )}
+            </main>
+        </>
+    );
+}

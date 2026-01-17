@@ -1,7 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
 
-import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import CTAButton from '@/components/ui/CTAButton';
 import Card from '@/components/ui/Card';
 import CircularTimer from '@/components/ui/CircularTimer';
@@ -25,10 +24,6 @@ export default function Homepage() {
 
     return (
         <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden px-4 py-12">
-            <div className="fixed inset-0 z-0">
-                <AnimatedBackground />
-            </div>
-
             <div className="relative z-10 flex w-full max-w-4xl flex-col gap-8">
                 <Card className="border border-purple-500/20 bg-white/80 text-center shadow-2xl">
                     <div className="flex flex-col items-center">
