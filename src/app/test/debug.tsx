@@ -67,7 +67,7 @@ export default function DebugPage({
                 await gameLogic.leaveGame();
             }
         } catch (e) {
-            console.error("Erreur lors de la sauvegarde du départ", e);
+            console.error('Erreur lors de la sauvegarde du départ', e);
         } finally {
             logout();
             setIsLeaving(false);
@@ -255,27 +255,34 @@ export default function DebugPage({
                         const isValidated = validatedModules.includes(mod.id);
                         const isLocked = isModuleLocked(mod.id);
                         const isActiveInGame = activeExternalPuzzle === mod.id;
+                        const isGameMode = (gameLogic?.gameState?.step || 0) > 0;
+                        const showValidatedStyle = isValidated && !isGameMode;
+
                         return (
-                            // TODO: checker ici pour remettre les highlights pendant le tuto
-                            // <button key={mod.id} onClick={() => onModuleClick(mod.id)} disabled={isLocked} className={getHighlightClass(mod.id, `flex items-center gap-4 rounded-lg border p-4 text-left transition-all ${isActiveInGame ? 'bg-brand-purple/20 border-brand-purple text-white' : isValidated ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald opacity-70' : 'border-white/10 bg-neutral-900 text-neutral-300 hover:bg-white/5'}`)}>
-                            //     <mod.icon className="h-8 w-8 flex-shrink-0" />
-                            //     <div className="flex-1">
-                            //         <div className="flex items-center gap-2 text-sm font-bold">
-                            //             {mod.label}
-                            //             {isValidated && !isActiveInGame && <CheckCircleIcon className="text-brand-emerald h-4 w-4" />}
-                            //             {isActiveInGame && <span className="text-[10px] bg-brand-purple px-1 rounded text-white animate-pulse">REQUIS</span>}
-                            //         </div>
-                            //         <p className="line-clamp-1 text-xs opacity-60">{mod.description}</p>
-                            //     </div>
-                            //     {isLocked && <LockClosedIcon className="h-5 w-5 text-neutral-600" />}
-                            // </button>
-                            <ModuleLink
+                            <div
                                 key={mod.id}
-                                onClick={() => onModuleClick(mod.id)}
-                                title={mod.label}
-                                subtitle={mod.description}
-                                icon={mod.icon}
-                            />
+                                className={clsx(
+                                    isLocked && 'pointer-events-none opacity-50',
+                                    getHighlightClass(
+                                        mod.id,
+                                        `rounded-lg border transition-all ${
+                                            isActiveInGame
+                                                ? 'bg-brand-purple/20 border-brand-purple'
+                                                : showValidatedStyle
+                                                  ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald pointer-events-none opacity-70'
+                                                  : 'border-border bg-surface text-muted hover:bg-surface-highlight'
+                                        }`
+                                    )
+                                )}
+                            >
+                                <ModuleLink
+                                    key={mod.id}
+                                    onClick={() => onModuleClick(mod.id)}
+                                    title={mod.label}
+                                    subtitle={mod.description}
+                                    icon={mod.icon}
+                                />
+                            </div>
                         );
                     })}
                 </div>

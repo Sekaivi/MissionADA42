@@ -134,7 +134,6 @@ export const PasswordPuzzle = ({ onSolve, isSolved, scripts = {}, modalConfig }:
                             placeholder="ENTER_PASSWORD..."
                             autoComplete="off"
                             spellCheck={false}
-                            className="pr-20 font-mono tracking-wider"
                         />
 
                         <div className="text-muted pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs">

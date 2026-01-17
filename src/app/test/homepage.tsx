@@ -2,16 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 
-import {HashtagIcon, PuzzlePieceIcon} from '@heroicons/react/24/outline';
+import { HashtagIcon, PuzzlePieceIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 
+import { GameLobby } from '@/app/test/GameLobby';
+import { AlphaButton } from '@/components/alpha/AlphaButton';
+import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
-import { ModuleAction, PUZZLE_COMPONENTS, PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
+import {
+    ModuleAction,
+    PUZZLE_COMPONENTS,
+    PuzzleComponentId,
+} from '@/components/puzzles/PuzzleRegistry';
+import { useEscapeGame } from '@/context/EscapeGameContext';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState } from '@/types/game';
-import { useEscapeGame } from '@/context/EscapeGameContext';
 
 interface HomepageProps {
     missionStatus?: string;
@@ -20,11 +27,12 @@ interface HomepageProps {
     notificationCount?: number;
     activePuzzleId?: string | null;
     gameState?: GameState | null;
-    onPuzzleSolve?: () => void;
+    onPuzzleSolve?: (id?: string, data?: Record<string, unknown>) => void;
     isValidationPending?: boolean;
     onVoteReady?: () => void;
     isPlayerReady?: boolean;
     lastModuleAction?: ModuleAction | null;
+    showLobby?: boolean;
 }
 
 const formatTime = (seconds: number) => {
@@ -35,27 +43,44 @@ const formatTime = (seconds: number) => {
 };
 
 export default function Homepage({
-                                     missionStatus,
-                                     missionStep,
-                                     isTimerRunning = false,
-                                     activePuzzleId,
-                                     gameState,
-                                     onPuzzleSolve,
-                                     isValidationPending,
-                                     onVoteReady,
-                                     isPlayerReady,
-                                     lastModuleAction,
-                                 }: HomepageProps) {
-    const { gameCode, logic, playerId } = useEscapeGame();
+    missionStatus,
+    missionStep,
+    isTimerRunning = false,
+    activePuzzleId,
+    gameState,
+    onPuzzleSolve,
+    isValidationPending,
+    onVoteReady,
+    isPlayerReady,
+    lastModuleAction,
+    showLobby = false,
+}: HomepageProps) {
+    const { gameCode, logic } = useEscapeGame();
 
     const isHost = logic?.isHost || false;
-
     const timerEndTime = logic?.timerEndTime || 0;
     const totalDuration = logic?.currentTotalDuration || SCENARIO.defaultDuration;
-
     const isGameActive = !!missionStatus;
 
     const [showModal, setShowModal] = useState(false);
+
+    const [now, setNow] = useState(0);
+
+    // 'now' contient toujours l'heure réelle ou 0
+    useEffect(() => {
+        const initTimer = setTimeout(() => setNow(Date.now()), 0);
+
+        if (!isGameActive || !isTimerRunning) return;
+
+        const interval = setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => {
+            clearTimeout(initTimer);
+            clearInterval(interval);
+        };
+    }, [isGameActive, isTimerRunning]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -76,8 +101,23 @@ export default function Homepage({
         setShowModal(false);
     };
 
-    // on compare la fin prévue par le hook avec maintenant
-    const remainingSeconds = Math.max(0, Math.floor((timerEndTime - Date.now()) / 1000));
+    // calcul du temps restant
+    let remainingSeconds: number;
+
+    if (now === 0) {
+        // chargement initial
+        remainingSeconds = totalDuration;
+    } else if (!isTimerRunning && isGameActive && gameState?.startTime && gameState?.lastUpdate) {
+        // victoire => figé
+        // calcule la durée réelle de la partie : Restant = Durée Max - (Fin - Début)
+        const elapsedMs = gameState.lastUpdate - gameState.startTime;
+        const remainingMs = totalDuration * 1000 - elapsedMs;
+        remainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    } else {
+        // jeu en cours : Restant = Date de fin prévue - Heure actuelle
+        remainingSeconds = Math.max(0, Math.floor((timerEndTime - now) / 1000));
+    }
+
     const percentage = Math.min(100, Math.max(0, (remainingSeconds / totalDuration) * 100));
     const timeString = formatTime(remainingSeconds);
 
@@ -88,58 +128,67 @@ export default function Homepage({
         ? PUZZLE_COMPONENTS[activePuzzleId as PuzzleComponentId]
         : null;
 
+    const handleReplayTutorial = () => {
+        localStorage.removeItem('alpha_tuto_completed');
+        window.location.reload();
+    };
+
     return (
         <>
-            <div className="bg-surface-highlight rounded p-2">
-                <div className="text-muted mb-1 flex items-center gap-1">
-                    <HashtagIcon className="h-3 w-3" /> SESSION
-                </div>
-                <div className="text-brand-emerald font-mono text-2xl font-black tracking-widest">
-                    {gameCode}
-                </div>
-            </div>
-
-            <div
-                className={clsx(
-                    'mx-auto transition-all duration-500',
-                    isGameActive
-                        ? 'h-32 w-32 scale-100 opacity-100'
-                        : 'h-0 scale-90 overflow-hidden opacity-0'
-                )}
-            >
-                <AlphaCircularGauge
-                    progress={percentage}
-                    variant={variant}
-                    size="h-32 w-32"
-                    strokeWidth={8}
-                    showGlow={variant === 'error'}
-                >
-                    <div className="text-center">
-                        <div
-                            className={clsx(
-                                'text-2xl font-black tracking-tighter',
-                                variant === 'error'
-                                    ? 'text-brand-error animate-pulse'
-                                    : 'text-muted'
-                            )}
-                        >
-                            {timeString}
-                        </div>
-                        <div className="text-muted text-xs font-bold uppercase">Restant</div>
-                    </div>
-                </AlphaCircularGauge>
-            </div>
-
             {isGameActive && (
-                <AlphaFeedbackPill
-                    message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
-                    type={isValidationPending ? 'success' : 'info'}
-                    pulse={isValidationPending}
-                />
+                <>
+                    <div className="bg-surface-highlight rounded p-2">
+                        <div className="text-muted mb-1 flex items-center gap-1">
+                            <HashtagIcon className="h-3 w-3" /> SESSION
+                        </div>
+                        <div className="text-brand-emerald font-mono text-2xl font-black tracking-widest">
+                            {gameCode}
+                        </div>
+                    </div>
+
+                    <div
+                        className={clsx(
+                            'mx-auto transition-all duration-500',
+                            isGameActive
+                                ? 'h-32 w-32 scale-100 opacity-100'
+                                : 'h-0 scale-90 overflow-hidden opacity-0'
+                        )}
+                    >
+                        <AlphaCircularGauge
+                            progress={percentage}
+                            variant={variant}
+                            size="h-32 w-32"
+                            strokeWidth={8}
+                            showGlow={variant === 'error'}
+                        >
+                            <div className="text-center">
+                                <div
+                                    className={clsx(
+                                        'text-2xl font-black tracking-tighter',
+                                        variant === 'error'
+                                            ? 'text-brand-error animate-pulse'
+                                            : 'text-muted'
+                                    )}
+                                >
+                                    {timeString}
+                                </div>
+                                <div className="text-muted text-xs font-bold uppercase">
+                                    Restant
+                                </div>
+                            </div>
+                        </AlphaCircularGauge>
+                    </div>
+
+                    <AlphaFeedbackPill
+                        message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
+                        type={isValidationPending ? 'success' : 'info'}
+                        pulse={isValidationPending}
+                    />
+                </>
             )}
 
             {/* main content */}
-            <div className={'my-4 space-y-4'}>
+            <>
                 {isGameActive ? (
                     <>
                         {/* modale de validation */}
@@ -184,10 +233,19 @@ export default function Homepage({
                         </>
                     </>
                 ) : (
-                    // mode accueil
-                    <>accueil</>
+                    // accueil
+                    <>
+                        <AlphaCard title={SCENARIO.name}>
+                            <p>{SCENARIO.description}</p>
+                            <AlphaButton onClick={handleReplayTutorial} variant={'secondary'}>
+                                Rejouer le tutoriel
+                            </AlphaButton>
+                        </AlphaCard>
+
+                        {showLobby && <GameLobby />}
+                    </>
                 )}
-            </div>
+            </>
         </>
     );
 }

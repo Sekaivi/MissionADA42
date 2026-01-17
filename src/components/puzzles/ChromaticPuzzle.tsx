@@ -2,9 +2,10 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CheckIcon, QuestionMarkCircleIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { CpuChipIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
+
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaError } from '@/components/alpha/AlphaError';
@@ -15,6 +16,7 @@ import { DialogueBox } from '@/components/dialogueBox';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { ColorDefinition } from '@/types/colorDetection';
+
 import { PuzzlePhases, PuzzleProps } from './PuzzleRegistry';
 
 export type ChromaticPuzzlePhases = PuzzlePhases | 'memory' | 'scan';
@@ -32,12 +34,12 @@ interface AlphaSequenceDisplayProps {
 }
 
 export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
-                                                                              sequence,
-                                                                              presets,
-                                                                              gameState,
-                                                                              step,
-                                                                              className,
-                                                                          }) => {
+    sequence,
+    presets,
+    gameState,
+    step,
+    className,
+}) => {
     return (
         <div className={clsx('flex flex-wrap justify-center gap-4', className)}>
             {sequence.map((colorId, index) => {
@@ -61,9 +63,9 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
                         className={clsx(
                             'flex h-14 w-14 items-center justify-center rounded-full border-4 font-bold transition-all duration-300',
                             isMemory && 'scale-110 text-white shadow-lg',
-                            isCompleted && 'text-white opacity-50 scale-90',
+                            isCompleted && 'scale-90 text-white opacity-50',
                             isActive && 'scale-125 animate-bounce border-current bg-transparent',
-                            isPending && 'bg-gray-100 border-gray-300 text-gray-300'
+                            isPending && 'border-gray-300 bg-gray-100 text-gray-300'
                         )}
                     >
                         {!isMemory && (
@@ -83,13 +85,12 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
 };
 
 export const ChromaticPuzzle = ({
-                                    onSolve,
-                                    isSolved,
-                                    scripts = {},
-                                    puzzleConfig,
-                                    lastModuleAction
-                                }: PuzzleProps<ChromaticPuzzlePhases, ChromaticConfig>) => {
-
+    onSolve,
+    isSolved,
+    scripts = {},
+    puzzleConfig,
+    lastModuleAction,
+}: PuzzleProps<ChromaticPuzzlePhases, ChromaticConfig>) => {
     const GAME_PRESETS = useMemo(() => puzzleConfig?.sequence || [], [puzzleConfig?.sequence]);
     const MEMO_TIME = useMemo(() => {
         return GAME_PRESETS.length > 0 ? Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5)) : 0;
@@ -133,7 +134,7 @@ export const ChromaticPuzzle = ({
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     triggerPhase('scan');
-                    setFeedbackMsg("SCANNEZ LES COULEURS VIA LE DEBUGGER");
+                    setFeedbackMsg('SCANNEZ LES COULEURS VIA LE DEBUGGER');
                     return 0;
                 }
                 setFeedbackMsg(`Mémorisez la séquence : ${prev - 1}s`);
@@ -158,37 +159,40 @@ export const ChromaticPuzzle = ({
         // on flag comme traitée immédiatement pour ne pas y revenir
         lastProcessedActionTime.current = lastModuleAction.timestamp;
 
-        console.log("ChromaticPuzzle : Nouvelle action reçue : ", lastModuleAction);
+        console.log('ChromaticPuzzle : Nouvelle action reçue : ', lastModuleAction);
 
         if (lastModuleAction?.id === 'color_scanner' && lastModuleAction.data) {
-
             const scannedColorData = lastModuleAction.data;
             const scannedId = scannedColorData.id;
 
             const expectedId = sequence[step];
-            const detectedPreset = GAME_PRESETS.find(p => p.id === scannedId);
+            const detectedPreset = GAME_PRESETS.find((p) => p.id === scannedId);
 
-            if (scannedId === expectedId) {
-                // succès
-                setFeedbackMsg(`CORRECT ! ${detectedPreset?.name || 'Couleur'} validé.`);
-                const nextStep = step + 1;
-                setStep(nextStep);
+            setTimeout(() => {
+                if (scannedId === expectedId) {
+                    // succès
+                    setFeedbackMsg(`CORRECT ! ${detectedPreset?.name || 'Couleur'} validé.`);
+                    const nextStep = step + 1;
+                    setStep(nextStep);
 
-                if (nextStep >= sequence.length) {
-                    triggerPhase('win');
-                    setFeedbackMsg('Séquence Complète. Accès Autorisé.');
+                    if (nextStep >= sequence.length) {
+                        triggerPhase('win');
+                        setFeedbackMsg('Séquence Complète. Accès Autorisé.');
+                    }
+                } else {
+                    // erreur
+                    setFeedbackMsg(
+                        `ERREUR ! ${detectedPreset?.name || 'Couleur inconnue'} détecté.`
+                    );
+                    // TODO: reset ou pénalité ?
                 }
-            } else {
-                // erreur
-                setFeedbackMsg(`ERREUR ! ${detectedPreset?.name || 'Couleur inconnue'} détecté.`);
-                // TODO: reset ou pénalité ?
-            }
+            }, 0);
         }
     }, [lastModuleAction, gameState, sequence, step, triggerPhase, GAME_PRESETS]);
 
     useScenarioTransition(gameState, isDialogueOpen, {
         idle: () => {
-            if (GAME_PRESETS.length > 0) triggerPhase('intro')
+            if (GAME_PRESETS.length > 0) triggerPhase('intro');
         },
         intro: startGame,
         win: () => {
@@ -216,31 +220,36 @@ export const ChromaticPuzzle = ({
             />
 
             <AlphaCard title="Séquence de Sécurité">
-
                 <AlphaSequenceDisplay
                     sequence={sequence}
                     presets={GAME_PRESETS}
                     gameState={displayPhase}
                     step={step}
-                    className="mb-8 mt-4"
+                    className="mt-4 mb-8"
                 />
 
                 <AlphaFeedbackPill
                     message={feedbackMsg}
-                    type={gameState === 'win' ? 'success' : gameState === 'memory' ? 'warning' : 'info'}
+                    type={
+                        gameState === 'win'
+                            ? 'success'
+                            : gameState === 'memory'
+                              ? 'warning'
+                              : 'info'
+                    }
                     pulse={gameState === 'scan'}
                 />
 
                 {gameState === 'scan' && (
                     <AlphaCard>
-                        <div className="flex flex-col items-center gap-2 text-muted text-sm">
-                            <CpuChipIcon className="w-8 h-8 animate-pulse text-brand-purple" />
+                        <div className="text-muted flex flex-col items-center gap-2 text-sm">
+                            <CpuChipIcon className="text-brand-purple h-8 w-8 animate-pulse" />
                             <p>
-                                Utilisez le <strong>Scanner de Couleurs</strong> dans l'interface <span className="font-mono font-bold text-brand-purple">DEBUG</span> pour valider la séquence.
+                                Utilisez le <strong>Scanner de Couleurs</strong> dans l'interface{' '}
+                                <span className="text-brand-purple font-mono font-bold">DEBUG</span>{' '}
+                                pour valider la séquence.
                             </p>
-                            <p className="text-xs italic">
-                                Switch requis (Secouez le téléphone)
-                            </p>
+                            <p className="text-xs italic">Switch requis (Secouez le téléphone)</p>
                         </div>
                     </AlphaCard>
                 )}
@@ -250,7 +259,7 @@ export const ChromaticPuzzle = ({
                 <div className="flex justify-center">
                     <AlphaButton onClick={startGame} variant="secondary" size="sm">
                         <div className="flex items-center gap-2">
-                            <ArrowPathIcon className="w-4 h-4" />
+                            <ArrowPathIcon className="h-4 w-4" />
                             Réessayer
                         </div>
                     </AlphaButton>

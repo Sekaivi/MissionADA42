@@ -4,14 +4,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { HandRaisedIcon } from '@heroicons/react/24/outline';
 
-import { GameLobby } from '@/app/test/GameLobby';
+import ClientLayout from '@/app/ClientLayout';
 import { ModuleTestModal } from '@/app/test/ModuleTestModal';
 import DebugPage, { DebugTab } from '@/app/test/debug';
 import Homepage from '@/app/test/homepage';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { DialogueBox } from '@/components/dialogueBox';
-import {ModuleAction, PuzzlePhases} from '@/components/puzzles/PuzzleRegistry';
+import { ModuleAction, PuzzlePhases } from '@/components/puzzles/PuzzleRegistry';
 import { EscapeGameProvider, useEscapeGame } from '@/context/EscapeGameContext';
 import { CHARACTERS } from '@/data/characters';
 import { ModuleId } from '@/data/modules';
@@ -19,7 +19,6 @@ import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario'
 import { useShake } from '@/hooks/useShake';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
-import ClientLayout from "@/app/ClientLayout";
 
 export type GamePhases =
     | PuzzlePhases
@@ -79,21 +78,40 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le Décodeur QR. Indispensable.')],
     tuto_gyro: [say(CHARACTERS.paj, 'Calibrons le Gyroscope.')],
     tuto_mic: [say(CHARACTERS.paj, "Enfin, le Micro. On a besoin d'oreilles partout.")],
-    debug_all_validated: [],
+    debug_all_validated: [
+        say(CHARACTERS.paj, 'Ton équipement est opérationnel.'),
+        say(
+            CHARACTERS.goguey,
+            "Tu peux retourner sur l'interface principal pour débuter l'opération quand tes amis et toi seront prêts !"
+        ),
+    ],
 };
+
+// config highlight => phase = ID élément
+const HIGHLIGHT_MAP: Partial<Record<string, string>> = {
+    debug_pres_home: 'nav_home',
+    debug_pres_evidence: 'nav_evidence',
+    debug_pres_modules: 'nav_modules',
+    debug_go_to_modules: 'nav_modules',
+    tuto_face_id: 'facial_recognition',
+    tuto_color: 'color_scanner',
+    tuto_qr: 'qr_scanner',
+    tuto_gyro: 'gyroscope',
+    tuto_mic: 'microphone',
+};
+
+// séquence du tutoriel : ordre strict des modules à valider
+const TUTORIAL_SEQUENCE: { id: ModuleId; phase: GamePhases }[] = [
+    { id: 'facial_recognition', phase: 'tuto_face_id' },
+    { id: 'color_scanner', phase: 'tuto_color' },
+    { id: 'qr_scanner', phase: 'tuto_qr' },
+    { id: 'gyroscope', phase: 'tuto_gyro' },
+    { id: 'microphone', phase: 'tuto_mic' },
+];
 
 const GameContent = () => {
     // contexte multijoueur
     const { isConnected, logic, pseudo, playerId } = useEscapeGame();
-
-    const multiplayerState = logic?.gameState;
-    const currentMultiplayerStep = logic?.currentScenarioStep;
-    const activePuzzleId = logic?.activePuzzleId;
-
-    // gestion de validation de vote multijoueur
-    const validationRequest = logic?.gameState?.validationRequest;
-    const isValidationPending = !!validationRequest;
-    const isPlayerReady = validationRequest?.readyPlayers?.includes(playerId) || false;
 
     const [isAlternateView, setIsAlternateView] = useState(false);
     const [isIntroFinished, setIsIntroFinished] = useState(false);
@@ -101,90 +119,65 @@ const GameContent = () => {
     const [showPermissionModal, setShowPermissionModal] = useState(false);
 
     const [currentTab, setCurrentTab] = useState<DebugTab>('home');
+
+    // gestion de validation de vote multijoueur
     const [validatedModules, setValidatedModules] = useState<ModuleId[]>([]);
     const [testingModule, setTestingModule] = useState<ModuleId | null>(null);
+    const [lastModuleAction, setLastModuleAction] = useState<ModuleAction | null>(null);
 
     const {
-        gameState: tutorialPhase,
+        gameState: currentPhase,
         isDialogueOpen,
         currentScript,
         triggerPhase,
         onDialogueComplete,
     } = useGameScenario<GamePhases>(SCRIPTS);
 
+    const phaseString = currentPhase as string;
+
     // persistance et restauration
     useEffect(() => {
-        const tutoCompleted =
+        const isTutoDone =
             typeof window !== 'undefined' &&
             localStorage.getItem('alpha_tuto_completed') === 'true';
 
         // si le joueur est connecté ou a fini le tuto, mais que localStorage n'est pas encore à jour
-        if ((isConnected || tutoCompleted) && (tutorialPhase as string) !== 'debug_all_validated') {
+        if ((isConnected || isTutoDone) && phaseString !== 'debug_all_validated') {
             const timer = setTimeout(() => {
                 triggerPhase('debug_all_validated');
                 setIsIntroFinished(true);
                 setHasDiscoveredDebug(true);
-                setValidatedModules([
-                    'facial_recognition',
-                    'color_scanner',
-                    'qr_scanner',
-                    'gyroscope',
-                    'microphone',
-                ]);
+                setValidatedModules(TUTORIAL_SEQUENCE.map((s) => s.id));
             }, 0);
-
             return () => clearTimeout(timer);
         }
-    }, [isConnected, tutorialPhase, triggerPhase]);
-
-    useEffect(() => {
-        if ((tutorialPhase as string) === 'debug_all_validated') {
-            localStorage.setItem('alpha_tuto_completed', 'true');
-        }
-    }, [tutorialPhase]);
-
-    // logs
-    useEffect(() => {
-        if (isConnected && multiplayerState) {
-            console.log('🔄 [SYNC] State Step:', multiplayerState.step);
-        }
-    }, [multiplayerState, isConnected]);
+    }, [isConnected, phaseString, triggerPhase]);
 
     // switch interface
     const switchInterface = () => {
-        if (!isIntroFinished && (tutorialPhase as string) !== 'debug_all_validated') return;
+        if (!isIntroFinished && phaseString !== 'debug_all_validated') return;
         if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(200);
 
         setIsAlternateView((prev) => {
             const nextView = !prev;
             if (nextView && !hasDiscoveredDebug) {
-                if ((tutorialPhase as string) !== 'debug_all_validated') {
-                    triggerPhase('debug_start');
-                }
+                if (phaseString !== 'debug_all_validated') triggerPhase('debug_start');
                 setHasDiscoveredDebug(true);
             }
             return nextView;
         });
     };
 
-    const { requestPermission, permissionGranted } = useShake(() => switchInterface(), {
+    const { requestPermission, permissionGranted } = useShake(switchInterface, {
         threshold: 20,
         minShakes: 4,
         timeout: 1000,
     });
 
-    const handlePermissionRequest = async () => {
-        await requestPermission();
-        setShowPermissionModal(false);
-    };
-
-    useScenarioTransition(tutorialPhase, isDialogueOpen, {
+    useScenarioTransition(currentPhase, isDialogueOpen, {
         idle: () => {
-            if (localStorage.getItem('alpha_tuto_completed') !== 'true') {
-                triggerPhase('intro');
-            } else {
-                triggerPhase('debug_all_validated');
-            }
+            const isDone = localStorage.getItem('alpha_tuto_completed') === 'true';
+            triggerPhase(isDone ? 'debug_all_validated' : 'intro');
         },
         intro: () => {
             setIsIntroFinished(true);
@@ -197,100 +190,85 @@ const GameContent = () => {
         debug_go_to_modules: () => {
             if (currentTab === 'modules') triggerPhase('tuto_face_id');
         },
+        debug_all_validated: () => {
+            console.log('save tuto passed');
+            localStorage.setItem('alpha_tuto_completed', 'true');
+        },
     });
 
-    // validation des modules (Unlock during Tuto)
+    // validation des modules (unlock pendant le tuto)
     useEffect(() => {
-        if (
-            !isAlternateView ||
-            !hasDiscoveredDebug ||
-            (tutorialPhase as string) === 'debug_all_validated'
-        )
+        if (!isAlternateView || !hasDiscoveredDebug || phaseString === 'debug_all_validated')
             return;
-        const isTutorialReady =
-            validatedModules.length > 0 ||
-            tutorialPhase === 'debug_go_to_modules' ||
-            currentTab === 'modules';
-        if (!isTutorialReady) return;
 
-        if (!validatedModules.includes('facial_recognition')) {
-            if (tutorialPhase !== 'tuto_face_id' && !testingModule && currentTab === 'modules')
-                triggerPhase('tuto_face_id');
-        } else if (!validatedModules.includes('color_scanner')) {
-            if (tutorialPhase !== 'tuto_color' && !testingModule) triggerPhase('tuto_color');
-        } else if (!validatedModules.includes('qr_scanner')) {
-            if (tutorialPhase !== 'tuto_qr' && !testingModule) triggerPhase('tuto_qr');
-        } else if (!validatedModules.includes('gyroscope')) {
-            if (tutorialPhase !== 'tuto_gyro' && !testingModule) triggerPhase('tuto_gyro');
-        } else if (!validatedModules.includes('microphone')) {
-            if (tutorialPhase !== 'tuto_mic' && !testingModule) triggerPhase('tuto_mic');
-        } else {
-            if ((tutorialPhase as string) !== 'debug_all_validated')
-                triggerPhase('debug_all_validated');
+        const isReadyToStart =
+            validatedModules.length > 0 ||
+            currentPhase === 'debug_go_to_modules' ||
+            currentTab === 'modules';
+        if (!isReadyToStart) return;
+
+        for (const step of TUTORIAL_SEQUENCE) {
+            // si ce module n'est pas encore validé
+            if (!validatedModules.includes(step.id)) {
+                // si on n'est pas déjà dans la bonne phase et qu'on n'est pas en train de tester
+                if (currentPhase !== step.phase && !testingModule) {
+                    // pour le premier module, on force l'onglet
+                    if (step.id === 'facial_recognition' && currentTab === 'modules') {
+                        triggerPhase(step.phase);
+                    } else if (step.id !== 'facial_recognition') {
+                        triggerPhase(step.phase);
+                    }
+                }
+                return; // on arrête la boucle ici => on attend que ce module soit validé
+            }
+        }
+
+        // si la boucle se termine => tous les modules sont validés
+        if (phaseString !== 'debug_all_validated') {
+            triggerPhase('debug_all_validated');
         }
     }, [
         validatedModules,
         isAlternateView,
         hasDiscoveredDebug,
-        tutorialPhase,
+        currentPhase,
         testingModule,
         triggerPhase,
         currentTab,
+        phaseString,
     ]);
 
     const handleTabChange = (tab: DebugTab) => {
         setCurrentTab(tab);
-        if (tutorialPhase === 'debug_go_to_modules' && tab === 'modules') {
+        if (currentPhase === 'debug_go_to_modules' && tab === 'modules') {
             triggerPhase('tuto_face_id');
         }
     };
 
     // GESTION DES RÉSULTATS DES MODULES
-    const [lastModuleAction, setLastModuleAction] = useState<ModuleAction | null>(null);
-    const handleModuleSuccess = (id: ModuleId, result?: any) => {
-        const isGameMode = (tutorialPhase as string) === 'debug_all_validated';
+    const handleModuleSuccess = (id: ModuleId, result: Record<string, unknown> = {}) => {
+        const isGameMode = phaseString === 'debug_all_validated';
 
         // tutoriel
         if (!isGameMode) {
-            if (!validatedModules.includes(id)) {
-                setValidatedModules((prev) => [...prev, id]);
-            }
+            if (!validatedModules.includes(id)) setValidatedModules((prev) => [...prev, id]);
             // ferme automatiquement pour valider l'étape et passer à la suivante
             setTestingModule(null);
-            return;
-        }
-
-        // logique de jeu => mode libre
-        if (isGameMode) {
+        } else {
+            // logique de jeu => mode libre
             console.log(`[GAME] Module ${id} used.`);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
 
-            if (logic) {
-                logic.submitModuleAction(id, result);
-            }
-
+            logic?.submitModuleAction(id, result);
             // màj locale pour réactivité immédiate
-            setLastModuleAction({
-                id,
-                data: result,
-                timestamp: Date.now()
-            });
+            setLastModuleAction({ id, data: result, timestamp: Date.now() });
         }
     };
 
     const highlightedElement = useMemo(() => {
-        if ((tutorialPhase as string) === 'debug_all_validated') return null;
-        if (tutorialPhase === 'debug_pres_home') return 'nav_home';
-        if (tutorialPhase === 'debug_pres_evidence') return 'nav_evidence';
-        if (tutorialPhase === 'debug_pres_modules') return 'nav_modules';
-        if (tutorialPhase === 'debug_go_to_modules') return 'nav_modules';
-        if (tutorialPhase === 'tuto_face_id') return 'facial_recognition';
-        if (tutorialPhase === 'tuto_color') return 'color_scanner';
-        if (tutorialPhase === 'tuto_qr') return 'qr_scanner';
-        if (tutorialPhase === 'tuto_gyro') return 'gyroscope';
-        if (tutorialPhase === 'tuto_mic') return 'microphone';
-        return null;
-    }, [tutorialPhase]);
+        if (phaseString === 'debug_all_validated') return null;
+        return HIGHLIGHT_MAP[phaseString] || null;
+    }, [phaseString]);
 
     const isDebugTuto = [
         'debug_start',
@@ -298,107 +276,102 @@ const GameContent = () => {
         'debug_pres_evidence',
         'debug_pres_modules',
         'debug_go_to_modules',
-    ].includes((tutorialPhase as string) || '');
-
-    // on accepte les arguments optionnels du onSolve
-    const handleMultiplayerPuzzleSolve = (id?: string, data?: any) => {
-        if (logic && currentMultiplayerStep) {
-            // si le puzzle envoie des données spécifiques (ex: un code trouvé), on l'ajoute
-            const payload = data ? ` : ${JSON.stringify(data)}` : '';
-            const source = id ? `[${id}] ` : '';
-
-            logic.submitProposal(pseudo, `${source}Solution pour "${currentMultiplayerStep.title}"${payload}`);
-        }
-    };
-
-    const showDialogBox = isDialogueOpen && (tutorialPhase as string) !== 'debug_all_validated';
-
+    ].includes(phaseString);
+    const multiplayerState = logic?.gameState;
+    const currentMultiplayerStep = logic?.currentScenarioStep;
+    const activePuzzleId = logic?.activePuzzleId;
+    const validationRequest = multiplayerState?.validationRequest;
+    const isValidationPending = !!validationRequest;
+    const isPlayerReady = validationRequest?.readyPlayers?.includes(playerId) || false;
     const shouldTimerRun =
         !!logic && (multiplayerState?.step || 0) > 0 && !logic.isGameWon && !logic.isTimeUp;
 
     return (
-        <>
+        <ClientLayout variant={isAlternateView ? 'dark' : 'light'}>
             <AlphaButton variant={'primary'} onClick={switchInterface}>
                 Switch
             </AlphaButton>
 
-            {showDialogBox && (
-                <DialogueBox
-                    isOpen={true}
-                    script={currentScript}
-                    onComplete={onDialogueComplete}
-                    position={isDebugTuto ? 'top' : 'bottom'}
-                />
-            )}
+            <DialogueBox
+                isOpen={isDialogueOpen}
+                script={currentScript}
+                onComplete={onDialogueComplete}
+                position={isDebugTuto ? 'top' : 'bottom'}
+            />
 
-            {/* ModuleTestModal peut renvoyer des données via onSuccess
-                ex : onSuccess={(id, data) => handleModuleSuccess(id, data)}
-            */}
             <ModuleTestModal
                 moduleId={testingModule}
                 onClose={() => setTestingModule(null)}
-                onSuccess={(id, data) => handleModuleSuccess(id, data)}
-                // C'est un tuto SI on n'est PAS encore à l'étape 'debug_all_validated'
-                isTutorial={(tutorialPhase as string) !== 'debug_all_validated'}
+                onSuccess={handleModuleSuccess}
+                isTutorial={phaseString !== 'debug_all_validated'}
             />
 
             <AlphaModal
                 isOpen={showPermissionModal}
                 title="Autorisation Requise"
                 message="Accès aux capteurs de mouvement requis."
-                onClose={() => {}}
+                onClose={() => setShowPermissionModal(false)}
                 hideIcon
                 variant={'info'}
             >
                 <div className="flex flex-col items-center gap-4 pt-4">
                     <HandRaisedIcon className="text-brand-orange h-12 w-12 animate-pulse" />
-                    <AlphaButton variant={'secondary'} onClick={handlePermissionRequest} size="lg">
+                    <AlphaButton
+                        variant={'secondary'}
+                        onClick={async () => {
+                            await requestPermission();
+                            setShowPermissionModal(false);
+                        }}
+                        size="lg"
+                    >
                         Activer
                     </AlphaButton>
                 </div>
             </AlphaModal>
 
-            <div className={!isAlternateView ? '_HOMEPAGE_CONTENT' : 'hidden'}>
-                <ClientLayout variant={'light'}>
-                    {(tutorialPhase as string) === 'debug_all_validated' ? (
-                        isConnected ? (
-                            <Homepage
-                                missionStatus={currentMultiplayerStep?.title}
-                                missionStep={multiplayerState?.step}
-                                isTimerRunning={shouldTimerRun}
-                                notificationCount={multiplayerState?.step ? 1 : 0}
-                                activePuzzleId={activePuzzleId}
-                                gameState={multiplayerState || null}
-                                onPuzzleSolve={handleMultiplayerPuzzleSolve}
-                                isValidationPending={isValidationPending}
-                                isPlayerReady={isPlayerReady}
-                                onVoteReady={() => logic?.voteReady()}
-                                lastModuleAction={lastModuleAction}
-                            />
-                        ) : (
-                            <GameLobby />
-                        )
-                    ) : (
-                        <Homepage />
-                    )}
-                </ClientLayout>
-            </div>
-
-            <div className={isAlternateView ? '_DEBUG_CONTENT' : 'hidden'}>
-                <ClientLayout variant={'dark'}>
-
-                    <DebugPage
-                        currentTab={currentTab}
-                        onTabChange={handleTabChange}
-                        validatedModules={validatedModules}
-                        highlightedElement={highlightedElement}
-                        onModuleClick={setTestingModule}
-                        gameLogic={logic}
-                        activeExternalPuzzle={activePuzzleId}
+            <div className={!isAlternateView ? '_HOMEPAGE_CONTENT my-4 space-y-4' : 'hidden'}>
+                {phaseString === 'debug_all_validated' ? (
+                    <Homepage
+                        missionStatus={currentMultiplayerStep?.title}
+                        missionStep={multiplayerState?.step}
+                        isTimerRunning={shouldTimerRun}
+                        notificationCount={multiplayerState?.step ? 1 : 0}
+                        activePuzzleId={activePuzzleId}
+                        gameState={multiplayerState || null}
+                        onPuzzleSolve={(id, data) => {
+                            if (logic && currentMultiplayerStep) {
+                                const payload = data ? ` : ${JSON.stringify(data)}` : '';
+                                const source = id ? `[${id}] ` : '';
+                                logic.submitProposal(
+                                    pseudo,
+                                    `${source}Solution pour "${currentMultiplayerStep.title}"${payload}`
+                                );
+                            }
+                        }}
+                        isValidationPending={isValidationPending}
+                        isPlayerReady={isPlayerReady}
+                        onVoteReady={() => logic?.voteReady()}
+                        lastModuleAction={lastModuleAction}
+                        showLobby={isIntroFinished}
                     />
-                </ClientLayout>
+                ) : (
+                    <Homepage />
+                )}
             </div>
-        </>
+
+            {/* VUE DEBUG */}
+            <div className={isAlternateView ? '_DEBUG_CONTENT my-4 space-y-4' : 'hidden'}>
+                <DebugPage
+                    currentTab={currentTab}
+                    onTabChange={handleTabChange}
+                    validatedModules={validatedModules}
+                    highlightedElement={highlightedElement}
+                    onModuleClick={setTestingModule}
+                    gameLogic={logic}
+                    activeExternalPuzzle={activePuzzleId}
+                />
+            </div>
+        </ClientLayout>
     );
 };
 

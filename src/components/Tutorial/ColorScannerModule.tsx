@@ -15,7 +15,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { ColorDefinition } from '@/types/colorDetection';

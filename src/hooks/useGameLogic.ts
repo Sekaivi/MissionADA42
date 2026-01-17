@@ -19,7 +19,7 @@ export const useGameLogic = (
     playerId: string,
     pseudo: string
 ) => {
-    const { gameState, updateState, refresh, error } = useGameSync(gameCode, initialIsHost);
+    const { gameState, updateState, error } = useGameSync(gameCode, initialIsHost);
 
     // calcul dynamique du statut 'hôte' en checkant la liste des joueurs actuelle
     const isHost = useMemo(() => {
@@ -58,7 +58,7 @@ export const useGameLogic = (
                 pendingProposal: null,
                 validationRequest: null,
                 lastUpdate: now,
-                lastModuleAction: null
+                lastModuleAction: null,
             });
         }
     }, [initialIsHost, gameState, updateState, playerId, pseudo]);
@@ -80,7 +80,7 @@ export const useGameLogic = (
             await updateState({
                 ...gameState,
                 players: updatedPlayers,
-                message: "Changement de commandement..."
+                message: 'Changement de commandement...',
             });
         } else {
             // sinon je pars juste
@@ -103,7 +103,7 @@ export const useGameLogic = (
             const amIFirst = firstPlayer.id === playerId;
 
             if (amIFirst) {
-                console.log("[AUTO-PROMOTION] Je prends le lead");
+                console.log('[AUTO-PROMOTION] Je prends le lead');
 
                 const updatedPlayers = gameState.players.map((p) =>
                     p.id === playerId ? { ...p, isGM: true } : p
@@ -113,11 +113,11 @@ export const useGameLogic = (
                 updateState({
                     ...gameState,
                     players: updatedPlayers,
-                    message: "Signal perdu. Nouveau chef désigné."
+                    message: 'Signal perdu. Nouveau chef désigné.',
                 });
             }
         }
-    }, [gameState?.players, playerId, updateState]);
+    }, [gameState, playerId, updateState]);
 
     // auto join
     useEffect(() => {
@@ -158,19 +158,19 @@ export const useGameLogic = (
     // ACTIONS DE JEU
 
     // action technique d'un module => ne notifie pas l'hôte, met juste à jour l'état pour les puzzles
-    const submitModuleAction = async (moduleId: string, payload: any) => {
+    const submitModuleAction = async (moduleId: string, payload: Record<string, unknown>) => {
         if (!gameState) return;
 
         await updateState({
             ...gameState,
             lastModuleAction: {
                 id: moduleId,
-                payload: typeof payload === 'string' ? payload : JSON.stringify(payload),
+                payload: JSON.stringify(payload),
                 playerId,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             },
             // on ne touche pas à pendingProposal
-            lastUpdate: Date.now()
+            lastUpdate: Date.now(),
         });
     };
 
@@ -180,23 +180,18 @@ export const useGameLogic = (
 
         const isPlayingSolo = gameState.players.length === 1;
 
-        // si c'est une action technique
-        if (label.startsWith('MODULE_ACTION:')) {
-            const parts = label.split(':');
-            // parts[0] = MODULE_ACTION, parts[1] = id, parts[2] = payload
-            if (parts.length >= 3) {
-                await submitModuleAction(parts[1], parts.slice(2).join(':'));
-                return;
-            }
-        }
-
         if (initialIsHost || isPlayingSolo) {
             await initiateNextStep();
         } else {
             await updateState({
                 ...gameState,
-                pendingProposal: { playerId, playerName, actionLabel: label, timestamp: Date.now() },
-                lastUpdate: Date.now()
+                pendingProposal: {
+                    playerId,
+                    playerName,
+                    actionLabel: label, // stocke juste le texte (ex: "Code 1234")
+                    timestamp: Date.now(),
+                },
+                lastUpdate: Date.now(),
             });
         }
     };
@@ -265,7 +260,7 @@ export const useGameLogic = (
             lastUpdate: now,
             validationRequest: null,
             pendingProposal: null,
-            lastModuleAction: null
+            lastModuleAction: null,
         });
     };
 
@@ -342,6 +337,6 @@ export const useGameLogic = (
         confirmNextStep,
         submitModuleAction,
         isHost,
-        leaveGame
+        leaveGame,
     };
 };
