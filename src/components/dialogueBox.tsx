@@ -78,7 +78,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
     }, [isOpen, handleInteraction]);
 
     const positionClasses = clsx(
-        'fixed inset-0 z-[100] flex justify-center p-4 bg-black/20',
+        'fixed inset-0 z-[100] flex justify-center p-4 bg-black/20 m-0',
         position === 'bottom' ? 'items-end pb-8' : 'items-start pt-8'
     );
 

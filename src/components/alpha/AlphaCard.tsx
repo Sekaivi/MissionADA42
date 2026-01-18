@@ -25,7 +25,7 @@ export const AlphaCard = ({
         {title && (
             <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">
                 <h3 className="text-muted text-xs font-bold tracking-wider uppercase">{title}</h3>
-                {action && <div>{action}</div>}
+                {action && <>{action}</>}
             </div>
         )}
         <div className={`flex-1 space-y-4 p-4 ${contentClassName}`}>{children}</div>

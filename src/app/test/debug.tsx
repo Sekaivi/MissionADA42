@@ -321,7 +321,7 @@ export default function DebugPage({
             )}
 
             {/* nav en bas */}
-            <div className="border-border bg-surface fixed right-0 bottom-0 left-0 z-40 border-t px-2 py-3 pb-8">
+            <div className="border-border bg-surface fixed right-0 bottom-0 left-0 z-40 border-t px-2 py-3">
                 <div className="mx-auto flex max-w-md items-center justify-around gap-2">
                     <NavButton
                         active={currentTab === 'home'}

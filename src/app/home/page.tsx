@@ -47,12 +47,7 @@ export default function Homepage() {
                         </p>
                         <div className="mb-10 grid w-full grid-cols-1 gap-4 md:grid-cols-3">
                             {features.map((f, i) => (
-                                <FeatureCard
-                                    key={i}
-                                    icon={f.icon}
-                                    title={f.title}
-                                    description={f.desc}
-                                />
+                                <FeatureCard key={i} title={f.title} description={f.desc} />
                             ))}
                         </div>
                         <div className="flex w-full flex-col justify-center gap-4 sm:flex-row">

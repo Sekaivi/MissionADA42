@@ -310,7 +310,6 @@ const GameContent = () => {
                 isOpen={showPermissionModal}
                 title="Autorisation Requise"
                 message="Accès aux capteurs de mouvement requis."
-                onClose={() => setShowPermissionModal(false)}
                 hideIcon
                 variant={'info'}
             >

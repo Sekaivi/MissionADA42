@@ -5,9 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { HashtagIcon, PuzzlePieceIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 
-import { GameLobby } from '@/app/test/GameLobby';
-import { AlphaButton } from '@/components/alpha/AlphaButton';
-import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { WelcomeScreen } from '@/app/test/WelcomeScreen';
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
@@ -128,11 +126,6 @@ export default function Homepage({
         ? PUZZLE_COMPONENTS[activePuzzleId as PuzzleComponentId]
         : null;
 
-    const handleReplayTutorial = () => {
-        localStorage.removeItem('alpha_tuto_completed');
-        window.location.reload();
-    };
-
     return (
         <>
             {isGameActive && (
@@ -234,16 +227,7 @@ export default function Homepage({
                     </>
                 ) : (
                     // accueil
-                    <>
-                        <AlphaCard title={SCENARIO.name}>
-                            <p>{SCENARIO.description}</p>
-                            <AlphaButton onClick={handleReplayTutorial} variant={'secondary'}>
-                                Rejouer le tutoriel
-                            </AlphaButton>
-                        </AlphaCard>
-
-                        {showLobby && <GameLobby />}
-                    </>
+                    <WelcomeScreen showLobby={showLobby} />
                 )}
             </>
         </>

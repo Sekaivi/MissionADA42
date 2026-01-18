@@ -164,7 +164,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                     {!hideCloseButton && onClose && (
                                         <button
                                             onClick={onClose}
-                                            className={`absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors hover:bg-surface text-brand-error`}
+                                            className={`hover:bg-surface text-brand-error absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors`}
                                         >
                                             <XMarkIcon className="h-4 w-4" />
                                         </button>
