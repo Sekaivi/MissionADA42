@@ -4,6 +4,7 @@ import React, { Suspense, useCallback, useEffect, useState } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import {
     ArrowLeftIcon,
     ArrowPathIcon,
@@ -25,13 +26,12 @@ import { AlphaPuzzleHeader } from '@/components/alpha/AlphaGameHeader';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaInput } from '@/components/alpha/AlphaInput';
+import { AlphaTerminalWrapper } from '@/components/alpha/AlphaTerminalWrapper';
 import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { SCENARIO } from '@/data/alphaScenario';
+import { createLog } from '@/hooks/useGameLogic';
 import { useGameSync } from '@/hooks/useGameSync';
-import { AdminCommandType, ChallengeType, GameState, Player, GameLogEntry } from '@/types/game';
-import {AlphaTerminalWrapper} from "@/components/alpha/AlphaTerminalWrapper";
-import {PaperAirplaneIcon} from "@heroicons/react/24/outline";
-import { createLog } from "@/hooks/useGameLogic";
+import { AdminCommandType, ChallengeType, GameLogEntry, GameState, Player } from '@/types/game';
 
 interface ExtendedGameState extends GameState {
     duration?: number;
@@ -55,10 +55,10 @@ const formatTime = (seconds: number) => {
 };
 
 const AdminTimer = ({
-                        startTime,
-                        bonusTime,
-                        isStopped,
-                    }: {
+    startTime,
+    bonusTime,
+    isStopped,
+}: {
     startTime: number;
     bonusTime: number;
     isStopped?: boolean;
@@ -93,28 +93,27 @@ const AdminTimer = ({
                 <div className="text-center">
                     <div
                         className={clsx(
-                            "text-2xl font-black tracking-tighter",
+                            'text-2xl font-black tracking-tighter',
                             variant === 'error' && 'text-brand-error animate-pulse'
                         )}
                     >
                         {formatTime(remainingSec)}
                     </div>
-                    <div className="text-xs font-bold  text-muted uppercase">
-                        Restant
-                    </div>
+                    <div className="text-muted text-xs font-bold uppercase">Restant</div>
                 </div>
             </AlphaCircularGauge>
 
-            <div className="mt-4 flex items-center gap-2 font-mono text-xs text-muted">
+            <div className="text-muted mt-4 flex items-center gap-2 font-mono text-xs">
                 <span>Total: {Math.floor(totalDurationSec / 60)}min</span>
                 {bonusTime !== 0 && (
                     <span
                         className={clsx(
-                            "font-bold",
+                            'font-bold',
                             bonusTime > 0 ? 'text-brand-emerald' : 'text-brand-error'
                         )}
                     >
-                        ({bonusTime > 0 ? '+' : ''}{bonusTime})
+                        ({bonusTime > 0 ? '+' : ''}
+                        {bonusTime})
                     </span>
                 )}
             </div>
@@ -132,6 +131,14 @@ function GameControlPanel() {
     const [customMessage, setCustomMessage] = useState('');
     const [customTime, setCustomTime] = useState('');
     const [fallbackStartTime] = useState(() => Date.now());
+
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        // màj l'heure toutes les secondes pour recalculer isDefeat en temps réel
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const historyRef = React.useRef<HTMLDivElement>(null);
     // si l'utilisateur regarde l'historique
@@ -165,7 +172,7 @@ function GameControlPanel() {
         }
 
         prevLogLength.current = currentLogs.length;
-    }, [currentLogs.length])
+    }, [currentLogs.length]);
 
     useEffect(() => {
         if (!gameCode) router.push('/mc-admin');
@@ -182,7 +189,10 @@ function GameControlPanel() {
                 admin_command: { id: commandId, type, payload },
                 message: type === 'MESSAGE' ? (payload as string) : currentState.message,
                 lastUpdate: Date.now(),
-                logs: [...(currentState.logs || []), createLog('ADMIN', `Commande: ${type}`, payload?.toString())],
+                logs: [
+                    ...(currentState.logs || []),
+                    createLog('ADMIN', `Commande: ${type}`, payload?.toString()),
+                ],
             });
         },
         [gameState, updateState]
@@ -199,7 +209,10 @@ function GameControlPanel() {
                 active_challenge: { id: challengeId, type },
                 message: 'DÉFI ACTIVÉ : ' + type,
                 lastUpdate: Date.now(),
-                logs: [...(currentState.logs || []), createLog('WARNING', `Défi lancé : ${type}`, 'Action Admin')],
+                logs: [
+                    ...(currentState.logs || []),
+                    createLog('WARNING', `Défi lancé : ${type}`, 'Action Admin'),
+                ],
             });
         },
         [gameState, updateState]
@@ -225,7 +238,10 @@ function GameControlPanel() {
                 },
                 message: `Temps modifié (${sign}${minutes} min)`,
                 lastUpdate: Date.now(),
-                logs: [...(currentState.logs || []), createLog('ADMIN', 'Modification Temps', `${sign}${minutes} min`)],
+                logs: [
+                    ...(currentState.logs || []),
+                    createLog('ADMIN', 'Modification Temps', `${sign}${minutes} min`),
+                ],
             });
         },
         [gameState, updateState]
@@ -240,13 +256,17 @@ function GameControlPanel() {
             active_challenge: null,
             message: "Défi annulé par l'Admin",
             lastUpdate: Date.now(),
-            logs: [...(currentState.logs || []), createLog('ADMIN', 'Interruption Défi', 'Annulé manuellement')],
+            logs: [
+                ...(currentState.logs || []),
+                createLog('ADMIN', 'Interruption Défi', 'Annulé manuellement'),
+            ],
         });
     }, [gameState, updateState]);
 
     const skipLevel = useCallback(async () => {
         if (!gameState) return;
-        if (!confirm("ATTENTION : Cette action est irréversible. Forcer l'étape suivante ?")) return;
+        if (!confirm("ATTENTION : Cette action est irréversible. Forcer l'étape suivante ?"))
+            return;
 
         const currentState = gameState as ExtendedGameState;
         const nextStep = (gameState.step || 0) + 1;
@@ -257,7 +277,10 @@ function GameControlPanel() {
             message: 'INTERVENTION ADMIN : NIVEAU PASSÉ',
             active_challenge: null,
             lastUpdate: Date.now(),
-            logs: [...(currentState.logs || []), createLog('ADMIN', 'Force Skip Level', `Vers étape ${nextStep}`)],
+            logs: [
+                ...(currentState.logs || []),
+                createLog('ADMIN', 'Force Skip Level', `Vers étape ${nextStep}`),
+            ],
         });
     }, [gameState, updateState]);
 
@@ -265,8 +288,8 @@ function GameControlPanel() {
     if (isLoading && !gameState)
         return (
             <div className="animate-pulse text-center">
-                <ArrowPathIcon className="mx-auto mb-4 h-10 w-10 animate-spin text-brand-blue" />
-                <p className="font-mono text-xs  uppercase">Chargement...</p>
+                <ArrowPathIcon className="text-brand-blue mx-auto mb-4 h-10 w-10 animate-spin" />
+                <p className="font-mono text-xs uppercase">Chargement...</p>
             </div>
         );
 
@@ -274,36 +297,32 @@ function GameControlPanel() {
         return (
             <AlphaCard title="ERREUR CRITIQUE">
                 <AlphaError message={`Liaison échouée : ${error}`} />
-                <AlphaButton variant={'secondary'} onClick={() => router.push('/mc-admin')}>Retour</AlphaButton>
+                <AlphaButton variant={'secondary'} onClick={() => router.push('/mc-admin')}>
+                    Retour
+                </AlphaButton>
             </AlphaCard>
         );
 
     if (!gameState) return <AlphaError message={`Aucun signal.`} />;
 
     const startTime = state.startTime || state.timestamp || fallbackStartTime;
-
-    const totalDurationMs = (SCENARIO.defaultDuration * 1000) + ((state.bonusTime || 0) * 60 * 1000);
-    const elapsedMs = Date.now() - startTime;
+    const totalDurationMs = SCENARIO.defaultDuration * 1000 + (state.bonusTime || 0) * 60 * 1000;
+    const elapsedMs = now - startTime;
     const isVictory = state.step > SCENARIO.steps.length;
     const isDefeat = !isVictory && elapsedMs > totalDurationMs;
-
-
 
     return (
         <>
             <AlphaPuzzleHeader
                 left={
-                        <AlphaButton
-                            onClick={() => router.push('/mc-admin')}
-                            variant={'ghost'}
-                        >
-                            <ArrowLeftIcon className="mr-2 h-3 w-3" />
-                            RETOUR
-                        </AlphaButton>
+                    <AlphaButton onClick={() => router.push('/mc-admin')} variant={'ghost'}>
+                        <ArrowLeftIcon className="mr-2 h-3 w-3" />
+                        RETOUR
+                    </AlphaButton>
                 }
                 right={
                     <div className="flex items-center gap-4">
-                        <AlphaTitle className="text-lg !mb-0">{gameCode}</AlphaTitle>
+                        <AlphaTitle className="!mb-0 text-lg">{gameCode}</AlphaTitle>
                         {isVictory ? (
                             <AlphaFeedbackPill type="success" message="VICTOIRE" />
                         ) : isDefeat ? (
@@ -318,39 +337,51 @@ function GameControlPanel() {
             <div className="container mx-auto px-4 pb-20">
                 <AlphaGrid>
                     {/* col 1 : monitoring */}
-                        <AlphaCard title="Monitoring Temporel" className={'col-span-2'}>
-                            <AdminTimer
-                                startTime={startTime}
-                                bonusTime={state.bonusTime || 0}
-                                isStopped={isVictory || isDefeat}
-                            />
+                    <AlphaCard title="Monitoring Temporel" className={'col-span-2'}>
+                        <AdminTimer
+                            startTime={startTime}
+                            bonusTime={state.bonusTime || 0}
+                            isStopped={isVictory || isDefeat}
+                        />
 
-                            {/* log */}
-                            <AlphaTerminalWrapper >
-                             <div onScroll={handleScroll} className={'max-h-[200px] overflow-y-scroll'} ref={historyRef}>
+                        {/* log */}
+                        <AlphaTerminalWrapper>
+                            <div
+                                onScroll={handleScroll}
+                                className={'max-h-[200px] overflow-y-scroll'}
+                                ref={historyRef}
+                            >
                                 {state.logs && state.logs.length > 0 ? (
                                     [...state.logs].map((log) => (
-                                        <div key={log.id} className="flex gap-2 text-xs font-mono opacity-80 hover:opacity-100 transition-opacity">
-                <span className="text-muted">
-                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
-                                            <span className={clsx(
-                                                "font-bold w-10 text-right",
-                                                log.type === 'ADMIN' && 'text-brand-purple',
-                                                log.type === 'ERROR' && 'text-brand-error',
-                                                log.type === 'WARNING' && 'text-brand-yellow',
-                                                log.type === 'SUCCESS' && 'text-brand-emerald',
-                                                log.type === 'PLAYER' && 'text-brand-blue',
-                                                (log.type === 'INFO' || !log.type) && 'text-gray-400'
-                                            )}>
-                    [{log.type ? log.type.substring(0, 3) : 'SYS'}]
-                </span>
-                                            <span className="text-gray-300 truncate">
-                    {log.message}
-                </span> :
-                                            <span>
-                                                {log.details}
+                                        <div
+                                            key={log.id}
+                                            className="flex gap-2 font-mono text-xs opacity-80 transition-opacity hover:opacity-100"
+                                        >
+                                            <span className="text-muted">
+                                                {new Date(log.timestamp).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                })}
                                             </span>
+                                            <span
+                                                className={clsx(
+                                                    'w-10 text-right font-bold',
+                                                    log.type === 'ADMIN' && 'text-brand-purple',
+                                                    log.type === 'ERROR' && 'text-brand-error',
+                                                    log.type === 'WARNING' && 'text-brand-yellow',
+                                                    log.type === 'SUCCESS' && 'text-brand-emerald',
+                                                    log.type === 'PLAYER' && 'text-brand-blue',
+                                                    (log.type === 'INFO' || !log.type) &&
+                                                        'text-gray-400'
+                                                )}
+                                            >
+                                                [{log.type ? log.type.substring(0, 3) : 'SYS'}]
+                                            </span>
+                                            <span className="truncate text-gray-300">
+                                                {log.message}
+                                            </span>{' '}
+                                            :<span>{log.details}</span>
                                         </div>
                                     ))
                                 ) : (
@@ -359,36 +390,36 @@ function GameControlPanel() {
                                         {state.message || 'Système nominal...'}
                                     </div>
                                 )}
-                             </div>
-                            </AlphaTerminalWrapper>
-                        </AlphaCard>
-
-                        <AlphaCard
-                            title={`Escouade (${state.players?.length || 0})`}
-                            contentClassName={'space-y-2'}
-                        >
-                            <ul className="custom-scrollbar max-h-[200px] space-y-1 overflow-y-auto pr-1">
-                                {state.players?.map((p: Player) => (
-                                    <li
-                                        key={p.id}
-                                    >
-                                        <AlphaInfoRow label={
-                                            p.isGM ? 'Hôte' : 'Agent'
-                                        } value={
-                                            p.name
-
-                                        } />
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <div className="border-t border-border pt-4">
-                                <AlphaInfoRow
-                                    label="Progression"
-                                    value={<span className="text-brand-yellow font-bold">Étape {state.step}</span>}
-                                />
                             </div>
-                        </AlphaCard>
+                        </AlphaTerminalWrapper>
+                    </AlphaCard>
+
+                    <AlphaCard
+                        title={`Escouade (${state.players?.length || 0})`}
+                        contentClassName={'space-y-2'}
+                    >
+                        <ul className="custom-scrollbar max-h-[200px] space-y-1 overflow-y-auto pr-1">
+                            {state.players?.map((p: Player) => (
+                                <li key={p.id}>
+                                    <AlphaInfoRow
+                                        label={p.isGM ? 'Hôte' : 'Agent'}
+                                        value={p.name}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+
+                        <div className="border-border border-t pt-4">
+                            <AlphaInfoRow
+                                label="Progression"
+                                value={
+                                    <span className="text-brand-yellow font-bold">
+                                        Étape {state.step}
+                                    </span>
+                                }
+                            />
+                        </div>
+                    </AlphaCard>
                     <AlphaCard title="Distorsion Temporelle" icon={ClockIcon}>
                         <div className="grid grid-cols-3 gap-2">
                             {[1, 5, 10].map((min) => (
@@ -402,13 +433,16 @@ function GameControlPanel() {
                                 </AlphaButton>
                             ))}
                         </div>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            if (customTime) {
-                                addTime(parseInt(customTime));
-                                setCustomTime('');
-                            }
-                        }} className="flex gap-2">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (customTime) {
+                                    addTime(parseInt(customTime));
+                                    setCustomTime('');
+                                }
+                            }}
+                            className="flex gap-2"
+                        >
                             <AlphaInput
                                 type="number"
                                 value={customTime}
@@ -416,10 +450,7 @@ function GameControlPanel() {
                                 placeholder="Min..."
                                 containerClassName={'w-full'}
                             />
-                            <AlphaButton
-                                type={'submit'}
-                                disabled={!customTime}
-                            >
+                            <AlphaButton type={'submit'} disabled={!customTime}>
                                 OK
                             </AlphaButton>
                         </form>
@@ -427,133 +458,156 @@ function GameControlPanel() {
 
                     {/* col 2 et 3 : commandes */}
 
+                    {/* temps */}
 
-                            {/* temps */}
+                    {/* messages */}
+                    <AlphaCard
+                        title="Canal Prioritaire"
+                        icon={ChatBubbleLeftRightIcon}
+                        className={'col-span-2'}
+                    >
+                        <div className="grid grid-cols-2 gap-2">
+                            <AlphaButton
+                                fullWidth
+                                variant={'warning'}
+                                onClick={() => sendEffect('MESSAGE', 'TEMPS LIMITÉ')}
+                            >
+                                ALERTE TEMPS
+                            </AlphaButton>
+                            <AlphaButton
+                                fullWidth
+                                size={'sm'}
+                                variant={'primary'}
+                                onClick={() => sendEffect('MESSAGE', 'Bon travail agent.')}
+                            >
+                                FÉLICITER
+                            </AlphaButton>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                sendEffect('MESSAGE', customMessage);
+                                setCustomMessage('');
+                            }}
+                            className="flex gap-2"
+                        >
+                            <AlphaInput
+                                containerClassName="w-full"
+                                type="text"
+                                value={customMessage}
+                                onChange={(e) => setCustomMessage(e.target.value)}
+                                placeholder="Message..."
+                            />
+                            <AlphaButton size="sm" type={'submit'} disabled={!customMessage}>
+                                <PaperAirplaneIcon className="h-6 w-6" />
+                            </AlphaButton>
+                        </form>
+                    </AlphaCard>
 
-
-                            {/* messages */}
-                            <AlphaCard title="Canal Prioritaire" icon={ChatBubbleLeftRightIcon} className={'col-span-2'}>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <AlphaButton
-                                            fullWidth
-                                            variant={'warning'}
-                                            onClick={() => sendEffect('MESSAGE', 'TEMPS LIMITÉ')}
-                                        >
-                                            ALERTE TEMPS
-                                        </AlphaButton>
-                                        <AlphaButton
-                                            fullWidth
-                                            size={'sm'}
-                                            variant={'primary'}
-                                            onClick={() => sendEffect('MESSAGE', 'Bon travail agent.')}
-                                        >
-                                            FÉLICITER
-                                        </AlphaButton>
-                                    </div>
-                                    <form
-                                        onSubmit={(e) => {
-                                            e.preventDefault();
-                                            sendEffect('MESSAGE', customMessage);
-                                            setCustomMessage('');
-                                        }}
-                                        className="flex gap-2">
-                                        <AlphaInput
-                                            containerClassName="w-full"
-                                            type="text"
-                                            value={customMessage}
-                                            onChange={(e) => setCustomMessage(e.target.value)}
-                                            placeholder="Message..."
-                                        />
-                                        <AlphaButton
-                                            size="sm"
-                                            type={'submit'}
-                                            disabled={!customMessage}
-                                        >
-                                            <PaperAirplaneIcon className="h-6 w-6" />
-                                        </AlphaButton>
-                                    </form>
-                            </AlphaCard>
-
-                        {/* sabotage */}
-                        <AlphaCard title="Sabotage & Admin" icon={BoltIcon} className={'col-span-2'}>
-                            {/* indicateur de la perturbation en cours */}
-                            <div className={clsx(
-                                "mb-6 rounded-xl border p-4 transition-all shadow-md",
+                    {/* sabotage */}
+                    <AlphaCard title="Sabotage & Admin" icon={BoltIcon} className={'col-span-2'}>
+                        {/* indicateur de la perturbation en cours */}
+                        <div
+                            className={clsx(
+                                'mb-6 rounded-xl border p-4 shadow-md transition-all',
                                 state.active_challenge
-                                    ? "bg-brand-error/10 border-brand-error shadow-brand-error/40"
-                                    : "bg-surface-highlight border-border"
-                            )}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={clsx(
-                                            "p-2 rounded-full",
-                                            state.active_challenge ? "bg-brand-error animate-pulse" : "bg-surface text-muted"
-                                        )}>
-                                            <ExclamationTriangleIcon className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <h4 className={clsx("text-sm font-bold uppercase", state.active_challenge ? "text-brand-error" : "text-muted")}>
-                                                {state.active_challenge ? "PERTURBATION EN COURS" : "Système Stable"}
-                                            </h4>
-                                            {state.active_challenge && (
-                                                <p className="text-xs font-mono">TYPE: {state.active_challenge.type}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {state.active_challenge && (
-                                        <AlphaButton onClick={stopChallenge} variant="danger" size="sm">
-                                            <StopIcon className="mr-1 h-3 w-3" /> STOP
-                                        </AlphaButton>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                                {/* col 1 : effets bisuels */}
-                                <div className="space-y-3">
-                                    <h4 className="text-muted text-xs font-bold uppercase">Effets visuels</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <AlphaButton
-                                            fullWidth
-                                            variant={'primary'}
-                                            onClick={() => sendEffect('GLITCH', 'heavy')}
-                                        >
-                                            GLITCH
-                                        </AlphaButton>
-                                        <AlphaButton
-                                            fullWidth
-                                            variant={'secondary'}
-                                            onClick={() => sendEffect('INVERT', 'on')}
-                                        >
-                                            INVERSION
-                                        </AlphaButton>
-                                    </div>
-                                </div>
-
-                                {/* col 2 : perturbations */}
-                                <div className="space-y-3">
-                                    <h4 className="text-brand-error text-xs font-bold uppercase">Perturbations</h4>
-
-                                    <AlphaButton
-                                        onClick={() => sendChallenge('GYRO')}
-                                        disabled={!!state.active_challenge}
-                                       variant={'warning'}
-                                        fullWidth
+                                    ? 'bg-brand-error/10 border-brand-error shadow-brand-error/40'
+                                    : 'bg-surface-highlight border-border'
+                            )}
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className={clsx(
+                                            'rounded-full p-2',
+                                            state.active_challenge
+                                                ? 'bg-brand-error animate-pulse'
+                                                : 'bg-surface text-muted'
+                                        )}
                                     >
-                                        <ArrowPathIcon className="h-5 w-5 mr-2" /> Gyro Protocol
-                                    </AlphaButton>
+                                        <ExclamationTriangleIcon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4
+                                            className={clsx(
+                                                'text-sm font-bold uppercase',
+                                                state.active_challenge
+                                                    ? 'text-brand-error'
+                                                    : 'text-muted'
+                                            )}
+                                        >
+                                            {state.active_challenge
+                                                ? 'PERTURBATION EN COURS'
+                                                : 'Système Stable'}
+                                        </h4>
+                                        {state.active_challenge && (
+                                            <p className="font-mono text-xs">
+                                                TYPE: {state.active_challenge.type}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className={'col-span-2'}>
-                                    <AlphaButton variant={'danger'} fullWidth onClick={skipLevel} className="border-dashed">
-                                        <ForwardIcon className="mr-2 h-4 w-4" /> FORCER NIVEAU SUIVANT
+                                {state.active_challenge && (
+                                    <AlphaButton onClick={stopChallenge} variant="danger" size="sm">
+                                        <StopIcon className="mr-1 h-3 w-3" /> STOP
                                     </AlphaButton>
-                                </div>
-
+                                )}
                             </div>
-                        </AlphaCard>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                            {/* col 1 : effets bisuels */}
+                            <div className="space-y-3">
+                                <h4 className="text-muted text-xs font-bold uppercase">
+                                    Effets visuels
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <AlphaButton
+                                        fullWidth
+                                        variant={'primary'}
+                                        onClick={() => sendEffect('GLITCH', 'heavy')}
+                                    >
+                                        GLITCH
+                                    </AlphaButton>
+                                    <AlphaButton
+                                        fullWidth
+                                        variant={'secondary'}
+                                        onClick={() => sendEffect('INVERT', 'on')}
+                                    >
+                                        INVERSION
+                                    </AlphaButton>
+                                </div>
+                            </div>
+
+                            {/* col 2 : perturbations */}
+                            <div className="space-y-3">
+                                <h4 className="text-brand-error text-xs font-bold uppercase">
+                                    Perturbations
+                                </h4>
+
+                                <AlphaButton
+                                    onClick={() => sendChallenge('GYRO')}
+                                    disabled={!!state.active_challenge}
+                                    variant={'warning'}
+                                    fullWidth
+                                >
+                                    <ArrowPathIcon className="mr-2 h-5 w-5" /> Gyro Protocol
+                                </AlphaButton>
+                            </div>
+
+                            <div className={'col-span-2'}>
+                                <AlphaButton
+                                    variant={'danger'}
+                                    fullWidth
+                                    onClick={skipLevel}
+                                    className="border-dashed"
+                                >
+                                    <ForwardIcon className="mr-2 h-4 w-4" /> FORCER NIVEAU SUIVANT
+                                </AlphaButton>
+                            </div>
+                        </div>
+                    </AlphaCard>
                 </AlphaGrid>
             </div>
         </>
@@ -562,7 +616,13 @@ function GameControlPanel() {
 
 export default function AdminGamePage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-black text-brand-emerald font-mono">CHARGEMENT...</div>}>
+        <Suspense
+            fallback={
+                <div className="text-brand-emerald flex h-screen items-center justify-center bg-black font-mono">
+                    CHARGEMENT...
+                </div>
+            }
+        >
             <GameControlPanel />
         </Suspense>
     );

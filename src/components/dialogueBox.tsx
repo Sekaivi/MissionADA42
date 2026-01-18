@@ -9,6 +9,7 @@ import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import { useIsClient } from '@/hooks/useIsClient';
 import { useTypewriter } from '@/hooks/useTypeWriter';
 import { DialogueLine } from '@/types/dialogue';
 
@@ -25,12 +26,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
     isOpen,
     position = 'bottom',
 }) => {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
-    }, []);
+    const isClient = useIsClient();
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -92,7 +88,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
 
     const initialY = position === 'bottom' ? 50 : -50;
 
-    if (!mounted) return null;
+    if (!isClient) return null;
 
     const content = (
         <AnimatePresence>

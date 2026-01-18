@@ -15,7 +15,7 @@ interface CardProps {
 export const AlphaCard = ({
     title,
     children,
-    icon:Icon,
+    icon: Icon,
     action,
     className = '',
     contentClassName = '',
@@ -26,9 +26,10 @@ export const AlphaCard = ({
     >
         {title && (
             <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">
-                <h3 className="flex items-center text-muted text-xs font-bold tracking-wider uppercase">
-                    {Icon && <Icon className="mr-2 h-3 w-3"/>}
-                    {title}</h3>
+                <h3 className="text-muted flex items-center text-xs font-bold tracking-wider uppercase">
+                    {Icon && <Icon className="mr-2 h-3 w-3" />}
+                    {title}
+                </h3>
                 {action && <>{action}</>}
             </div>
         )}
@@ -43,6 +44,8 @@ export const AlphaCard = ({
                     transition={{ duration: 0.5 }}
                 />
             </div>
-        ) : ''}
+        ) : (
+            ''
+        )}
     </div>
 );

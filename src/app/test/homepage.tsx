@@ -14,10 +14,10 @@ import {
     PUZZLE_COMPONENTS,
     PuzzleComponentId,
 } from '@/components/puzzles/PuzzleRegistry';
+import { DefeatScreen } from '@/components/puzzles/PuzzleRegistry';
 import { useEscapeGame } from '@/context/EscapeGameContext';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState } from '@/types/game';
-import {DefeatScreen} from "@/components/puzzles/PuzzleRegistry";
 
 interface HomepageProps {
     missionStatus?: string;
@@ -46,7 +46,7 @@ export default function Homepage({
     missionStatus,
     missionStep,
     isTimerRunning = false,
-                                     isTimeUp = false,
+    isTimeUp = false,
     activePuzzleId,
     gameState,
     onPuzzleSolve,
@@ -163,7 +163,7 @@ export default function Homepage({
                                 <div
                                     className={clsx(
                                         'text-2xl font-black tracking-tighter',
-                                        (variant === 'error' || isTimeUp)
+                                        variant === 'error' || isTimeUp
                                             ? 'text-brand-error animate-pulse'
                                             : 'text-muted'
                                     )}
@@ -206,38 +206,43 @@ export default function Homepage({
                         />
 
                         {isTimeUp ? (
-                            <div className="mt-8 animate-in fade-in zoom-in duration-500">
+                            <div className="animate-in fade-in zoom-in mt-8 duration-500">
                                 <DefeatScreen />
                             </div>
-                        ) : (<>
+                        ) : (
+                            <>
+                                <h2 className="text-muted text-center text-xs font-bold uppercase">
+                                    Mission &bull; Étape {missionStep}
+                                </h2>
+                                <h1 className="text-brand-emerald text-center text-2xl font-black">
+                                    {missionStatus}
+                                </h1>
 
-                        <h2 className="text-muted text-center text-xs font-bold uppercase">
-                            Mission &bull; Étape {missionStep}
-                        </h2>
-                        <h1 className="text-brand-emerald text-center text-2xl font-black">
-                            {missionStatus}
-                        </h1>
-
-                        {/* ZONE PUZZLE */}
-                        <>
-                            {ActivePuzzle ? (
-                                <ActivePuzzle
-                                    onSolve={onPuzzleSolve || (() => {})}
-                                    isSolved={false}
-                                    data={gameState || undefined}
-                                    lastModuleAction={lastModuleAction}
-                                />
-                            ) : (
-                                <div className="text-muted flex flex-col items-center justify-center text-center">
-                                    <PuzzlePieceIcon className={'h-12 w-12 animate-pulse'} />
-                                    <p className="mt-2 text-sm italic">
-                                        Synchronisation du module...
-                                    </p>
-                                    <span className="font-mono text-xs">ID: {activePuzzleId}</span>
-                                </div>
-                            )}
-                        </>
-                        </>)}
+                                {/* ZONE PUZZLE */}
+                                <>
+                                    {ActivePuzzle ? (
+                                        <ActivePuzzle
+                                            onSolve={onPuzzleSolve || (() => {})}
+                                            isSolved={false}
+                                            data={gameState || undefined}
+                                            lastModuleAction={lastModuleAction}
+                                        />
+                                    ) : (
+                                        <div className="text-muted flex flex-col items-center justify-center text-center">
+                                            <PuzzlePieceIcon
+                                                className={'h-12 w-12 animate-pulse'}
+                                            />
+                                            <p className="mt-2 text-sm italic">
+                                                Synchronisation du module...
+                                            </p>
+                                            <span className="font-mono text-xs">
+                                                ID: {activePuzzleId}
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            </>
+                        )}
                     </>
                 ) : (
                     // accueil

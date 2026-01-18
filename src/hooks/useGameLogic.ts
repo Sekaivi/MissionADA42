@@ -95,11 +95,7 @@ export const useGameLogic = (
                 logs: [
                     ...(gameState.logs || []),
                     createLog('WARNING', `Départ de l'hôte (${pseudo})`),
-                    createLog(
-                        'INFO',
-                        'Nouveau leadership',
-                        `Hôte : ${updatedPlayers[0].name}`
-                    ),
+                    createLog('INFO', 'Nouveau leadership', `Hôte : ${updatedPlayers[0].name}`),
                 ],
             });
         } else {
@@ -145,7 +141,11 @@ export const useGameLogic = (
                             'Signal hôte perdu',
                             'Protocole de récupération activé'
                         ),
-                        createLog('INFO', 'Auto-promotion', `${firstPlayer.name} est maintenant Hôte`),
+                        createLog(
+                            'INFO',
+                            'Auto-promotion',
+                            `${firstPlayer.name} est maintenant Hôte`
+                        ),
                     ],
                 });
             }
@@ -372,17 +372,11 @@ export const useGameLogic = (
                 lastUpdate: Date.now(),
                 logs: [
                     ...(gameState.logs || []),
-                    createLog(
-                        'SUCCESS',
-                        'Perturbation résolue',
-                        `Type: ${activeChallenge.type}`
-                    ),
+                    createLog('SUCCESS', 'Perturbation résolue', `Type: ${activeChallenge.type}`),
                 ],
             });
 
-            setAdminScript([
-                say(CHARACTERS.system, 'PERTURBATION STABILISÉE. BON TRAVAIL.'),
-            ]);
+            setAdminScript([say(CHARACTERS.system, 'PERTURBATION STABILISÉE. BON TRAVAIL.')]);
             setAdminDialogueOpen(true);
         }
     }, [activeChallenge, resolveChallenge, gameState, updateState]);

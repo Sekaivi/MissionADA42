@@ -2,12 +2,13 @@
 
 import React, { ReactNode, createContext, useContext } from 'react';
 
+import { AnimatePresence } from 'framer-motion';
+
+import { DialogueBox } from '@/components/dialogueBox';
+import { EmergencyOverlay } from '@/components/overlays/EmergencyOverlay';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { createGame } from '@/hooks/useGameSync';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
-import {DialogueBox} from "@/components/dialogueBox";
-import {AnimatePresence} from "framer-motion";
-import {EmergencyOverlay} from "@/components/overlays/EmergencyOverlay";
 
 interface EscapeGameContextType {
     isConnected: boolean;
@@ -62,25 +63,27 @@ export const EscapeGameProvider = ({ children }: { children: ReactNode }) => {
 
     if (!isLoaded) return null;
 
-    return <EscapeGameContext.Provider value={value}>
-        <div className="relative z-[51]">
-            <DialogueBox
-                script={gameLogic.adminScript}
-                onComplete={() => gameLogic.setAdminDialogueOpen(false)}
-                isOpen={gameLogic.adminDialogueOpen}
-            />
-            <AnimatePresence>
-                {gameLogic.activeChallenge && (
-                    <EmergencyOverlay
-                        key={gameLogic.activeChallenge.id}
-                        type={gameLogic.activeChallenge.type}
-                        onResolve={gameLogic.handleChallengeResolved}
-                    />
-                )}
-            </AnimatePresence>
-        </div>
-        {children}
-    </EscapeGameContext.Provider>;
+    return (
+        <EscapeGameContext.Provider value={value}>
+            <div className="relative z-[51]">
+                <DialogueBox
+                    script={gameLogic.adminScript}
+                    onComplete={() => gameLogic.setAdminDialogueOpen(false)}
+                    isOpen={gameLogic.adminDialogueOpen}
+                />
+                <AnimatePresence>
+                    {gameLogic.activeChallenge && (
+                        <EmergencyOverlay
+                            key={gameLogic.activeChallenge.id}
+                            type={gameLogic.activeChallenge.type}
+                            onResolve={gameLogic.handleChallengeResolved}
+                        />
+                    )}
+                </AnimatePresence>
+            </div>
+            {children}
+        </EscapeGameContext.Provider>
+    );
 };
 
 export const useEscapeGame = () => {

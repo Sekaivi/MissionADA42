@@ -9,7 +9,8 @@ import {
     ChartBarIcon,
     ClockIcon,
     EyeIcon,
-    MagnifyingGlassIcon, // Import ajouté
+    MagnifyingGlassIcon,
+    // Import ajouté
     TrashIcon,
     UsersIcon,
 } from '@heroicons/react/24/solid';
@@ -83,11 +84,11 @@ export default function AdminDashboard() {
             if (res.ok) {
                 await fetchGames();
             } else {
-                alert("Erreur lors de la suppression de la partie.");
+                alert('Erreur lors de la suppression de la partie.');
             }
         } catch (err) {
             console.error('Erreur delete:', err);
-            alert("Impossible de contacter le serveur.");
+            alert('Impossible de contacter le serveur.');
         } finally {
             setLoading(false);
         }
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
         const term = searchTerm.toLowerCase();
         return (
             game.code.toLowerCase().includes(term) || // par code (ABCD)
-            game.id.toString().includes(term)         // par ID (123)
+            game.id.toString().includes(term) // par ID (123)
         );
     });
 
@@ -117,10 +118,8 @@ export default function AdminDashboard() {
             />
 
             <div className="container mx-auto px-4 pt-8 pb-20">
-
                 {/* toolbar */}
                 <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
                     {/* info et refresh */}
                     <div className="flex items-center justify-between gap-4 lg:justify-start">
                         <div className="flex items-center gap-2">
@@ -140,11 +139,14 @@ export default function AdminDashboard() {
                     {/* Zone Recherche (Ajoutée) */}
                     <div className="relative w-full max-w-md">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <MagnifyingGlassIcon className="h-5 w-5 text-muted" aria-hidden="true" />
+                            <MagnifyingGlassIcon
+                                className="text-muted h-5 w-5"
+                                aria-hidden="true"
+                            />
                         </div>
                         <input
                             type="text"
-                            className="bg-surface border-border focus:border-brand-emerald focus:ring-brand-emerald block w-full rounded-lg border p-2.5 pl-10 text-sm placeholder-muted outline-none transition-all"
+                            className="bg-surface border-border focus:border-brand-emerald focus:ring-brand-emerald placeholder-muted block w-full rounded-lg border p-2.5 pl-10 text-sm transition-all outline-none"
                             placeholder="Rechercher une session (Code, ID...)"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -154,21 +156,21 @@ export default function AdminDashboard() {
 
                 <AlphaGrid>
                     {filteredGames.map((game) => (
-                        <GameCard
-                            key={game.id}
-                            game={game}
-                            onDelete={() => deleteGame(game.id)}
-                        />
+                        <GameCard key={game.id} game={game} onDelete={() => deleteGame(game.id)} />
                     ))}
 
                     {filteredGames.length === 0 && !loading && (
                         <div className="col-span-full py-20 text-center opacity-50">
-                            <ChartBarIcon className="mx-auto mb-4 h-16 w-16 text-muted" />
-                            <p className="text-xl font-bold text-muted">
-                                {games.length === 0 ? "Aucune activité détectée" : "Aucun résultat pour cette recherche"}
+                            <ChartBarIcon className="text-muted mx-auto mb-4 h-16 w-16" />
+                            <p className="text-muted text-xl font-bold">
+                                {games.length === 0
+                                    ? 'Aucune activité détectée'
+                                    : 'Aucun résultat pour cette recherche'}
                             </p>
-                            <p className="text-sm text-muted">
-                                {games.length === 0 ? "Le système est en attente de connexions." : "Essayez un autre code ou ID."}
+                            <p className="text-muted text-sm">
+                                {games.length === 0
+                                    ? 'Le système est en attente de connexions.'
+                                    : 'Essayez un autre code ou ID.'}
                             </p>
                         </div>
                     )}
@@ -195,11 +197,14 @@ const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void 
     const playerCount = gameState.players?.length || 0;
     const startTime = gameState.startTime || new Date(game.created_at).getTime();
 
-    const totalDurationMs = (SCENARIO.defaultDuration * 1000) + ((gameState.bonusTime || 0) * 60 * 1000);
+    const totalDurationMs =
+        SCENARIO.defaultDuration * 1000 + (gameState.bonusTime || 0) * 60 * 1000;
     const elapsedMs = now.getTime() - startTime;
 
     const isEmpty = playerCount === 0;
-    const isVictory = gameState.step > SCENARIO.steps.length || (gameState.history && gameState.history.length >= SCENARIO.steps.length);
+    const isVictory =
+        gameState.step > SCENARIO.steps.length ||
+        (gameState.history && gameState.history.length >= SCENARIO.steps.length);
     const isDefeat = !isVictory && elapsedMs > totalDurationMs;
 
     const isActive = minutesSinceUpdate < 2 && !isEmpty && !isVictory && !isDefeat;
@@ -237,28 +242,29 @@ const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void 
             title={`SESSION #${game.id}`}
             contentClassName={'space-y-4 mb-4'}
             className={clsx(
-                'border transition-all duration-300 hover:-translate-y-1 relative group',
+                'group relative border transition-all duration-300 hover:-translate-y-1',
                 statusColor
             )}
         >
             <div className="mb-4 flex items-start justify-between">
                 <div>
                     <h3 className="font-mono text-3xl font-black">{game.code}</h3>
-                    <div className="flex items-center gap-2 text-xs text-muted uppercase">
+                    <div className="text-muted flex items-center gap-2 text-xs uppercase">
                         <span>{new Date(game.created_at).toLocaleDateString()}</span>
                         <span>•</span>
-                        <span>{new Date(game.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span>
+                            {new Date(game.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </span>
                     </div>
                 </div>
 
                 <div className="flex flex-col items-end gap-1">
-                    <AlphaFeedbackPill
-                        type={statusType}
-                        message={statusMessage}
-                        pulse={isActive}
-                    />
+                    <AlphaFeedbackPill type={statusType} message={statusMessage} pulse={isActive} />
                     {isDefeat && (
-                        <span className="text-xs font-bold text-brand-error">TIMEOUT</span>
+                        <span className="text-brand-error text-xs font-bold">TIMEOUT</span>
                     )}
                 </div>
             </div>
@@ -268,9 +274,13 @@ const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void 
                     label={'Niveau'}
                     value={
                         <div className="flex items-center gap-2">
-                             <span className={isVictory ? 'text-brand-yellow font-black' : 'text-foreground'}>
+                            <span
+                                className={
+                                    isVictory ? 'text-brand-yellow font-black' : 'text-foreground'
+                                }
+                            >
                                 {gameState.step} / {SCENARIO.steps.length}
-                             </span>
+                            </span>
                         </div>
                     }
                 />
@@ -288,8 +298,8 @@ const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void 
                                 <div
                                     key={p.id}
                                     className={clsx(
-                                        "h-5 w-5 rounded-full ring-2 ring-surface flex items-center justify-center text-xs font-bold",
-                                        p.isGM ? "bg-brand-purple z-10" : "bg-brand-blue"
+                                        'ring-surface flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2',
+                                        p.isGM ? 'bg-brand-purple z-10' : 'bg-brand-blue'
                                     )}
                                     title={p.name}
                                 >
@@ -305,19 +315,31 @@ const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void 
                     }
                 />
 
-                <div className="bg-black/20 h-10 overflow-hidden rounded px-2 py-1">
+                <div className="h-10 overflow-hidden rounded bg-black/20 px-2 py-1">
                     <p className="text-muted truncate font-mono text-xs leading-tight opacity-70">
                         &gt; {gameState.message || 'Système en attente...'}
                     </p>
                     {gameState.bonusTime !== 0 && gameState.bonusTime !== undefined && (
-                        <p className={clsx("text-[9px] font-bold", (gameState.bonusTime || 0) > 0 ? "text-brand-emerald" : "text-brand-error")}>
-                            &gt; TEMPS: {(gameState.bonusTime || 0) > 0 ? '+' : ''}{gameState.bonusTime} min
+                        <p
+                            className={clsx(
+                                'text-[9px] font-bold',
+                                (gameState.bonusTime || 0) > 0
+                                    ? 'text-brand-emerald'
+                                    : 'text-brand-error'
+                            )}
+                        >
+                            &gt; TEMPS: {(gameState.bonusTime || 0) > 0 ? '+' : ''}
+                            {gameState.bonusTime} min
                         </p>
                     )}
                 </div>
             </div>
 
-            <div className={'mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4'}>
+            <div
+                className={
+                    'border-border mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-4'
+                }
+            >
                 <AlphaButton
                     onClick={() => router.push(`/mc-admin/game?code=${game.code}`)}
                     variant="primary"
