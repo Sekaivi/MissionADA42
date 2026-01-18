@@ -5,7 +5,16 @@ import { CHARACTERS } from '@/data/characters';
 import { useGameEffects } from '@/hooks/useGameEffects';
 import { useGameSync } from '@/hooks/useGameSync';
 import { DialogueLine } from '@/types/dialogue';
+import { GameLogEntry, LogType } from '@/types/game';
 import { say } from '@/utils/dialogueUtils';
+
+export const createLog = (type: LogType, message: string, details?: string): GameLogEntry => ({
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    type,
+    message,
+    details,
+});
 
 const toMs = (timestamp: number | string | undefined) => {
     if (!timestamp) return 0;
@@ -42,7 +51,7 @@ export const useGameLogic = (
         setIsLeavingState(false);
     }, [playerId, gameCode]);
 
-    // init auto
+    // init auto (création de session)
     useEffect(() => {
         if (initialIsHost && gameState && (!gameState.step || gameState.step === 0)) {
             const now = Date.now();
@@ -59,10 +68,12 @@ export const useGameLogic = (
                 validationRequest: null,
                 lastUpdate: now,
                 lastModuleAction: null,
+                logs: [createLog('INFO', 'Session initialisée', `Créée par ${pseudo}`)],
             });
         }
     }, [initialIsHost, gameState, updateState, playerId, pseudo]);
 
+    // gestion de départ
     const leaveGame = async () => {
         setIsLeavingState(true);
         if (!gameState || !gameState.players) return;
@@ -81,12 +92,25 @@ export const useGameLogic = (
                 ...gameState,
                 players: updatedPlayers,
                 message: 'Changement de commandement...',
+                logs: [
+                    ...(gameState.logs || []),
+                    createLog('WARNING', `Départ de l'hôte (${pseudo})`),
+                    createLog(
+                        'INFO',
+                        'Nouveau leadership',
+                        `Hôte : ${updatedPlayers[0].name}`
+                    ),
+                ],
             });
         } else {
             // sinon je pars juste
             await updateState({
                 ...gameState,
                 players: remainingPlayers,
+                logs: [
+                    ...(gameState.logs || []),
+                    createLog('PLAYER', 'Déconnexion agent', `${pseudo} a quitté la session`),
+                ],
             });
         }
     };
@@ -114,12 +138,21 @@ export const useGameLogic = (
                     ...gameState,
                     players: updatedPlayers,
                     message: 'Signal perdu. Nouveau chef désigné.',
+                    logs: [
+                        ...(gameState.logs || []),
+                        createLog(
+                            'WARNING',
+                            'Signal hôte perdu',
+                            'Protocole de récupération activé'
+                        ),
+                        createLog('INFO', 'Auto-promotion', `${firstPlayer.name} est maintenant Hôte`),
+                    ],
                 });
             }
         }
     }, [gameState, playerId, updateState]);
 
-    // auto join
+    // auto join (nouveau joueur)
     useEffect(() => {
         if (!isLeavingState && playerId && !initialIsHost && gameState && gameState.players) {
             const amIInList = gameState.players.find((p) => p.id === playerId);
@@ -130,6 +163,10 @@ export const useGameLogic = (
                     players: [
                         ...gameState.players,
                         { id: playerId, name: pseudo || 'Agent', isGM: false, joinedAt: now },
+                    ],
+                    logs: [
+                        ...(gameState.logs || []),
+                        createLog('PLAYER', 'Nouvelle connexion', `Agent ${pseudo} a rejoint`),
                     ],
                 });
             }
@@ -169,8 +206,11 @@ export const useGameLogic = (
                 playerId,
                 timestamp: Date.now(),
             },
-            // on ne touche pas à pendingProposal
             lastUpdate: Date.now(),
+            logs: [
+                ...(gameState.logs || []),
+                createLog('PLAYER', `Module: ${moduleId}`, `Activé par ${pseudo}`),
+            ],
         });
     };
 
@@ -192,6 +232,10 @@ export const useGameLogic = (
                     timestamp: Date.now(),
                 },
                 lastUpdate: Date.now(),
+                logs: [
+                    ...(gameState.logs || []),
+                    createLog('PLAYER', 'Proposition de solution', `${playerName}: ${label}`),
+                ],
             });
         }
     };
@@ -199,7 +243,15 @@ export const useGameLogic = (
     // rejeter proposition
     const rejectProposal = async () => {
         if (!gameState) return;
-        await updateState({ ...gameState, pendingProposal: null, lastUpdate: Date.now() });
+        await updateState({
+            ...gameState,
+            pendingProposal: null,
+            lastUpdate: Date.now(),
+            logs: [
+                ...(gameState.logs || []),
+                createLog('PLAYER', 'Proposition rejetée', 'Par le commandement'),
+            ],
+        });
     };
 
     // lancer le vôte (hôte accepte ou force)
@@ -218,6 +270,10 @@ export const useGameLogic = (
                 timestamp: Date.now(),
             },
             lastUpdate: Date.now(),
+            logs: [
+                ...(gameState.logs || []),
+                createLog('INFO', 'Validation de niveau lancée', `Vers étape ${nextStep}`),
+            ],
         });
     };
 
@@ -234,6 +290,10 @@ export const useGameLogic = (
                 readyPlayers: [...currentReady, playerId],
             },
             lastUpdate: Date.now(),
+            logs: [
+                ...(gameState.logs || []),
+                createLog('PLAYER', 'Confirmation', `${pseudo} est prêt`),
+            ],
         });
     };
 
@@ -251,16 +311,27 @@ export const useGameLogic = (
             duration: (now - startOfStep) / 1000,
         };
 
+        const completedStep = gameState.step;
+        const nextStep = gameState.validationRequest.nextStep;
+
         await updateState({
             ...gameState,
-            step: gameState.validationRequest.nextStep,
-            message: `Étape ${gameState.validationRequest.nextStep}`,
+            step: nextStep,
+            message: `Étape ${nextStep}`,
             history: [historyEntry, ...(gameState.history || [])],
             lastStepTime: now,
             lastUpdate: now,
             validationRequest: null,
             pendingProposal: null,
             lastModuleAction: null,
+            logs: [
+                ...(gameState.logs || []),
+                createLog(
+                    'SUCCESS',
+                    `ÉTAPE ${completedStep} TERMINÉE`,
+                    `Résolu par: ${historyEntry.solverName} (${historyEntry.duration.toFixed(0)}s)`
+                ),
+            ],
         });
     };
 
@@ -289,6 +360,7 @@ export const useGameLogic = (
 
     const { resolveChallenge } = useGameEffects(gameState, callbacks);
 
+    // perturbation résolue
     const handleChallengeResolved = useCallback(async () => {
         if (activeChallenge && gameState) {
             resolveChallenge(activeChallenge.id);
@@ -297,11 +369,19 @@ export const useGameLogic = (
             await updateState({
                 ...gameState,
                 active_challenge: null,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                logs: [
+                    ...(gameState.logs || []),
+                    createLog(
+                        'SUCCESS',
+                        'Perturbation résolue',
+                        `Type: ${activeChallenge.type}`
+                    ),
+                ],
             });
 
             setAdminScript([
-                say(CHARACTERS.system, "PERTURBATION STABILISÉE. BON TRAVAIL."),
+                say(CHARACTERS.system, 'PERTURBATION STABILISÉE. BON TRAVAIL.'),
             ]);
             setAdminDialogueOpen(true);
         }

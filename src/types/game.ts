@@ -36,6 +36,16 @@ export interface ModuleActionEvent {
     timestamp: number;
 }
 
+export type LogType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'ADMIN' | 'PLAYER';
+
+export interface GameLogEntry {
+    id: string;
+    timestamp: number;
+    type: LogType;
+    message: string;
+    details?: string;
+}
+
 export interface GameState {
     step: number;
     message: string;
@@ -51,6 +61,7 @@ export interface GameState {
     admin_command?: AdminCommand; // canal 1 : flash info / effets
     active_challenge?: ChallengeCommand | null; // canal 2 : défis bloquants persistants
     bonusTime?: number; // temps ajouté/retiré en MINUTES (ex: 5, -2)
+    logs?: GameLogEntry[];
 }
 
 export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'INVERT' | 'SKIP' | 'ADD_TIME'; // commandes éphémères

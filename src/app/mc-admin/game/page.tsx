@@ -28,12 +28,14 @@ import { AlphaInput } from '@/components/alpha/AlphaInput';
 import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameSync } from '@/hooks/useGameSync';
-import { AdminCommandType, ChallengeType, GameState, Player } from '@/types/game';
+import { AdminCommandType, ChallengeType, GameState, Player, GameLogEntry } from '@/types/game';
 import {AlphaTerminalWrapper} from "@/components/alpha/AlphaTerminalWrapper";
 import {PaperAirplaneIcon} from "@heroicons/react/24/outline";
+import { createLog } from "@/hooks/useGameLogic";
 
 interface ExtendedGameState extends GameState {
     duration?: number;
+    logs?: GameLogEntry[];
     admin_command?: {
         id: number;
         type: AdminCommandType;
@@ -131,6 +133,40 @@ function GameControlPanel() {
     const [customTime, setCustomTime] = useState('');
     const [fallbackStartTime] = useState(() => Date.now());
 
+    const historyRef = React.useRef<HTMLDivElement>(null);
+    // si l'utilisateur regarde l'historique
+    const isUserScrolledUp = React.useRef(false);
+    // nombre de logs précédents pour ne scroller que s'il y a du nouveau
+    const prevLogLength = React.useRef(0);
+
+    const state = gameState as ExtendedGameState;
+    const currentLogs = state?.logs || [];
+
+    // détecter si l'utilisateur scrolle manuellement vers le haut
+    const handleScroll = useCallback(() => {
+        if (!historyRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = historyRef.current;
+
+        // si on est à plus de 50px du bas, on considère que l'user regarde l'historique
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+        isUserScrolledUp.current = !isAtBottom;
+    }, []);
+
+    useEffect(() => {
+        if (!historyRef.current) return;
+
+        const hasNewLogs = currentLogs.length > prevLogLength.current;
+
+        // on scroll auto si
+        // premier chargement (prevLogLength === 0)
+        // nouveaux logs ET l'utilisateur n'est pas en train de lire l'historique
+        if (prevLogLength.current === 0 || (hasNewLogs && !isUserScrolledUp.current)) {
+            historyRef.current.scrollTop = historyRef.current.scrollHeight;
+        }
+
+        prevLogLength.current = currentLogs.length;
+    }, [currentLogs.length])
+
     useEffect(() => {
         if (!gameCode) router.push('/mc-admin');
     }, [gameCode, router]);
@@ -145,7 +181,8 @@ function GameControlPanel() {
                 ...currentState,
                 admin_command: { id: commandId, type, payload },
                 message: type === 'MESSAGE' ? (payload as string) : currentState.message,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                logs: [...(currentState.logs || []), createLog('ADMIN', `Commande: ${type}`, payload?.toString())],
             });
         },
         [gameState, updateState]
@@ -161,7 +198,8 @@ function GameControlPanel() {
                 ...currentState,
                 active_challenge: { id: challengeId, type },
                 message: 'DÉFI ACTIVÉ : ' + type,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                logs: [...(currentState.logs || []), createLog('WARNING', `Défi lancé : ${type}`, 'Action Admin')],
             });
         },
         [gameState, updateState]
@@ -186,7 +224,8 @@ function GameControlPanel() {
                     payload: alertMessage,
                 },
                 message: `Temps modifié (${sign}${minutes} min)`,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                logs: [...(currentState.logs || []), createLog('ADMIN', 'Modification Temps', `${sign}${minutes} min`)],
             });
         },
         [gameState, updateState]
@@ -198,9 +237,10 @@ function GameControlPanel() {
 
         await updateState({
             ...currentState,
-            active_challenge: null, // On nullifie explicitement
+            active_challenge: null,
             message: "Défi annulé par l'Admin",
-            lastUpdate: Date.now()
+            lastUpdate: Date.now(),
+            logs: [...(currentState.logs || []), createLog('ADMIN', 'Interruption Défi', 'Annulé manuellement')],
         });
     }, [gameState, updateState]);
 
@@ -208,12 +248,16 @@ function GameControlPanel() {
         if (!gameState) return;
         if (!confirm("ATTENTION : Cette action est irréversible. Forcer l'étape suivante ?")) return;
 
+        const currentState = gameState as ExtendedGameState;
+        const nextStep = (gameState.step || 0) + 1;
+
         await updateState({
             ...gameState,
             step: (gameState.step || 0) + 1,
             message: 'INTERVENTION ADMIN : NIVEAU PASSÉ',
             active_challenge: null,
-            lastUpdate: Date.now()
+            lastUpdate: Date.now(),
+            logs: [...(currentState.logs || []), createLog('ADMIN', 'Force Skip Level', `Vers étape ${nextStep}`)],
         });
     }, [gameState, updateState]);
 
@@ -236,13 +280,14 @@ function GameControlPanel() {
 
     if (!gameState) return <AlphaError message={`Aucun signal.`} />;
 
-    const state = gameState as ExtendedGameState;
     const startTime = state.startTime || state.timestamp || fallbackStartTime;
 
     const totalDurationMs = (SCENARIO.defaultDuration * 1000) + ((state.bonusTime || 0) * 60 * 1000);
     const elapsedMs = Date.now() - startTime;
     const isVictory = state.step > SCENARIO.steps.length;
     const isDefeat = !isVictory && elapsedMs > totalDurationMs;
+
+
 
     return (
         <>
@@ -273,7 +318,7 @@ function GameControlPanel() {
             <div className="container mx-auto px-4 pb-20">
                 <AlphaGrid>
                     {/* col 1 : monitoring */}
-                        <AlphaCard title="Monitoring Temporel">
+                        <AlphaCard title="Monitoring Temporel" className={'col-span-2'}>
                             <AdminTimer
                                 startTime={startTime}
                                 bonusTime={state.bonusTime || 0}
@@ -281,9 +326,40 @@ function GameControlPanel() {
                             />
 
                             {/* log */}
-                            <AlphaTerminalWrapper>
-                                <span className="mr-2 opacity-50">&gt;</span>
-                                {state.message || 'Système nominal...'}
+                            <AlphaTerminalWrapper >
+                             <div onScroll={handleScroll} className={'max-h-[200px] overflow-y-scroll'} ref={historyRef}>
+                                {state.logs && state.logs.length > 0 ? (
+                                    [...state.logs].map((log) => (
+                                        <div key={log.id} className="flex gap-2 text-xs font-mono opacity-80 hover:opacity-100 transition-opacity">
+                <span className="text-muted">
+                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+                                            <span className={clsx(
+                                                "font-bold w-10 text-right",
+                                                log.type === 'ADMIN' && 'text-brand-purple',
+                                                log.type === 'ERROR' && 'text-brand-error',
+                                                log.type === 'WARNING' && 'text-brand-yellow',
+                                                log.type === 'SUCCESS' && 'text-brand-emerald',
+                                                log.type === 'PLAYER' && 'text-brand-blue',
+                                                (log.type === 'INFO' || !log.type) && 'text-gray-400'
+                                            )}>
+                    [{log.type ? log.type.substring(0, 3) : 'SYS'}]
+                </span>
+                                            <span className="text-gray-300 truncate">
+                    {log.message}
+                </span> :
+                                            <span>
+                                                {log.details}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-gray-500 italic">
+                                        <span className="mr-2 opacity-50">&gt;</span>
+                                        {state.message || 'Système nominal...'}
+                                    </div>
+                                )}
+                             </div>
                             </AlphaTerminalWrapper>
                         </AlphaCard>
 
@@ -313,51 +389,50 @@ function GameControlPanel() {
                                 />
                             </div>
                         </AlphaCard>
+                    <AlphaCard title="Distorsion Temporelle" icon={ClockIcon}>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[1, 5, 10].map((min) => (
+                                <AlphaButton
+                                    key={min}
+                                    fullWidth
+                                    onClick={() => addTime(min)}
+                                    variant={'primary'}
+                                >
+                                    +{min}m
+                                </AlphaButton>
+                            ))}
+                        </div>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            if (customTime) {
+                                addTime(parseInt(customTime));
+                                setCustomTime('');
+                            }
+                        }} className="flex gap-2">
+                            <AlphaInput
+                                type="number"
+                                value={customTime}
+                                onChange={(e) => setCustomTime(e.target.value)}
+                                placeholder="Min..."
+                                containerClassName={'w-full'}
+                            />
+                            <AlphaButton
+                                type={'submit'}
+                                disabled={!customTime}
+                            >
+                                OK
+                            </AlphaButton>
+                        </form>
+                    </AlphaCard>
 
                     {/* col 2 et 3 : commandes */}
-                    <div className="lg:col-span-2 space-y-6">
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             {/* temps */}
-                            <AlphaCard title="Distorsion Temporelle" icon={ClockIcon}>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[1, 5, 10].map((min) => (
-                                            <AlphaButton
-                                                key={min}
-                                                fullWidth
-                                                onClick={() => addTime(min)}
-                                                variant={'primary'}
-                                            >
-                                                +{min}m
-                                            </AlphaButton>
-                                        ))}
-                                    </div>
-                                    <form onSubmit={(e) => {
-                                        e.preventDefault();
-                                        if (customTime) {
-                                            addTime(parseInt(customTime));
-                                            setCustomTime('');
-                                        }
-                                    }} className="flex gap-2">
-                                        <AlphaInput
-                                            type="number"
-                                            value={customTime}
-                                            onChange={(e) => setCustomTime(e.target.value)}
-                                            placeholder="Min..."
-                                            containerClassName={'w-full'}
-                                        />
-                                        <AlphaButton
-                                            type={'submit'}
-                                            disabled={!customTime}
-                                        >
-                                            OK
-                                        </AlphaButton>
-                                    </form>
-                            </AlphaCard>
+
 
                             {/* messages */}
-                            <AlphaCard title="Canal Prioritaire" icon={ChatBubbleLeftRightIcon}>
+                            <AlphaCard title="Canal Prioritaire" icon={ChatBubbleLeftRightIcon} className={'col-span-2'}>
                                     <div className="grid grid-cols-2 gap-2">
                                         <AlphaButton
                                             fullWidth
@@ -398,10 +473,9 @@ function GameControlPanel() {
                                         </AlphaButton>
                                     </form>
                             </AlphaCard>
-                        </div>
 
                         {/* sabotage */}
-                        <AlphaCard title="Sabotage & Admin" icon={BoltIcon}>
+                        <AlphaCard title="Sabotage & Admin" icon={BoltIcon} className={'col-span-2'}>
                             {/* indicateur de la perturbation en cours */}
                             <div className={clsx(
                                 "mb-6 rounded-xl border p-4 transition-all shadow-md",
@@ -480,7 +554,6 @@ function GameControlPanel() {
 
                             </div>
                         </AlphaCard>
-                    </div>
                 </AlphaGrid>
             </div>
         </>
