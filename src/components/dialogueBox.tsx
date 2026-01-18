@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import Image from 'next/image';
 
@@ -24,6 +25,13 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
     isOpen,
     position = 'bottom',
 }) => {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -78,13 +86,15 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
     }, [isOpen, handleInteraction]);
 
     const positionClasses = clsx(
-        'fixed inset-0 z-[100] flex justify-center p-4 bg-black/20 m-0',
+        'fixed inset-0 z-[9999] flex justify-center p-4 bg-black/20 m-0',
         position === 'bottom' ? 'items-end pb-8' : 'items-start pt-8'
     );
 
     const initialY = position === 'bottom' ? 50 : -50;
 
-    return (
+    if (!mounted) return null;
+
+    const content = (
         <AnimatePresence>
             {isOpen && currentLine && (
                 <motion.div
@@ -207,4 +217,6 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
             )}
         </AnimatePresence>
     );
+
+    return createPortal(content, document.body);
 };
