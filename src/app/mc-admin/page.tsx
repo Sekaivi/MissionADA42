@@ -9,8 +9,11 @@ import {
     ChartBarIcon,
     ClockIcon,
     EyeIcon,
+    MagnifyingGlassIcon, // Import ajouté
+    TrashIcon,
     UsersIcon,
 } from '@heroicons/react/24/solid';
+import clsx from 'clsx';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
@@ -18,11 +21,12 @@ import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
+import { SCENARIO } from '@/data/alphaScenario';
 
 interface RawGameData {
     id: number;
     code: string;
-    state: string;
+    state: string; // JSON Stringified
     created_at: string;
     updated_at: string;
 }
@@ -33,12 +37,16 @@ interface ParsedGameState {
     players?: { id: string; name: string; isGM?: boolean }[];
     history?: { step: number; solverName: string; solvedAt: number; duration: number }[];
     lastUpdate?: number;
+    startTime?: number;
+    bonusTime?: number; // en minutes
 }
 
 export default function AdminDashboard() {
     const [games, setGames] = useState<RawGameData[]>([]);
     const [loading, setLoading] = useState(false);
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+
+    const [searchTerm, setSearchTerm] = useState('');
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -63,49 +71,104 @@ export default function AdminDashboard() {
         }
     }, [API_BASE]);
 
+    const deleteGame = async (id: number) => {
+        if (!confirm(`Voulez-vous vraiment supprimer définitivement la session #${id} ?`)) return;
+
+        try {
+            setLoading(true);
+            const res = await fetch(`${API_BASE}/game/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                await fetchGames();
+            } else {
+                alert("Erreur lors de la suppression de la partie.");
+            }
+        } catch (err) {
+            console.error('Erreur delete:', err);
+            alert("Impossible de contacter le serveur.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // polling automatique
     useEffect(() => {
         fetchGames();
-        const interval = setInterval(fetchGames, 5000);
+        const interval = setInterval(fetchGames, 10000);
         return () => clearInterval(interval);
     }, [fetchGames]);
+
+    // filtrage
+    const filteredGames = games.filter((game) => {
+        const term = searchTerm.toLowerCase();
+        return (
+            game.code.toLowerCase().includes(term) || // par code (ABCD)
+            game.id.toString().includes(term)         // par ID (123)
+        );
+    });
 
     return (
         <>
             <AlphaHeader
                 title="GOD MODE"
-                subtitle={`${games.length} SESSIONS ACTIVES • CONTROL CENTER`}
+                subtitle={`${games.length} SESSIONS EN BASE DE DONNÉES`}
             />
 
-            <div className="container mx-auto px-4 pt-8">
-                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                        <ClockIcon className="text-brand-blue h-8 w-8" />
-                        <AlphaFeedbackPill
-                            message={`Dernière màj: ${lastRefresh?.toLocaleTimeString() || '--:--:--'}`}
+            <div className="container mx-auto px-4 pt-8 pb-20">
+
+                {/* toolbar */}
+                <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                    {/* info et refresh */}
+                    <div className="flex items-center justify-between gap-4 lg:justify-start">
+                        <div className="flex items-center gap-2">
+                            <ClockIcon className="text-brand-blue h-6 w-6 lg:h-8 lg:w-8" />
+                            <AlphaFeedbackPill
+                                message={`MAJ: ${lastRefresh?.toLocaleTimeString() || '--:--:--'}`}
+                            />
+                        </div>
+                        <AlphaButton onClick={() => fetchGames()} variant={'secondary'} size="sm">
+                            <ArrowPathIcon
+                                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                            />
+                            RAFRAÎCHIR
+                        </AlphaButton>
+                    </div>
+
+                    {/* Zone Recherche (Ajoutée) */}
+                    <div className="relative w-full max-w-md">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <MagnifyingGlassIcon className="h-5 w-5 text-muted" aria-hidden="true" />
+                        </div>
+                        <input
+                            type="text"
+                            className="bg-surface border-border focus:border-brand-emerald focus:ring-brand-emerald block w-full rounded-lg border p-2.5 pl-10 text-sm placeholder-muted outline-none transition-all"
+                            placeholder="Rechercher une session (Code, ID...)"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <AlphaButton onClick={() => fetchGames()} variant={'secondary'}>
-                        <ArrowPathIcon
-                            className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-                        />
-                        RAFRAÎCHIR
-                    </AlphaButton>
                 </div>
 
                 <AlphaGrid>
-                    {games.map((game) => (
-                        <GameCard key={game.id} game={game} />
+                    {filteredGames.map((game) => (
+                        <GameCard
+                            key={game.id}
+                            game={game}
+                            onDelete={() => deleteGame(game.id)}
+                        />
                     ))}
 
-                    {games.length === 0 && !loading && (
+                    {filteredGames.length === 0 && !loading && (
                         <div className="col-span-full py-20 text-center opacity-50">
-                            <ChartBarIcon className="mx-auto mb-4 h-16 w-16 text-gray-600" />
-                            <p className="text-xl font-bold text-gray-400">
-                                Aucune activité détectée
+                            <ChartBarIcon className="mx-auto mb-4 h-16 w-16 text-muted" />
+                            <p className="text-xl font-bold text-muted">
+                                {games.length === 0 ? "Aucune activité détectée" : "Aucun résultat pour cette recherche"}
                             </p>
-                            <p className="text-sm text-gray-600">
-                                Le système est en attente de connexions.
+                            <p className="text-sm text-muted">
+                                {games.length === 0 ? "Le système est en attente de connexions." : "Essayez un autre code ou ID."}
                             </p>
                         </div>
                     )}
@@ -115,7 +178,7 @@ export default function AdminDashboard() {
     );
 }
 
-const GameCard = ({ game }: { game: RawGameData }) => {
+const GameCard = ({ game, onDelete }: { game: RawGameData; onDelete: () => void }) => {
     const router = useRouter();
 
     let gameState: ParsedGameState = { step: 0 };
@@ -125,93 +188,155 @@ const GameCard = ({ game }: { game: RawGameData }) => {
         console.error('Erreur parsing state pour', game.code, e);
     }
 
-    const playerCount = gameState.players?.length || 0;
-    const lastActive = new Date(game.updated_at);
     const now = new Date();
+    const lastActive = new Date(game.updated_at);
     const minutesSinceUpdate = Math.floor((now.getTime() - lastActive.getTime()) / 60000);
 
-    const isActive = minutesSinceUpdate < 2;
-    const isStale = minutesSinceUpdate > 30;
+    const playerCount = gameState.players?.length || 0;
+    const startTime = gameState.startTime || new Date(game.created_at).getTime();
+
+    const totalDurationMs = (SCENARIO.defaultDuration * 1000) + ((gameState.bonusTime || 0) * 60 * 1000);
+    const elapsedMs = now.getTime() - startTime;
+
+    const isEmpty = playerCount === 0;
+    const isVictory = gameState.step > SCENARIO.steps.length || (gameState.history && gameState.history.length >= SCENARIO.steps.length);
+    const isDefeat = !isVictory && elapsedMs > totalDurationMs;
+
+    const isActive = minutesSinceUpdate < 2 && !isEmpty && !isVictory && !isDefeat;
+    const isStale = minutesSinceUpdate > 20;
+
+    let statusColor = 'border-border';
+    let statusMessage = `${minutesSinceUpdate}min ago`;
+    let statusType: 'info' | 'success' | 'error' | 'warning' = 'info';
+
+    if (isActive) {
+        statusColor = 'border-brand-yellow shadow-[0_0_8px_var(--color-brand-yellow)]';
+        statusMessage = 'EN LIGNE';
+        statusType = 'success';
+    } else if (isVictory) {
+        statusColor = 'border-brand-emerald bg-brand-emerald/5';
+        statusMessage = 'VICTOIRE';
+        statusType = 'warning';
+    } else if (isDefeat) {
+        statusColor = 'border-brand-error/50 bg-brand-error/5';
+        statusMessage = 'DÉFAITE (Temps)';
+        statusType = 'error';
+    } else if (isEmpty) {
+        statusColor = 'border-muted opacity-60';
+        statusMessage = 'VIDE / ABANDON';
+        statusType = 'info';
+    } else if (isStale) {
+        statusColor = 'border-brand-purple/30 opacity-70';
+        statusMessage = 'INACTIF';
+        statusType = 'info';
+    }
 
     return (
         <AlphaCard
-            progress={Math.min((gameState.step / 8) * 100, 100)}
-            title={`ID: ${game.id} • lvl cleared : ${gameState.history?.length || 0}`}
+            progress={Math.min((gameState.step / SCENARIO.steps.length) * 100, 100)}
+            title={`SESSION #${game.id}`}
             contentClassName={'space-y-4 mb-4'}
-            className={`border transition-transform duration-300 hover:-translate-y-1 ${isActive ? 'border-brand-emerald/50 shadow-[0_0_8px_var(--color-brand-emerald)]' : isStale ? 'border-brand-error/50 opacity-80' : 'border-border'} `}
+            className={clsx(
+                'border transition-all duration-300 hover:-translate-y-1 relative group',
+                statusColor
+            )}
         >
             <div className="mb-4 flex items-start justify-between">
                 <div>
                     <h3 className="font-mono text-3xl font-black">{game.code}</h3>
-                    <div className="flex items-center gap-2 text-[10px] tracking-wider text-gray-500 uppercase">
-                        <span>ID: {game.id}</span>
+                    <div className="flex items-center gap-2 text-xs text-muted uppercase">
+                        <span>{new Date(game.created_at).toLocaleDateString()}</span>
                         <span>•</span>
-                        <span>lvl {gameState.history?.length || 0}</span>
+                        <span>{new Date(game.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                 </div>
 
-                {isActive ? (
-                    <AlphaFeedbackPill type="success" message="LIVE" pulse />
-                ) : (
-                    <AlphaFeedbackPill type={'error'} message={`${minutesSinceUpdate}min ago`} />
-                )}
+                <div className="flex flex-col items-end gap-1">
+                    <AlphaFeedbackPill
+                        type={statusType}
+                        message={statusMessage}
+                        pulse={isActive}
+                    />
+                    {isDefeat && (
+                        <span className="text-xs font-bold text-brand-error">TIMEOUT</span>
+                    )}
+                </div>
             </div>
 
-            {/* Infos Clés */}
             <div className="space-y-4">
-                {/* Progression */}
-                <AlphaInfoRow label={'Progression'} value={`Étape ${gameState.step}`} />
+                <AlphaInfoRow
+                    label={'Niveau'}
+                    value={
+                        <div className="flex items-center gap-2">
+                             <span className={isVictory ? 'text-brand-yellow font-black' : 'text-foreground'}>
+                                {gameState.step} / {SCENARIO.steps.length}
+                             </span>
+                        </div>
+                    }
+                />
+
                 <AlphaInfoRow
                     label={
                         <div className="text-muted flex items-center gap-2">
                             <UsersIcon className="h-4 w-4" />
                             <span className="font-bold">{playerCount}</span>
-                            <span className="text-xs uppercase">Agents</span>
                         </div>
                     }
                     value={
                         <div className="flex -space-x-2">
-                            {gameState.players?.slice(0, 4).map((p) => (
+                            {gameState.players?.slice(0, 5).map((p) => (
                                 <div
                                     key={p.id}
-                                    className="bg-brand-blue ring-border h-4 w-4 rounded-full ring-2"
+                                    className={clsx(
+                                        "h-5 w-5 rounded-full ring-2 ring-surface flex items-center justify-center text-xs font-bold",
+                                        p.isGM ? "bg-brand-purple z-10" : "bg-brand-blue"
+                                    )}
                                     title={p.name}
-                                />
+                                >
+                                    {p.name.charAt(0).toUpperCase()}
+                                </div>
                             ))}
-                            {(gameState.players?.length || 0) > 4 && (
-                                <div className="bg-muted ring-border h-4 w-4 rounded-full ring-2" />
+                            {(gameState.players?.length || 0) > 5 && (
+                                <div className="bg-muted ring-surface flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ring-2">
+                                    +
+                                </div>
                             )}
                         </div>
                     }
                 />
 
-                {/* Message Debug */}
-                <div className="h-8 overflow-hidden">
-                    <p className="text-muted truncate font-mono text-[10px]">
-                        &gt; {gameState.message || 'Système stable...'}
+                <div className="bg-black/20 h-10 overflow-hidden rounded px-2 py-1">
+                    <p className="text-muted truncate font-mono text-xs leading-tight opacity-70">
+                        &gt; {gameState.message || 'Système en attente...'}
                     </p>
+                    {gameState.bonusTime !== 0 && gameState.bonusTime !== undefined && (
+                        <p className={clsx("text-[9px] font-bold", (gameState.bonusTime || 0) > 0 ? "text-brand-emerald" : "text-brand-error")}>
+                            &gt; TEMPS: {(gameState.bonusTime || 0) > 0 ? '+' : ''}{gameState.bonusTime} min
+                        </p>
+                    )}
                 </div>
             </div>
 
-            <div className={'flex flex-wrap justify-center gap-4'}>
+            <div className={'mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4'}>
                 <AlphaButton
                     onClick={() => router.push(`/mc-admin/game?code=${game.code}`)}
                     variant="primary"
+                    className={'flex-1'}
                 >
-                    <EyeIcon className="mr-2 h-4 w-4" />
+                    <EyeIcon className="mr-2 h-3 w-3" />
                     ESPIONNER
                 </AlphaButton>
 
                 <AlphaButton
-                    variant={'secondary'}
-                    onClick={() =>
-                        alert(
-                            `Stats ID: ${game.id}\nCreated: ${new Date(game.created_at).toLocaleString()}`
-                        )
-                    }
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                    }}
+                    variant={'danger'}
+                    className={'!p-2'}
+                    title="Supprimer définitivement"
                 >
-                    <ChartBarIcon className="mr-2 h-4 w-4" />
-                    DÉTAILS
+                    <TrashIcon className="h-4 w-4" />
                 </AlphaButton>
             </div>
         </AlphaCard>

@@ -9,13 +9,12 @@ import {
     ArrowPathIcon,
     BoltIcon,
     ChatBubbleLeftRightIcon,
-    CheckIcon,
     ClockIcon,
     ExclamationTriangleIcon,
     ForwardIcon,
     StopIcon,
-    TrophyIcon,
 } from '@heroicons/react/24/solid';
+import clsx from 'clsx';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
@@ -30,6 +29,8 @@ import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameSync } from '@/hooks/useGameSync';
 import { AdminCommandType, ChallengeType, GameState, Player } from '@/types/game';
+import {AlphaTerminalWrapper} from "@/components/alpha/AlphaTerminalWrapper";
+import {PaperAirplaneIcon} from "@heroicons/react/24/outline";
 
 interface ExtendedGameState extends GameState {
     duration?: number;
@@ -42,64 +43,76 @@ interface ExtendedGameState extends GameState {
         id: number;
         type: ChallengeType;
         payload?: string | number | Record<string, unknown>;
-    };
+    } | null;
 }
 
-const AdminTimer = ({ startTime, bonusTime }: { startTime: number; bonusTime: number }) => {
+const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
+const AdminTimer = ({
+                        startTime,
+                        bonusTime,
+                        isStopped,
+                    }: {
+    startTime: number;
+    bonusTime: number;
+    isStopped?: boolean;
+}) => {
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
+        if (isStopped) return;
         const i = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(i);
-    }, []);
+    }, [isStopped]);
 
-    const startMs = startTime;
     const totalDurationSec = SCENARIO.defaultDuration + bonusTime * 60;
-
-    const elapsedSec = Math.floor((now - startMs) / 1000);
+    const elapsedSec = Math.floor((now - startTime) / 1000);
     const remainingSec = Math.max(0, totalDurationSec - elapsedSec);
 
     const percentage = Math.min(100, Math.max(0, (remainingSec / totalDurationSec) * 100));
-
-    const mins = Math.floor(remainingSec / 60);
-    const secs = remainingSec % 60;
-    const timeString = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
     let variant: 'success' | 'warning' | 'error' = 'success';
     if (remainingSec < 300) variant = 'error';
     else if (remainingSec < 600) variant = 'warning';
 
     return (
-        <div className="flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center p-2">
             <AlphaCircularGauge
                 progress={percentage}
                 variant={variant}
-                size="h-32 w-32"
+                size="h-28 w-28"
                 strokeWidth={8}
                 showGlow={variant === 'error'}
             >
                 <div className="text-center">
                     <div
-                        className={`text-2xl font-black tracking-tighter ${variant === 'error' ? 'text-brand-error animate-pulse' : ''}`}
+                        className={clsx(
+                            "text-2xl font-black tracking-tighter",
+                            variant === 'error' && 'text-brand-error animate-pulse'
+                        )}
                     >
-                        {timeString}
+                        {formatTime(remainingSec)}
                     </div>
-                    <div className="text-[9px] font-bold tracking-widest text-gray-500 uppercase">
+                    <div className="text-xs font-bold  text-muted uppercase">
                         Restant
                     </div>
                 </div>
             </AlphaCircularGauge>
 
-            <div className="mt-2 font-mono text-xs text-gray-600">
-                Total: {Math.floor(totalDurationSec / 60)} min
+            <div className="mt-4 flex items-center gap-2 font-mono text-xs text-muted">
+                <span>Total: {Math.floor(totalDurationSec / 60)}min</span>
                 {bonusTime !== 0 && (
                     <span
-                        className={
-                            bonusTime > 0 ? 'text-brand-emerald0 ml-1' : 'text-brand-error ml-1'
-                        }
+                        className={clsx(
+                            "font-bold",
+                            bonusTime > 0 ? 'text-brand-emerald' : 'text-brand-error'
+                        )}
                     >
-                        ({bonusTime > 0 ? '+' : ''}
-                        {bonusTime})
+                        ({bonusTime > 0 ? '+' : ''}{bonusTime})
                     </span>
                 )}
             </div>
@@ -116,28 +129,24 @@ function GameControlPanel() {
 
     const [customMessage, setCustomMessage] = useState('');
     const [customTime, setCustomTime] = useState('');
-
-    // CORRECTION PURITY: On initialise une date fixe au montage du composant
-    // Cela sert de valeur par défaut stable si le gameState n'a pas de timestamp
     const [fallbackStartTime] = useState(() => Date.now());
 
     useEffect(() => {
         if (!gameCode) router.push('/mc-admin');
     }, [gameCode, router]);
 
-    // --- LOGIQUE METIER ---
-
     const sendEffect = useCallback(
         async (type: AdminCommandType, payload?: string | number) => {
             if (!gameState) return;
             const commandId = Date.now();
             const currentState = gameState as ExtendedGameState;
-            const newState = {
+
+            await updateState({
                 ...currentState,
                 admin_command: { id: commandId, type, payload },
                 message: type === 'MESSAGE' ? (payload as string) : currentState.message,
-            };
-            await updateState(newState);
+                lastUpdate: Date.now()
+            });
         },
         [gameState, updateState]
     );
@@ -147,12 +156,13 @@ function GameControlPanel() {
             if (!gameState) return;
             const challengeId = Date.now();
             const currentState = gameState as ExtendedGameState;
-            const newState = {
+
+            await updateState({
                 ...currentState,
                 active_challenge: { id: challengeId, type },
-                message: '⚠️ DÉFI ACTIVÉ : ' + type,
-            };
-            await updateState(newState);
+                message: 'DÉFI ACTIVÉ : ' + type,
+                lastUpdate: Date.now()
+            });
         },
         [gameState, updateState]
     );
@@ -167,7 +177,7 @@ function GameControlPanel() {
             const sign = minutes > 0 ? '+' : '';
             const alertMessage = `RECALIBRAGE TEMPOREL : ${sign}${minutes} MIN`;
 
-            const newState = {
+            await updateState({
                 ...currentState,
                 bonusTime: newBonus,
                 admin_command: {
@@ -175,9 +185,9 @@ function GameControlPanel() {
                     type: 'MESSAGE' as AdminCommandType,
                     payload: alertMessage,
                 },
-                message: `⏱️ Temps modifié (${sign}${minutes} min)`,
-            };
-            await updateState(newState);
+                message: `Temps modifié (${sign}${minutes} min)`,
+                lastUpdate: Date.now()
+            });
         },
         [gameState, updateState]
     );
@@ -185,258 +195,262 @@ function GameControlPanel() {
     const stopChallenge = useCallback(async () => {
         if (!gameState) return;
         const currentState = gameState as ExtendedGameState;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { active_challenge, ...rest } = currentState;
-        const newState = { ...rest, message: "✅ Défi annulé par l'Admin" };
-        await updateState(newState as ExtendedGameState);
+
+        await updateState({
+            ...currentState,
+            active_challenge: null, // On nullifie explicitement
+            message: "Défi annulé par l'Admin",
+            lastUpdate: Date.now()
+        });
     }, [gameState, updateState]);
 
     const skipLevel = useCallback(async () => {
         if (!gameState) return;
-        if (!confirm("Êtes-vous sûr de vouloir forcer l'étape suivante ?")) return;
-        const newState = {
+        if (!confirm("ATTENTION : Cette action est irréversible. Forcer l'étape suivante ?")) return;
+
+        await updateState({
             ...gameState,
             step: (gameState.step || 0) + 1,
-            message: '⚠️ INTERVENTION ADMIN : NIVEAU PASSÉ',
-            active_challenge: undefined,
-        };
-        await updateState(newState);
+            message: 'INTERVENTION ADMIN : NIVEAU PASSÉ',
+            active_challenge: null,
+            lastUpdate: Date.now()
+        });
     }, [gameState, updateState]);
 
-    // --- RENDU ---
+    // --- RENDU ETATS ---
     if (isLoading && !gameState)
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
-                <div className="animate-pulse text-center">
-                    <ArrowPathIcon className="mx-auto mb-4 h-10 w-10 animate-spin text-blue-500" />
-                    <p>ÉTABLISSEMENT DE LA LIAISON SATELLITE...</p>
-                </div>
+            <div className="animate-pulse text-center">
+                <ArrowPathIcon className="mx-auto mb-4 h-10 w-10 animate-spin text-brand-blue" />
+                <p className="font-mono text-xs  uppercase">Chargement...</p>
             </div>
         );
 
     if (error)
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4">
-                <AlphaCard title="ERREUR CRITIQUE">
-                    <AlphaError message={`Liaison échouée : ${error}`} />
-                    <AlphaButton onClick={() => router.push('/mc-admin')}>Retour Base</AlphaButton>
-                </AlphaCard>
-            </div>
+            <AlphaCard title="ERREUR CRITIQUE">
+                <AlphaError message={`Liaison échouée : ${error}`} />
+                <AlphaButton variant={'secondary'} onClick={() => router.push('/mc-admin')}>Retour</AlphaButton>
+            </AlphaCard>
         );
 
-    if (!gameState) return <div className="p-10 text-gray-500">Aucun signal.</div>;
+    if (!gameState) return <AlphaError message={`Aucun signal.`} />;
 
     const state = gameState as ExtendedGameState;
+    const startTime = state.startTime || state.timestamp || fallbackStartTime;
+
+    const totalDurationMs = (SCENARIO.defaultDuration * 1000) + ((state.bonusTime || 0) * 60 * 1000);
+    const elapsedMs = Date.now() - startTime;
+    const isVictory = state.step > SCENARIO.steps.length;
+    const isDefeat = !isVictory && elapsedMs > totalDurationMs;
 
     return (
         <>
-            {/* HEADER */}
             <AlphaPuzzleHeader
                 left={
-                    <div className="flex items-center gap-4">
-                        <button
+                        <AlphaButton
                             onClick={() => router.push('/mc-admin')}
-                            className="text-gray-400 transition hover:text-white"
+                            variant={'ghost'}
                         >
-                            <ArrowLeftIcon className="h-6 w-6" />
-                        </button>
-                        <AlphaFeedbackPill
-                            type="success"
-                            message="LIVE LINK"
-                            className="animate-pulse"
-                        />
+                            <ArrowLeftIcon className="mr-2 h-3 w-3" />
+                            RETOUR
+                        </AlphaButton>
+                }
+                right={
+                    <div className="flex items-center gap-4">
+                        <AlphaTitle className="text-lg !mb-0">{gameCode}</AlphaTitle>
+                        {isVictory ? (
+                            <AlphaFeedbackPill type="success" message="VICTOIRE" />
+                        ) : isDefeat ? (
+                            <AlphaFeedbackPill type="error" message="TIMEOUT" />
+                        ) : (
+                            <AlphaFeedbackPill type="success" message="LIVE LINK" pulse />
+                        )}
                     </div>
                 }
-                right={<AlphaTitle>{`SESSION: ${gameCode}`}</AlphaTitle>}
             />
 
-            <AlphaGrid>
-                {/* col 1 MONITORING */}
-                <AlphaCard title="État Système">
-                    <div className="space-y-4">
-                        <div className="border-border rounded-lg border">
+            <div className="container mx-auto px-4 pb-20">
+                <AlphaGrid>
+                    {/* col 1 : monitoring */}
+                        <AlphaCard title="Monitoring Temporel">
                             <AdminTimer
-                                startTime={state.startTime || state.timestamp || fallbackStartTime}
+                                startTime={startTime}
                                 bonusTime={state.bonusTime || 0}
+                                isStopped={isVictory || isDefeat}
                             />
-                        </div>
 
-                        <AlphaInfoRow
-                            label={'Perturbation Active'}
-                            value={
-                                <div className={'flex items-center gap-2'}>
-                                    <p
-                                        className={`font-bold ${state.active_challenge ? 'text-brand-error' : 'text-muted'}`}
+                            {/* log */}
+                            <AlphaTerminalWrapper>
+                                <span className="mr-2 opacity-50">&gt;</span>
+                                {state.message || 'Système nominal...'}
+                            </AlphaTerminalWrapper>
+                        </AlphaCard>
+
+                        <AlphaCard
+                            title={`Escouade (${state.players?.length || 0})`}
+                            contentClassName={'space-y-2'}
+                        >
+                            <ul className="custom-scrollbar max-h-[200px] space-y-1 overflow-y-auto pr-1">
+                                {state.players?.map((p: Player) => (
+                                    <li
+                                        key={p.id}
                                     >
-                                        {state.active_challenge
-                                            ? state.active_challenge.type
-                                            : 'AUCUNE'}
-                                    </p>
-                                    {state.active_challenge ? (
-                                        <AlphaButton onClick={stopChallenge} variant={'danger'}>
-                                            <StopIcon className="mr-2 h-4 w-4" /> ARRÊTER
-                                        </AlphaButton>
-                                    ) : (
-                                        <CheckIcon className="text-muted h-6 w-6" />
-                                    )}
-                                </div>
-                            }
-                        />
+                                        <AlphaInfoRow label={
+                                            p.isGM ? 'Hôte' : 'Agent'
+                                        } value={
+                                            p.name
 
-                        {/* console log */}
-                        <div className="border-border text-brand-emerald rounded border bg-black p-3 font-mono text-xs">
-                            <span className="text-muted mr-2">&gt;</span>
-                            {state.message || 'Système en attente...'}
-                        </div>
-                    </div>
-                </AlphaCard>
+                                        } />
+                                    </li>
+                                ))}
+                            </ul>
 
-                <AlphaCard
-                    title={`Escouade (${state.players?.length || 0})`}
-                    contentClassName={'space-y-4'}
-                >
-                    <ul className="custom-scrollbar max-h-[300px] space-y-2 overflow-y-auto">
-                        {state.players?.map((p: Player) => (
-                            <li
-                                key={p.id}
-                                className="bg-surface-highlight flex items-center justify-between rounded p-2 text-sm"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span
-                                        className={`h-2 w-2 rounded-full ${p.isGM ? 'bg-brand-purple shadow-[0_0_8px_var(--color-brand-purple)]' : 'bg-brand-emerald0'}`}
-                                    ></span>
-                                    <span
-                                        className={
-                                            p.isGM ? 'text-brand-purple font-bold' : 'text-muted'
-                                        }
-                                    >
-                                        {p.name}
-                                    </span>
-                                </div>
-                                {p.isGM && (
-                                    <span className="border-brand-purple bg-brand-purple/10 text-brand-purple rounded border px-1.5 py-0.5 text-[10px]">
-                                        GM
-                                    </span>
-                                )}
-                            </li>
-                        ))}
-                        {(!state.players || state.players.length === 0) && (
-                            <li className="text-muted py-4 text-center text-xs italic">
-                                Aucun agent connecté
-                            </li>
-                        )}
-                    </ul>
-
-                    <AlphaInfoRow
-                        label={
-                            <div className="text-muted flex items-center gap-2">
-                                <TrophyIcon className="text-brand-yellow h-5 w-5" />
-                                <span className="text-xs font-bold uppercase">Progression</span>
+                            <div className="border-t border-border pt-4">
+                                <AlphaInfoRow
+                                    label="Progression"
+                                    value={<span className="text-brand-yellow font-bold">Étape {state.step}</span>}
+                                />
                             </div>
-                        }
-                        value={`Étape ${state.step}`}
-                    />
-                </AlphaCard>
+                        </AlphaCard>
 
-                {/* cols 2 et 3 : INTERVENTIONS */}
-                <div className="lg:col-span-2">
-                    <AlphaCard title="Intervention Directe">
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                            <div className="space-y-8">
-                                {/* temps */}
-                                <div className="space-y-3">
-                                    <h3 className="text-brand-blue flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
-                                        <ClockIcon className="h-4 w-4" /> Distorsion Temporelle
-                                    </h3>
+                    {/* col 2 et 3 : commandes */}
+                    <div className="lg:col-span-2 space-y-6">
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {/* temps */}
+                            <AlphaCard title="Distorsion Temporelle" icon={ClockIcon}>
                                     <div className="grid grid-cols-3 gap-2">
                                         {[1, 5, 10].map((min) => (
                                             <AlphaButton
                                                 key={min}
-                                                onClick={() => addTime(min)}
                                                 fullWidth
-                                                variant={'secondary'}
+                                                onClick={() => addTime(min)}
+                                                variant={'primary'}
                                             >
-                                                +{min} min
+                                                +{min}m
                                             </AlphaButton>
                                         ))}
                                     </div>
-
-                                    <div className="flex gap-2">
+                                    <form onSubmit={(e) => {
+                                        e.preventDefault();
+                                        if (customTime) {
+                                            addTime(parseInt(customTime));
+                                            setCustomTime('');
+                                        }
+                                    }} className="flex gap-2">
                                         <AlphaInput
                                             type="number"
                                             value={customTime}
                                             onChange={(e) => setCustomTime(e.target.value)}
                                             placeholder="Min..."
+                                            containerClassName={'w-full'}
                                         />
                                         <AlphaButton
-                                            onClick={() => {
-                                                if (customTime) {
-                                                    addTime(parseInt(customTime));
-                                                    setCustomTime('');
-                                                }
-                                            }}
+                                            type={'submit'}
                                             disabled={!customTime}
-                                            variant="primary"
                                         >
-                                            APPLIQUER
+                                            OK
+                                        </AlphaButton>
+                                    </form>
+                            </AlphaCard>
+
+                            {/* messages */}
+                            <AlphaCard title="Canal Prioritaire" icon={ChatBubbleLeftRightIcon}>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <AlphaButton
+                                            fullWidth
+                                            variant={'warning'}
+                                            onClick={() => sendEffect('MESSAGE', 'TEMPS LIMITÉ')}
+                                        >
+                                            ALERTE TEMPS
+                                        </AlphaButton>
+                                        <AlphaButton
+                                            fullWidth
+                                            size={'sm'}
+                                            variant={'primary'}
+                                            onClick={() => sendEffect('MESSAGE', 'Bon travail agent.')}
+                                        >
+                                            FÉLICITER
                                         </AlphaButton>
                                     </div>
-                                </div>
-
-                                {/* communication */}
-                                <div className="space-y-3">
-                                    <h3 className="text-muted flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
-                                        <ChatBubbleLeftRightIcon className="h-4 w-4" />{' '}
-                                        Communication
-                                    </h3>
-                                    <div className="flex gap-2">
+                                    <form
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            sendEffect('MESSAGE', customMessage);
+                                            setCustomMessage('');
+                                        }}
+                                        className="flex gap-2">
                                         <AlphaInput
+                                            containerClassName="w-full"
                                             type="text"
                                             value={customMessage}
                                             onChange={(e) => setCustomMessage(e.target.value)}
-                                            placeholder="Message système..."
+                                            placeholder="Message..."
                                         />
                                         <AlphaButton
-                                            onClick={() => {
-                                                sendEffect('MESSAGE', customMessage);
-                                                setCustomMessage('');
-                                            }}
+                                            size="sm"
+                                            type={'submit'}
                                             disabled={!customMessage}
                                         >
-                                            envoyer
+                                            <PaperAirplaneIcon className="h-6 w-6" />
                                         </AlphaButton>
+                                    </form>
+                            </AlphaCard>
+                        </div>
+
+                        {/* sabotage */}
+                        <AlphaCard title="Sabotage & Admin" icon={BoltIcon}>
+                            {/* indicateur de la perturbation en cours */}
+                            <div className={clsx(
+                                "mb-6 rounded-xl border p-4 transition-all shadow-md",
+                                state.active_challenge
+                                    ? "bg-brand-error/10 border-brand-error shadow-brand-error/40"
+                                    : "bg-surface-highlight border-border"
+                            )}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={clsx(
+                                            "p-2 rounded-full",
+                                            state.active_challenge ? "bg-brand-error animate-pulse" : "bg-surface text-muted"
+                                        )}>
+                                            <ExclamationTriangleIcon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className={clsx("text-sm font-bold uppercase", state.active_challenge ? "text-brand-error" : "text-muted")}>
+                                                {state.active_challenge ? "PERTURBATION EN COURS" : "Système Stable"}
+                                            </h4>
+                                            {state.active_challenge && (
+                                                <p className="text-xs font-mono">TYPE: {state.active_challenge.type}</p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <AlphaButton
-                                            variant={'secondary'}
-                                            onClick={() =>
-                                                sendEffect('MESSAGE', 'ATTENTION : TEMPS LIMITÉ')
-                                            }
-                                        >
-                                            Alerte Temps
+
+                                    {state.active_challenge && (
+                                        <AlphaButton onClick={stopChallenge} variant="danger" size="sm">
+                                            <StopIcon className="mr-1 h-3 w-3" /> STOP
                                         </AlphaButton>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* PERTURBATIONS */}
-                            <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                                {/* col 1 : effets bisuels */}
                                 <div className="space-y-3">
-                                    <h3 className="text-brand-purple flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
-                                        <BoltIcon className="h-4 w-4" /> Effets Visuels
-                                    </h3>
+                                    <h4 className="text-muted text-xs font-bold uppercase">Effets visuels</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <AlphaButton
-                                            variant={'primary'}
                                             fullWidth
+                                            variant={'primary'}
                                             onClick={() => sendEffect('GLITCH', 'heavy')}
                                         >
                                             GLITCH
                                         </AlphaButton>
                                         <AlphaButton
-                                            variant={'danger'}
                                             fullWidth
+                                            variant={'secondary'}
                                             onClick={() => sendEffect('INVERT', 'on')}
                                         >
                                             INVERSION
@@ -444,54 +458,38 @@ function GameControlPanel() {
                                     </div>
                                 </div>
 
-                                {/* challenges */}
+                                {/* col 2 : perturbations */}
                                 <div className="space-y-3">
-                                    <h3 className="text-brand-error flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
-                                        <ExclamationTriangleIcon className="h-4 w-4" /> Challenges
-                                        Bloquants
-                                    </h3>
-                                    <button
+                                    <h4 className="text-brand-error text-xs font-bold uppercase">Perturbations</h4>
+
+                                    <AlphaButton
                                         onClick={() => sendChallenge('GYRO')}
                                         disabled={!!state.active_challenge}
-                                        className={`group relative w-full overflow-hidden rounded-xl border p-4 text-center transition-all ${
-                                            state.active_challenge
-                                                ? 'cursor-not-allowed border-gray-800 bg-gray-900 opacity-50'
-                                                : 'border-brand-orange/50 from-brand-orange/20 hover:border-brand-orange cursor-pointer bg-gradient-to-br to-black hover:shadow-[0_0_10px_var(--color-brand-orange)]'
-                                        }`}
+                                       variant={'warning'}
+                                        fullWidth
                                     >
-                                        <div className="relative z-10">
-                                            <div className="mb-1 text-2xl transition-transform group-hover:scale-110">
-                                                🔄
-                                            </div>
-                                            <div className="text-brand-orange font-black tracking-widest">
-                                                GYRO PROTOCOL
-                                            </div>
-                                            <div className="mt-1 text-[10px] text-orange-200/60 uppercase">
-                                                Rotation physique requise
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                {/* Section Admin */}
-                                <div className="mt-auto pt-4">
-                                    <AlphaButton variant={'danger'} fullWidth onClick={skipLevel}>
-                                        <ForwardIcon className="mr-2 h-4 w-4" /> FORCER NIVEAU
-                                        SUIVANT
+                                        <ArrowPathIcon className="h-5 w-5 mr-2" /> Gyro Protocol
                                     </AlphaButton>
                                 </div>
+
+                                <div className={'col-span-2'}>
+                                    <AlphaButton variant={'danger'} fullWidth onClick={skipLevel} className="border-dashed">
+                                        <ForwardIcon className="mr-2 h-4 w-4" /> FORCER NIVEAU SUIVANT
+                                    </AlphaButton>
+                                </div>
+
                             </div>
-                        </div>
-                    </AlphaCard>
-                </div>
-            </AlphaGrid>
+                        </AlphaCard>
+                    </div>
+                </AlphaGrid>
+            </div>
         </>
     );
 }
 
 export default function AdminGamePage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center">Chargement...</div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-black text-brand-emerald font-mono">CHARGEMENT...</div>}>
             <GameControlPanel />
         </Suspense>
     );
