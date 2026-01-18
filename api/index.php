@@ -29,6 +29,8 @@ $router->group('/game', function ($r) {
     $r->register('GET', '/read', [\App\Controllers\Game::class, 'read']);
 
     $r->register('POST', '/update', [\App\Controllers\Game::class, 'update']);
+
+    $r->register('DELETE', '/{id}', [\App\Controllers\Game::class, 'delete']);
 });
 
 // Lecture body
