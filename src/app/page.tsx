@@ -144,7 +144,7 @@ const GameContent = () => {
         // si le joueur est connecté ou a fini le tuto, mais que localStorage n'est pas encore à jour
         if ((isConnected || isTutoDone) && phaseString !== 'debug_all_validated') {
             const timer = setTimeout(() => {
-                triggerPhase('debug_all_validated');
+                triggerPhase('debug_all_validated', true);
                 setIsIntroFinished(true);
                 setHasDiscoveredDebug(true);
                 setValidatedModules(TUTORIAL_SEQUENCE.map((s) => s.id));
