@@ -289,12 +289,23 @@ export const useGameLogic = (
 
     const { resolveChallenge } = useGameEffects(gameState, callbacks);
 
-    const handleChallengeResolved = useCallback(() => {
-        if (activeChallenge) {
+    const handleChallengeResolved = useCallback(async () => {
+        if (activeChallenge && gameState) {
             resolveChallenge(activeChallenge.id);
             setActiveChallenge(null);
+
+            await updateState({
+                ...gameState,
+                active_challenge: null,
+                lastUpdate: Date.now()
+            });
+
+            setAdminScript([
+                say(CHARACTERS.system, "PERTURBATION STABILISÉE. BON TRAVAIL."),
+            ]);
+            setAdminDialogueOpen(true);
         }
-    }, [activeChallenge, resolveChallenge]);
+    }, [activeChallenge, resolveChallenge, gameState, updateState]);
 
     const effectiveStartTime = gameState?.startTime ?? gameState?.timestamp ?? Date.now();
     const bonusSeconds = (gameState?.bonusTime || 0) * 60;

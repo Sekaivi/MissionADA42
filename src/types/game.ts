@@ -49,7 +49,7 @@ export interface GameState {
     lastStepTime?: number;
     timestamp?: number;
     admin_command?: AdminCommand; // canal 1 : flash info / effets
-    active_challenge?: ChallengeCommand; // canal 2 : défis bloquants persistants
+    active_challenge?: ChallengeCommand | null; // canal 2 : défis bloquants persistants
     bonusTime?: number; // temps ajouté/retiré en MINUTES (ex: 5, -2)
 }
 
