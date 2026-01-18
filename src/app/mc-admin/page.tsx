@@ -51,6 +51,8 @@ export default function AdminDashboard() {
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+    const router = useRouter();
+
     const fetchGames = useCallback(async () => {
         try {
             setLoading(true);
@@ -132,7 +134,14 @@ export default function AdminDashboard() {
                             <ArrowPathIcon
                                 className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
                             />
-                            RAFRAÎCHIR
+                        </AlphaButton>
+
+                        <AlphaButton
+                            size="sm"
+                            onClick={() => router.push('/mc-admin/stats')}
+                            variant="secondary"
+                        >
+                            <ChartBarIcon className="mr-2 h-4 w-4" />
                         </AlphaButton>
                     </div>
 
