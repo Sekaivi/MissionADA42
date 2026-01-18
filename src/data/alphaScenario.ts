@@ -5,7 +5,7 @@ export const SCENARIO: Scenario = {
     name: 'Mission Ada 42',
     description:
         'Est ad in id laboris pariatur tempor reprehenderit occaecat dolor duis quis consequat. Velit in deserunt dolore et incididunt aute est laborum mollit tempor esse occaecat. Sint deserunt minim eu nisi mollit deserunt elit id pariatur cupidatat ea nisi velit exercitation tempor enim excepteur.',
-    defaultDuration: 3600,
+    defaultDuration: 5,
     defaultTimeBeforeNextStep: 3000,
     steps: [
         {

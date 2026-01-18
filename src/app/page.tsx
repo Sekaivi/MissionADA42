@@ -334,6 +334,7 @@ const GameContent = () => {
                         missionStatus={currentMultiplayerStep?.title}
                         missionStep={multiplayerState?.step}
                         isTimerRunning={shouldTimerRun}
+                        isTimeUp={logic?.isTimeUp || false}
                         notificationCount={multiplayerState?.step ? 1 : 0}
                         activePuzzleId={activePuzzleId}
                         gameState={multiplayerState || null}

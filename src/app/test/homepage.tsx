@@ -17,11 +17,13 @@ import {
 import { useEscapeGame } from '@/context/EscapeGameContext';
 import { SCENARIO } from '@/data/alphaScenario';
 import { GameState } from '@/types/game';
+import {DefeatScreen} from "@/components/puzzles/PuzzleRegistry";
 
 interface HomepageProps {
     missionStatus?: string;
     missionStep?: number;
     isTimerRunning?: boolean;
+    isTimeUp?: boolean;
     notificationCount?: number;
     activePuzzleId?: string | null;
     gameState?: GameState | null;
@@ -44,6 +46,7 @@ export default function Homepage({
     missionStatus,
     missionStep,
     isTimerRunning = false,
+                                     isTimeUp = false,
     activePuzzleId,
     gameState,
     onPuzzleSolve,
@@ -116,6 +119,8 @@ export default function Homepage({
         remainingSeconds = Math.max(0, Math.floor((timerEndTime - now) / 1000));
     }
 
+    if (isTimeUp) remainingSeconds = 0;
+
     const percentage = Math.min(100, Math.max(0, (remainingSeconds / totalDuration) * 100));
     const timeString = formatTime(remainingSeconds);
 
@@ -149,16 +154,16 @@ export default function Homepage({
                     >
                         <AlphaCircularGauge
                             progress={percentage}
-                            variant={variant}
+                            variant={isTimeUp ? 'error' : variant}
                             size="h-32 w-32"
                             strokeWidth={8}
-                            showGlow={variant === 'error'}
+                            showGlow={variant === 'error' || isTimeUp}
                         >
                             <div className="text-center">
                                 <div
                                     className={clsx(
                                         'text-2xl font-black tracking-tighter',
-                                        variant === 'error'
+                                        (variant === 'error' || isTimeUp)
                                             ? 'text-brand-error animate-pulse'
                                             : 'text-muted'
                                     )}
@@ -166,17 +171,19 @@ export default function Homepage({
                                     {timeString}
                                 </div>
                                 <div className="text-muted text-xs font-bold uppercase">
-                                    Restant
+                                    {isTimeUp ? 'ÉCHEC' : 'RESTANT'}
                                 </div>
                             </div>
                         </AlphaCircularGauge>
                     </div>
 
-                    <AlphaFeedbackPill
-                        message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
-                        type={isValidationPending ? 'success' : 'info'}
-                        pulse={isValidationPending}
-                    />
+                    {!isTimeUp && (
+                        <AlphaFeedbackPill
+                            message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
+                            type={isValidationPending ? 'success' : 'info'}
+                            pulse={isValidationPending}
+                        />
+                    )}
                 </>
             )}
 
@@ -197,6 +204,12 @@ export default function Homepage({
                             onAction={handleVoteAndClose}
                             onClose={() => setShowModal(false)}
                         />
+
+                        {isTimeUp ? (
+                            <div className="mt-8 animate-in fade-in zoom-in duration-500">
+                                <DefeatScreen />
+                            </div>
+                        ) : (<>
 
                         <h2 className="text-muted text-center text-xs font-bold uppercase">
                             Mission &bull; Étape {missionStep}
@@ -224,6 +237,7 @@ export default function Homepage({
                                 </div>
                             )}
                         </>
+                        </>)}
                     </>
                 ) : (
                     // accueil
