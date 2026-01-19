@@ -77,13 +77,12 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
             CHARACTERS.paj,
             'Si on l’attrape, il subira les conséquences de ses actes, et je m’en assurerai personnellement.',
             {}
-        ),        say(
+        ),
+        say(
             CHARACTERS.goguey,
             "Avant ça, laisse-moi te présenter les outils que tu utiliseras pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug."
-        ),say(
-            CHARACTERS.goguey,
-            "Secoue ton téléphone pour y accéder!"
         ),
+        say(CHARACTERS.goguey, 'Secoue ton téléphone pour y accéder!'),
     ],
     debug_start: [
         say(

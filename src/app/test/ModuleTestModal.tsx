@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { ColorScannerModule } from '@/components/Tutorial/ColorScannerModule';
 import { FaceDetectionModule } from '@/components/Tutorial/FaceDetectionModule';
 import { GyroscopeModule } from '@/components/Tutorial/GyroscopeModule';
+import { MicrophoneModule } from '@/components/Tutorial/MicrophoneModule';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaQRScanner } from '@/components/alpha/AlphaQRScanner';
@@ -58,6 +59,15 @@ export const ModuleTestModal = ({
                     onSolve={(detectedFace) =>
                         onSuccess('facial_recognition', normalizePayload(detectedFace))
                     }
+                />
+            );
+        }
+
+        if (moduleId === 'microphone') {
+            return (
+                <MicrophoneModule
+                    isSolved={false}
+                    onSolve={() => onSuccess('microphone', { status: 'micro_passed' })}
                 />
             );
         }

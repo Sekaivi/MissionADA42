@@ -22,8 +22,7 @@ export const SCENARIO: Scenario = {
             description: '',
             componentId: 'spin-puzzle',
             solution: '',
-            hints: [
-            ],
+            hints: [],
         },
         {
             id: 'step_1_3',
