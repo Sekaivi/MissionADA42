@@ -5,15 +5,15 @@ import React from 'react';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { AlphaQRScanner } from '@/components/alpha/AlphaQRScanner';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 export default function QRTestPage() {
     return (
         <>
             <AlphaHeader title={'Module de QR Code'} />
 
             <AlphaQRScanner
-                target={
-                    'https://gricad-gitlab.univ-grenoble-alpes.fr/mmi-students-projects/s5-2026/sae501/groupe-1/sae501-groupe1/-/merge_requests/16'
-                }
+                target={API_BASE + '/preuve/{id}'}
                 onScan={(code) => {
                     console.log(code);
                     return true;
