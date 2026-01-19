@@ -30,6 +30,22 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
+    // pour lisser la valeur de isOpen, si ça passe à false puis true très vite
+    const [isSafeOpen, setIsSafeOpen] = useState(isOpen);
+
+    if (isOpen && !isSafeOpen) {
+        setIsSafeOpen(true);
+    }
+
+    useEffect(() => {
+        if (!isOpen) {
+            const timer = setTimeout(() => {
+                setIsSafeOpen(false);
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
+
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
     const [prevScript, setPrevScript] = useState(script);
 
@@ -55,7 +71,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                 e.stopPropagation();
             }
 
-            if (!isOpen) return;
+            if (!isSafeOpen || !currentLine) return;
 
             if (isTyping) {
                 completeText();
@@ -67,19 +83,19 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                 }
             }
         },
-        [isOpen, isTyping, completeText, currentIndex, script.length, onComplete]
+        [isSafeOpen, currentLine, isTyping, completeText, currentIndex, script.length, onComplete]
     );
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (isOpen && (e.key === 'Enter' || e.key === ' ')) {
+            if (isSafeOpen && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 handleInteraction();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, handleInteraction]);
+    }, [isSafeOpen, handleInteraction]);
 
     const positionClasses = clsx(
         'fixed inset-0 z-[9999] flex justify-center p-4 bg-black/20 m-0',
@@ -91,13 +107,12 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
     const getAvatarSource = (originalSrc: string | undefined, isAnimating: boolean) => {
         if (!originalSrc) return '';
 
-        // Si on écrit (isTyping = true), on garde le GIF original
+        // on garde le GIF original pendant le typing
         if (isAnimating) {
             return originalSrc;
         }
 
-        // Sinon, on remplace l'extension (.gif ou .webp) par .png
-        // Assurez-vous d'avoir les fichiers .png correspondants !
+        // sinon => remplace l'extension (.gif ou .webp) par .png
         return originalSrc.replace(/\.(gif|webp)$/i, '.png');
     };
     const currentAvatarSrc = getAvatarSource(currentLine?.avatar, isTyping);
@@ -106,7 +121,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
 
     const content = (
         <AnimatePresence>
-            {isOpen && currentLine && (
+            {isSafeOpen && currentLine && (
                 <motion.div
                     key="dialogue-overlay"
                     initial={{ opacity: 0 }}
@@ -116,7 +131,8 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                     onClick={handleInteraction}
                 >
                     <motion.div
-                        key={`dialogue-session-${script[0]?.id}`}
+                        // key={`dialogue-session-${script[0]?.id}`} // remount à chaque phase
+                        key={`dialogue-box-container`}
                         initial={{ opacity: 0, y: initialY, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{
@@ -146,40 +162,41 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                             <AnimatePresence mode="popLayout">
                                 {currentLine.avatar && (
                                     <motion.div
+                                        // clef = Speaker + Side
+                                        // tant que c'est le même perso du même côté, pas de remount, donc pas de transition
                                         key={`${currentLine.speaker}-${currentLine.side}`}
+                                        initial={{
+                                            opacity: 0,
+                                            x: isRightAvatar ? 30 : -30,
+                                            scale: 0.9,
+                                        }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{
+                                            opacity: 0,
+                                            x: isRightAvatar ? 30 : -30,
+                                            scale: 0.9,
+                                        }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                         className={clsx(
-                                            'relative flex flex-shrink-0 items-end overflow-hidden shadow-inner',
+                                            'relative flex h-[115px] w-[115px] flex-shrink-0 items-end overflow-hidden shadow-inner',
                                             isRightAvatar ? 'order-last' : ''
                                         )}
                                     >
                                         <motion.div
-                                            key={currentLine.avatar}
-                                            initial={{
-                                                opacity: 0,
-                                                x: isRightAvatar ? 30 : -30,
-                                                scale: 0.9,
-                                            }}
-                                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                                            exit={{
-                                                opacity: 0,
-                                                x: isRightAvatar ? 30 : -30,
-                                                scale: 0.9,
-                                            }}
-                                            transition={{
-                                                type: 'spring',
-                                                stiffness: 300,
-                                                damping: 25,
-                                            }}
+                                            key={currentAvatarSrc}
+                                            className="relative h-full w-full"
                                         >
                                             <Image
-                                                width={80}
-                                                height={80}
                                                 src={currentAvatarSrc}
                                                 alt={currentLine.speaker}
+                                                fill
+                                                sizes="115px"
                                                 className={clsx(
                                                     'object-contain',
                                                     isRightAvatar && 'rotate-y-180'
                                                 )}
+                                                priority
+                                                unoptimized
                                             />
                                         </motion.div>
                                     </motion.div>
@@ -211,9 +228,9 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className={clsx(
-                                    'text-brand-emerald absolute bottom-1.5 flex items-center gap-2 transition-all duration-300',
+                                    'text-brand-emerald absolute bottom-2 flex items-center gap-2 transition-all duration-300',
                                     isLastLine ? 'font-bold text-emerald-400' : '',
-                                    isRightAvatar ? 'left-2' : 'right-2'
+                                    isRightAvatar ? 'left-6' : 'right-6'
                                 )}
                             >
                                 <span className="text-[10px] font-bold tracking-widest uppercase opacity-80">

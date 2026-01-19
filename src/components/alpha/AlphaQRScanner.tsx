@@ -113,7 +113,26 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
                                 console.error('URL invalide malgré le préfixe', error);
                             }
                         }
-                        // 3. FOREIGN CHECK (CODE INCONNU / EXTERNE)
+
+                        // fallback générique / tuto
+                        // pas une preuve => envoie le texte brut au parent.
+                        // si le parent renvoie true => c'est bon
+                        if (onScanRef.current) {
+                            console.log('qr brut : ', cleanText);
+                            const isAccepted = onScanRef.current(cleanText);
+
+                            if (isAccepted) {
+                                setScanStatus('win');
+                                try {
+                                    html5QrCode.pause();
+                                } catch (e) {
+                                    console.error('QRCode error : ', e);
+                                }
+                                return;
+                            }
+                        }
+
+                        // code inconnu / refusé par le parent
                         setScanStatus('foreign');
                         resetStatusAfterDelay(2000);
                     },

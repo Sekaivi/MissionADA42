@@ -72,28 +72,26 @@ export const GyroscopeModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =>
                 } else {
                     next = Math.max(0, prev - 3); // -3% par tick
                 }
-
-                // gestion du seuil 100%
-                if (next >= 100) {
-                    // si on vient d'atteindre 100% pour la première fois
-                    if (!hasTriggeredRef.current) {
-                        if (navigator.vibrate) navigator.vibrate(200);
-                        onSolve();
-                        hasTriggeredRef.current = true; // lock pour ne pas rappeler onSolve
-                    }
-                    return 100; // on reste à 100 tant qu'on est stable
-                } else {
-                    // si on redescend en dessous de 95%, on réarme le trigger pour pouvoir revalider plus tard si besoin
-                    if (next < 95) {
-                        hasTriggeredRef.current = false;
-                    }
-                    return next;
-                }
+                return next;
             });
         }, 20);
 
         return () => clearInterval(interval);
-    }, [hasActivatedSensor, isTiltedInstant, isFlatInstant, hasData, onSolve]);
+    }, [hasActivatedSensor, isTiltedInstant, isFlatInstant, hasData]);
+
+    useEffect(() => {
+        if (progress >= 100) {
+            // si on vient d'atteindre 100% pour la première fois
+            if (!hasTriggeredRef.current) {
+                if (navigator.vibrate) navigator.vibrate(200);
+                onSolve();
+                hasTriggeredRef.current = true; // lock pour ne pas rappeler onSolve
+            }
+        } else if (progress < 95) {
+            // si on redescend en dessous de 95%, on réarme le trigger
+            hasTriggeredRef.current = false;
+        }
+    }, [progress, onSolve]);
 
     if (!permissionGranted && !error) {
         return (

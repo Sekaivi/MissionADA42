@@ -64,7 +64,7 @@ export const ModuleTestModal = ({
                 return true;
             }
         }
-
+        console.log('objet inconnu');
         // si objet inconnu, mais on est en Tutoriel => accepté pour valider la calibration
         if (isTutorial) {
             onSuccess('qr_scanner', { status: 'calibrated', content: scanData });

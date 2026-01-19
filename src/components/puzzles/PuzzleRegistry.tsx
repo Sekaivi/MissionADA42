@@ -121,7 +121,7 @@ const VictoryScreen: React.FC<PuzzleProps> = ({ data }) => {
                                     {entry.solverName}
                                 </span>
                             </div>
-                            <span className="font-mono text-white opacity-70">
+                            <span className="font-mono">
                                 {formatDuration(entry.duration * 1000)}
                             </span>
                         </div>

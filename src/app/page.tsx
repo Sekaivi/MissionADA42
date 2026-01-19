@@ -51,11 +51,13 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            "Le problème, c'est que la clé d'activation de l'antivirus est sur une clé USB qui a été subtilisée par ce mystérieux élève..."
+            "Le problème, c'est que la clé d'activation de l'antivirus est sur une clé USB qui a été subtilisée par ce mystérieux élève...",
+            { emotion: 'shocked' }
         ),
         say(
             CHARACTERS.fabien,
-            'Comme par hasard, cet évènement est survenu juste après une SAE de dev !'
+            'Comme par hasard, cet évènement est survenu juste après une SAE de dev !',
+            { emotion: 'shocked' }
         ),
         say(
             CHARACTERS.fabien,
@@ -63,7 +65,8 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            "Il a menacé d'activer immédiatement le virus si ce puzzle n'était pas fait exclusivement par des étudiants en deuxième année."
+            "Il a menacé d'activer immédiatement le virus si ce puzzle n'était pas fait exclusivement par des étudiants en deuxième année.",
+            { emotion: 'shocked' }
         ),
         say(
             CHARACTERS.fabien,
@@ -80,7 +83,8 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.goguey,
-            "Avant ça, laissez-moi vous présenter les outils que vous utiliserez pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug."
+            "Avant ça, laissez-moi vous présenter les outils que vous utiliserez pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug.",
+            { emotion: 'happy' }
         ),
         say(CHARACTERS.goguey, 'Secoue ton téléphone pour y accéder!'),
     ],
@@ -99,6 +103,15 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
             CHARACTERS.goguey,
             "L'onglet TERMINAL affichera les logs systèmes et les messages interceptés."
         ),
+        say(
+            CHARACTERS.goguey,
+            "Durant votre mission, si l'un d'entre vous termine une mission plus tôt que les autres, votre chef d'équipe pourra alors lancer une requête de synchronisation."
+        ),
+        say(
+            CHARACTERS.goguey,
+            "Vous pourrez alors continuer tous ensemble, si tant est que tout le monde l'accepte !",
+            { emotion: 'happy' }
+        ),
     ],
     debug_pres_evidence: [
         say(
@@ -109,8 +122,9 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     debug_pres_modules: [
         say(
             CHARACTERS.goguey,
-            "L'onglet MODULES permet d'activer et calibrer les différents capteurs du téléphone."
+            "L'onglet MODULES permet quant à lui d'activer et calibrer les différents capteurs du téléphone."
         ),
+        say(CHARACTERS.goguey, "Tu en auras besoin pour t'aider au cours de ta mission !"),
     ],
     debug_go_to_modules: [
         say(
@@ -119,7 +133,9 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
     ],
     tuto_face_id: [say(CHARACTERS.paj, 'Premier test : La reconnaissance faciale. Clique dessus.')],
-    tuto_color: [say(CHARACTERS.paj, 'Bien. Maintenant, le scanner de couleur.')],
+    tuto_color: [
+        say(CHARACTERS.paj, 'Quelle tronche ! Bien. Maintenant, teste le scanner de couleur.'),
+    ],
     tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le merveilleux Décodeur QR. Indispensable !')],
     tuto_gyro: [say(CHARACTERS.paj, 'Calibrez moi le Gyroscope.')],
     tuto_mic: [say(CHARACTERS.paj, "Et enfin, le Micro. On a besoin d'oreilles partout.")],
