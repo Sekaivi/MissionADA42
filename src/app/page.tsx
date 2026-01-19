@@ -47,11 +47,11 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            'Un élève vient de développer un virus qui menace toutes les machines, alors M. Jacquot a créé un antivirus.'
+            "Un élève a développé un virus qui menace de mettre hors-service toutes les machines de l'IUT, alors M. Jacquot a créé un antivirus."
         ),
         say(
             CHARACTERS.fabien,
-            "Le problème, c'est que la clé USB sur laquelle il était stocké a été subtilisée par ce mystérieux élève..."
+            "Le problème, c'est que la clé d'activation de l'antivirus est sur une clé USB qui a été subtilisée par ce mystérieux élève..."
         ),
         say(
             CHARACTERS.fabien,
@@ -59,15 +59,15 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            'On a reçu un message du malfaiteur et il nous a laissé des puzzles pour retrouver notre précieuse clé USB !'
+            'On a reçu un message du malfaiteur accompagné de puzzles pour retrouver notre précieuse clé USB !'
         ),
         say(
             CHARACTERS.fabien,
-            'Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des premières années.'
+            'Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des deuxième années.'
         ),
         say(
             CHARACTERS.fabien,
-            'Vous avez donc été choisis pour trouver cette clé, l’activer et sauver l’IUT !'
+            "Merci de vous être portés volontaires pour trouver cette clé, activer l'antivirus et sauver l’IUT !"
         ),
         say(
             CHARACTERS.fabien,
@@ -75,20 +75,24 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.paj,
-            'Si on l’attrape, il subira les conséquences de ses actes, et je m’en assurerai personnellement.',
+            'Si on l’attrape, il subira les conséquences de ses actes et je m’en assurerai personnellement...',
             {}
         ),
         say(
             CHARACTERS.goguey,
-            "Avant ça, laisse-moi te présenter les outils que tu utiliseras pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug."
+            "Avant ça, laissez-moi vous présenter les outils que vous utiliserez pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug."
         ),
         say(CHARACTERS.goguey, 'Secoue ton téléphone pour y accéder!'),
     ],
     debug_start: [
         say(
             CHARACTERS.goguey,
-            "Bienvenue dans le Debugger. C'est ici que tu pourras accéder aux systèmes cachés."
+            "Bienvenue dans le debugger. C'est ici que tu pourras accéder aux systèmes cachés pour mener à bien la Mission Ada42."
         ),
+        say(
+            CHARACTERS.paj,
+            "Vous aurez évidemment relevé le choix de nom spécial pour une tâche tout aussi spéciale..."
+        )
     ],
     debug_pres_home: [
         say(
@@ -116,14 +120,14 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     ],
     tuto_face_id: [say(CHARACTERS.paj, 'Premier test : La reconnaissance faciale. Clique dessus.')],
     tuto_color: [say(CHARACTERS.paj, 'Bien. Maintenant, le scanner de couleur.')],
-    tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le Décodeur QR. Indispensable.')],
-    tuto_gyro: [say(CHARACTERS.paj, 'Calibrons le Gyroscope.')],
-    tuto_mic: [say(CHARACTERS.paj, "Enfin, le Micro. On a besoin d'oreilles partout.")],
+    tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le merveilleux Décodeur QR. Indispensable !')],
+    tuto_gyro: [say(CHARACTERS.paj, 'Calibrez moi le Gyroscope.')],
+    tuto_mic: [say(CHARACTERS.paj, "Et enfin, le Micro. On a besoin d'oreilles partout.")],
     debug_all_validated: [
         say(CHARACTERS.paj, 'Ton équipement est opérationnel.'),
         say(
             CHARACTERS.goguey,
-            "Tu peux retourner sur l'interface principal pour débuter l'opération quand tes amis et toi seront prêts !"
+            "Vous pouvez retourner sur l'interface principale pour débuter l'énigme laissée par l'élève !"
         ),
     ],
 };
