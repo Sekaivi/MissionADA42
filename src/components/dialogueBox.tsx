@@ -187,7 +187,12 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                             </AnimatePresence>
 
                             <div className="relative z-0 flex-grow">
-                                <p className="min-h-[4rem] py-6 pl-6 font-mono text-sm leading-relaxed">
+                                <p
+                                    className={clsx(
+                                        'min-h-[4rem] py-6 font-mono text-sm leading-relaxed',
+                                        isRightAvatar ? 'pl-6' : 'pr-6'
+                                    )}
+                                >
                                     {displayedText}
                                     {isTyping && (
                                         <motion.span
@@ -206,8 +211,9 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className={clsx(
-                                    'text-brand-emerald absolute bottom-1.5 left-2 flex items-center gap-2 transition-all duration-300',
-                                    isLastLine ? 'font-bold text-emerald-400' : ''
+                                    'text-brand-emerald absolute bottom-1.5 flex items-center gap-2 transition-all duration-300',
+                                    isLastLine ? 'font-bold text-emerald-400' : '',
+                                    isRightAvatar ? 'left-2' : 'right-2'
                                 )}
                             >
                                 <span className="text-[10px] font-bold tracking-widest uppercase opacity-80">

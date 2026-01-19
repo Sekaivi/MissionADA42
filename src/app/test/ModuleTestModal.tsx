@@ -41,27 +41,39 @@ export const ModuleTestModal = ({
 }: ModuleTestModalProps) => {
     const { logic } = useEscapeGame();
 
-    const handleScan = (proofId: string) => {
-        const itemDef = ITEMS_REGISTRY[proofId];
+    const handleScan = (scanData: string) => {
+        // on tente de trouver l'objet dans le registre
+        // scanData peut être un ID ("12") ou du texte brut ("https://...")
+        const itemDef = ITEMS_REGISTRY[scanData];
 
-        if (!itemDef) {
-            console.warn(`Objet inconnu scanné : ${proofId}`);
-            return false;
+        // si c'est un objet connu
+        if (itemDef) {
+            const { onCollectScript, ...itemData } = itemDef;
+            const newItem: InventoryItem = {
+                ...itemData,
+                isFound: true,
+            };
+
+            if (logic?.addItemToInventory) {
+                logic.addItemToInventory(newItem, onCollectScript);
+
+                // en tuto on valide aussi le module techniquement
+                if (isTutorial) {
+                    onSuccess('qr_scanner', { status: 'calibrated', content: scanData });
+                }
+                return true;
+            }
         }
 
-        const { onCollectScript, ...itemData } = itemDef;
-
-        const newItem: InventoryItem = {
-            ...itemData,
-            isFound: true,
-        };
-
-        if (logic?.addItemToInventory) {
-            logic.addItemToInventory(newItem, onCollectScript);
-            return true; // Succès
+        // si objet inconnu, mais on est en Tutoriel => accepté pour valider la calibration
+        if (isTutorial) {
+            onSuccess('qr_scanner', { status: 'calibrated', content: scanData });
+            return true;
         }
 
-        return true;
+        // si objet inconnu en jeu normal => ignoré
+        console.warn(`Objet inconnu scanné : ${scanData}`);
+        return false;
     };
 
     const [isSimulating, setIsSimulating] = useState(false);

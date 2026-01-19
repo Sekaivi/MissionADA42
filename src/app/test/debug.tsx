@@ -12,13 +12,16 @@ import {
     ShieldCheckIcon,
     UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { PlayIcon } from '@heroicons/react/24/solid';
+import { ArrowLeftIcon, PlayIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
 import { LogTerminal } from '@/components/LogTerminal';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { ModuleLink } from '@/components/alpha/ModuleLink';
+import { InventoryGrid } from '@/components/inventory/InventoryGrid';
+import { InventoryItemDetails } from '@/components/inventory/InventoryItemDetails';
+import { InventoryItemUI } from '@/components/inventory/InventorySlot';
 import { HintSystem } from '@/components/ui/HintSystem';
 import { useEscapeGame } from '@/context/EscapeGameContext';
 import { SCENARIO } from '@/data/alphaScenario';
@@ -48,6 +51,19 @@ export default function DebugPage({
 }: DebugPageProps) {
     const { logout, playerId, gameCode } = useEscapeGame();
     const [isLeaving, setIsLeaving] = useState(false);
+
+    const [viewedItem, setViewedItem] = useState<InventoryItemUI | null>(null);
+
+    // Transformation des items du jeu vers le format UI
+    const inventoryItems: InventoryItemUI[] = (gameLogic?.gameState?.inventory || []).map(
+        (item) => ({
+            id: item.id,
+            name: item.name,
+            description: item.desc,
+            sprite: item.sprite, // Le sprite (URL) est passé ici
+            // icon: <DocumentIcon /> // Fallback si pas de sprite
+        })
+    );
 
     const isHost = gameLogic?.isHost ?? false;
 
@@ -271,12 +287,12 @@ export default function DebugPage({
                                     isLocked && 'pointer-events-none opacity-50',
                                     getHighlightClass(
                                         mod.id,
-                                        `rounded-lg border transition-all ${
+                                        `rounded-lg transition-all ${
                                             isActiveInGame
                                                 ? 'bg-brand-purple/20 border-brand-purple'
                                                 : showValidatedStyle
                                                   ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald pointer-events-none opacity-70'
-                                                  : 'border-border bg-surface text-muted hover:bg-surface-highlight'
+                                                  : 'border-none'
                                         }`
                                     )
                                 )}
@@ -291,6 +307,50 @@ export default function DebugPage({
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* TAB: EVIDENCE (INVENTAIRE) */}
+            {currentTab === 'evidence' && (
+                <div className="h-full">
+                    {viewedItem ? (
+                        // VUE DÉTAIL
+                        <div className="flex h-full flex-col">
+                            <button
+                                onClick={() => setViewedItem(null)}
+                                className="text-muted hover:text-brand-emerald mb-2 flex items-center gap-2 text-xs font-bold uppercase transition-colors"
+                            >
+                                <ArrowLeftIcon className="h-4 w-4" /> Retour à la liste
+                            </button>
+                            <InventoryItemDetails item={viewedItem} variant="primary" />
+                        </div>
+                    ) : (
+                        // VUE GRILLE
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-muted text-xs font-bold uppercase">
+                                    Base de données : {inventoryItems.length} élément(s)
+                                </h3>
+                            </div>
+
+                            {/* Le bloc conditionnel doit être À L'INTÉRIEUR de la div flex-col */}
+                            {inventoryItems.length > 0 ? (
+                                <InventoryGrid
+                                    items={inventoryItems}
+                                    onSlotClick={setViewedItem}
+                                    variant="primary"
+                                />
+                            ) : (
+                                <div className="border-border bg-surface flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center opacity-50">
+                                    <FolderOpenIcon className="mb-2 h-12 w-12" />
+                                    <p className="font-mono text-sm">Aucune preuve collectée.</p>
+                                    <p className="text-xs">
+                                        Utilisez le SCANNER pour analyser l'environnement.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
