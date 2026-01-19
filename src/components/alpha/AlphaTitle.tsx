@@ -1,7 +1,20 @@
 import React, { ReactNode } from 'react';
 
-export const AlphaTitle = ({ children }: { children: ReactNode }) => (
-    <h1 className="text-brand-emerald mb-4 text-4xl font-black tracking-tighter drop-shadow-[0_0_10px_var(--color-brand-emerald)]">
+import clsx from 'clsx';
+
+export const AlphaTitle = ({
+    children,
+    className = '',
+}: {
+    children: ReactNode;
+    className?: string;
+}) => (
+    <h1
+        className={clsx(
+            'text-brand-emerald mb-4 text-4xl font-black drop-shadow-[0_0_8px_var(--color-brand-emerald)]',
+            className
+        )}
+    >
         {children}
     </h1>
 );

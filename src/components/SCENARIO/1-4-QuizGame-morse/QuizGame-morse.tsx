@@ -9,7 +9,7 @@ const QUESTIONS_MMI: Question[] = [
     {
         type: 'text',
         question: '... --.- .-.. .-.. . .---- .---- ^',
-        answer: 'SALLE115',
+        answer: 'SALLE116',
     },
 ];
 

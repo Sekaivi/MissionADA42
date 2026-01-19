@@ -939,7 +939,7 @@ export default function EscapeGamePage() {
     if (!isLoaded) return null;
 
     return (
-        <div className="min-h-screen pb-20">
+        <>
             <AlphaHeader title="Escape Game System" subtitle="Scénario: Protocole Alpha" />
             <div className="mx-auto mt-8">
                 {activeMode === 'select' && (
@@ -998,6 +998,6 @@ export default function EscapeGamePage() {
                     />
                 )}
             </div>
-        </div>
+        </>
     );
 }

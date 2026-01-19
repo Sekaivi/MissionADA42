@@ -2,8 +2,9 @@ import { Scenario } from '@/types/scenario';
 
 export const SCENARIO: Scenario = {
     id: 'scenario_alpha_01',
-    name: 'Protocole Alpha',
-    description: 'Première incursion dans le système.',
+    name: 'Mission Ada 42',
+    description:
+        'Est ad in id laboris pariatur tempor reprehenderit occaecat dolor duis quis consequat. Velit in deserunt dolore et incididunt aute est laborum mollit tempor esse occaecat. Sint deserunt minim eu nisi mollit deserunt elit id pariatur cupidatat ea nisi velit exercitation tempor enim excepteur.',
     defaultDuration: 3600,
     defaultTimeBeforeNextStep: 3000,
     steps: [
@@ -21,7 +22,8 @@ export const SCENARIO: Scenario = {
             description: '',
             componentId: 'spin-puzzle',
             solution: '',
-            hints: [],
+            hints: [
+            ],
         },
         {
             id: 'step_1_3',

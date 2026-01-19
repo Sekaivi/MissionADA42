@@ -107,4 +107,28 @@ class Game extends BaseController
         $this->res['msg']    = "État mis à jour.";
         $this->stop(true);
     }
+
+    /**
+     * SUPPRESSION
+     * Supprime une partie via son ID
+     */
+    public function delete($params, $data): void
+    {
+        $id = $params['id'] ?? $data['id'] ?? null;
+
+        if (!$id) {
+            $this->res['status'] = false;
+            $this->res['msg']    = "ID de la partie manquant.";
+            $this->stop(false);
+        }
+
+        $this->api->delete(
+            "DELETE FROM Games WHERE id = ?",
+            [$id]
+        );
+
+        $this->res['status'] = true;
+        $this->res['msg']    = "Partie $id supprimée avec succès.";
+        $this->stop(true);
+    }
 }

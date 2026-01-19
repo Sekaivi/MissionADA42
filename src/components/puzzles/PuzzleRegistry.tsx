@@ -14,17 +14,25 @@ import FirewallPuzzle from '@/components/SCENARIO/3-2-FirewallPuzzle/FirewallPuz
 import OrientationPuzzleS3E3 from '@/components/SCENARIO/3-3-OrientationPuzzle/OrientationPuzzle';
 import GpsPuzzle from '@/components/SCENARIO/3-4-GpsPuzzle/GpsPuzzle';
 import ChestCodePuzzleS4E1 from '@/components/SCENARIO/4-1-ChestCodePuzzle/ChestCodePuzzle';
+import { ModuleId } from '@/data/modules';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
 import { ModalConfig } from '@/types/modal';
 
+export interface ModuleAction {
+    id: ModuleId;
+    data: Record<string, unknown>;
+    timestamp: number;
+}
+
 export interface PuzzleProps<TPhase extends string = string, TConfig = Record<string, unknown>> {
-    onSolve: () => void;
+    onSolve: (id?: string | ModuleId, data?: Record<string, unknown>) => void;
     isSolved?: boolean;
     data?: GameState;
     scripts?: Partial<Record<TPhase, DialogueLine[]>>;
     puzzleConfig?: TConfig;
     modalConfig?: ModalConfig;
+    lastModuleAction?: ModuleAction | null;
 }
 
 export type PuzzlePhases = 'idle' | 'intro' | 'playing' | 'win' | 'lose';

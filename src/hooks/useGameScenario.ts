@@ -17,13 +17,13 @@ export const useGameScenario = <T extends string>(scripts: Partial<Record<T, Dia
     });
 
     // On passe la clé (ex: 'intro') qui DOIT exister dans les scripts fournis
-    const triggerPhase = useCallback((phase: T) => {
+    const triggerPhase = useCallback((phase: T, silent: boolean = false) => {
         const selectedScript = scriptsRef.current[phase];
         setGameState(phase);
 
         if (selectedScript && selectedScript.length > 0) {
             setCurrentScript(selectedScript);
-            setIsDialogueOpen(true);
+            setIsDialogueOpen(!silent);
         } else {
             setIsDialogueOpen(false);
             setCurrentScript([]);

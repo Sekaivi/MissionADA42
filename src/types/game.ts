@@ -22,6 +22,30 @@ export interface PendingProposal {
     timestamp: number;
 }
 
+export interface ValidationRequest {
+    nextStep: number;
+    triggeredBy: string;
+    readyPlayers: string[]; // IDs des joueurs prêts
+    timestamp: number;
+}
+
+export interface ModuleActionEvent {
+    id: string; // ex: 'color_scanner'
+    payload: string; // ex: 'RED'
+    playerId: string;
+    timestamp: number;
+}
+
+export type LogType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'ADMIN' | 'PLAYER';
+
+export interface GameLogEntry {
+    id: string;
+    timestamp: number;
+    type: LogType;
+    message: string;
+    details?: string;
+}
+
 export interface GameState {
     step: number;
     message: string;
@@ -29,12 +53,15 @@ export interface GameState {
     players: Player[];
     history: HistoryEntry[];
     pendingProposal: PendingProposal | null;
+    lastModuleAction?: ModuleActionEvent | null;
+    validationRequest?: ValidationRequest | null;
     lastUpdate: number;
     lastStepTime?: number;
     timestamp?: number;
     admin_command?: AdminCommand; // canal 1 : flash info / effets
-    active_challenge?: ChallengeCommand; // canal 2 : défis bloquants persistants
+    active_challenge?: ChallengeCommand | null; // canal 2 : défis bloquants persistants
     bonusTime?: number; // temps ajouté/retiré en MINUTES (ex: 5, -2)
+    logs?: GameLogEntry[];
 }
 
 export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'INVERT' | 'SKIP' | 'ADD_TIME'; // commandes éphémères
