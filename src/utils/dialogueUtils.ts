@@ -32,7 +32,7 @@ export function say(
             : char.avatars.default || Object.values(char.avatars)[0];
 
     return {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 9),
         speaker: char.name,
         text: text,
         avatar: avatarUrl,

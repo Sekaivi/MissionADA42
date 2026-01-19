@@ -1,4 +1,3 @@
-// data/characters.ts
 import { Character } from '@/types/dialogue';
 
 export const CHARACTERS: Record<string, Character> = {
@@ -63,3 +62,5 @@ export const CHARACTERS: Record<string, Character> = {
         defaultSide: 'right',
     },
 };
+
+export type CharacterId = keyof typeof CHARACTERS;

@@ -19,6 +19,7 @@ import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaTerminalWrapper } from '@/components/alpha/AlphaTerminalWrapper';
 import { ModuleLink } from '@/components/alpha/ModuleLink';
+import { HintSystem } from '@/components/ui/HintSystem';
 import { useEscapeGame } from '@/context/EscapeGameContext';
 import { SCENARIO } from '@/data/alphaScenario';
 import { MODULES, ModuleId } from '@/data/modules';
@@ -233,6 +234,24 @@ export default function DebugPage({
                             </AlphaTerminalWrapper>
                         </div>
                     </AlphaCard>
+
+                    {gameLogic && gameLogic.currentScenarioStep && !gameLogic.isGameWon && (
+                        <div className="my-4 flex justify-center">
+                            <HintSystem
+                                key={gameLogic.currentScenarioStep.id}
+                                step={gameLogic.currentScenarioStep}
+                                startTime={Number(
+                                    gameLogic.gameState?.lastStepTime ||
+                                        gameLogic.effectiveStartTime ||
+                                        Date.now()
+                                )}
+                                onShowScript={(script) => {
+                                    gameLogic.setAdminScript(script);
+                                    gameLogic.setAdminDialogueOpen(true);
+                                }}
+                            />
+                        </div>
+                    )}
 
                     {gameLogic && (
                         <AlphaButton

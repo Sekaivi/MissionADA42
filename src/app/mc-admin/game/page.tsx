@@ -271,12 +271,15 @@ function GameControlPanel() {
         const currentState = gameState as ExtendedGameState;
         const nextStep = (gameState.step || 0) + 1;
 
+        const actionTime = Date.now();
+
         await updateState({
             ...gameState,
             step: (gameState.step || 0) + 1,
             message: 'INTERVENTION ADMIN : NIVEAU PASSÉ',
             active_challenge: null,
-            lastUpdate: Date.now(),
+            lastStepTime: actionTime,
+            lastUpdate: actionTime,
             logs: [
                 ...(currentState.logs || []),
                 createLog('ADMIN', 'Force Skip Level', `Vers étape ${nextStep}`),
