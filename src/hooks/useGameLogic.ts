@@ -309,6 +309,7 @@ export const useGameLogic = (
             solverName: gameState.pendingProposal?.playerName || 'Commandement',
             solvedAt: now,
             duration: (now - startOfStep) / 1000,
+            lastStepTime: now,
         };
 
         const completedStep = gameState.step;

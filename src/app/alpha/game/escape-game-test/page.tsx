@@ -426,7 +426,9 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
 
     const [fallbackTime] = useState(() => Date.now());
 
-    const rawStepStartTime = gameState?.lastStepTime || logic.effectiveStartTime || fallbackTime;
+    const rawStepStartTime = gameState?.lastStepTime
+        ? gameState.lastStepTime
+        : (safeStep === 1 ? logic.effectiveStartTime : fallbackTime);
 
     const startTimeMs = Number(rawStepStartTime);
 

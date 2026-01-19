@@ -1,4 +1,6 @@
-export const CHARACTERS = {
+import { Character } from '@/types/dialogue';
+
+export const CHARACTERS: Record<string, Character> = {
     harry: {
         id: 'harry',
         name: 'Harry',
@@ -59,6 +61,6 @@ export const CHARACTERS = {
         },
         defaultSide: 'right',
     },
-} as const;
+};
 
 export type CharacterId = keyof typeof CHARACTERS;
