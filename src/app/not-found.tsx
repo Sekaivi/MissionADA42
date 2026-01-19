@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { HomeIcon } from '@heroicons/react/24/solid';
 import { motion, steps } from 'framer-motion';
@@ -23,6 +23,7 @@ const NOT_FOUND_SCRIPT: DialogueLine[] = [
 
 export default function NotFound() {
     const [isDialogueOpen, setIsDialogueOpen] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const timer = setTimeout(() => setIsDialogueOpen(true), 1000);
@@ -109,18 +110,17 @@ export default function NotFound() {
                             </p>
                         </div>
 
-                        <Link href="/" passHref className="w-full">
-                            <AlphaButton
-                                variant="danger"
-                                fullWidth
-                                className="group relative overflow-hidden"
-                            >
-                                <span className="relative z-10 flex items-center justify-center gap-2">
-                                    <HomeIcon className="h-4 w-4" />
-                                    REBOOT SYSTEM
-                                </span>
-                            </AlphaButton>
-                        </Link>
+                        <AlphaButton
+                            onClick={() => router.push('/')}
+                            variant="danger"
+                            fullWidth
+                            className="group relative overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                                <HomeIcon className="h-4 w-4" />
+                                REBOOT SYSTEM
+                            </span>
+                        </AlphaButton>
                     </div>
                 </AlphaCard>
             </motion.div>
