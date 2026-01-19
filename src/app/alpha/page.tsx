@@ -14,7 +14,7 @@ import {
     GlobeAltIcon,
     LockOpenIcon,
     MapIcon,
-    MapPinIcon,
+    MapPinIcon, MicrophoneIcon,
     PencilIcon,
     PhotoIcon,
     PlusIcon,
@@ -33,6 +33,7 @@ import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { ModuleLink } from '@/components/alpha/ModuleLink';
 import { ModuleGroup } from '@/types/alpha/module';
+import {FireIcon} from "@heroicons/react/24/solid";
 
 const ALPHA_MODULES: ModuleGroup[] = [
     {
@@ -211,6 +212,28 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 isGame: true,
             },
         ],
+    },
+    {
+        title: 'Microphone',
+        icon: MicrophoneIcon,
+        headerColor: 'text-brand-purple',
+        items: [
+            {
+                href: '/alpha/mic/mic-only',
+                title: 'Module microphone',
+                subtitle:
+                    '',
+                icon: MicrophoneIcon,
+            },
+            {
+                href: '/alpha/mic/firewall-puzzle-page',
+                title: 'Jeu du pare-feu',
+                subtitle:
+                    '',
+                icon: FireIcon,
+                isGame: true
+            },
+        ]
     },
     {
         title: 'Jeux divers',

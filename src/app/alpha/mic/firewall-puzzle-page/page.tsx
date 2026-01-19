@@ -99,14 +99,6 @@ export default function FirewallGame() {
 
     return (
         <>
-            <style jsx global>{`
-                .fan-smooth {
-                    transition:
-                        transform 0.1s linear,
-                        color 0.5s ease;
-                }
-            `}</style>
-
             <AlphaHeader
                 title="Pare-feu : Surchauffe"
                 subtitle="Refroidissement d'urgence requis"
@@ -195,7 +187,7 @@ export default function FirewallGame() {
                                     {/* Le Ventilo */}
                                     <svg
                                         viewBox="0 0 24 24"
-                                        className={`fan-smooth h-16 w-16 ${mic.isBlowing && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
+                                        className={`fan-smooth transition-colors duration-100 h-16 w-16 ${mic.isBlowing && isStable ? 'text-cyan-400' : 'text-neutral-700'}`}
                                         fill="none"
                                         stroke="currentColor"
                                         strokeWidth="2"

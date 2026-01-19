@@ -66,7 +66,7 @@ export function useFirewallLogic({ isActive, orientation, isBlowing, onWin }: Fi
                 let nextTemp = prev + 0.15;
 
                 if (isCurrentlyStable && current.isBlowing) {
-                    nextTemp -= 0.9;
+                    nextTemp -= 3.5;
                 }
 
                 if (nextTemp <= 50) {
