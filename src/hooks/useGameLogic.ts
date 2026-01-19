@@ -5,7 +5,7 @@ import { CHARACTERS } from '@/data/characters';
 import { useGameEffects } from '@/hooks/useGameEffects';
 import { useGameSync } from '@/hooks/useGameSync';
 import { DialogueLine } from '@/types/dialogue';
-import { GameLogEntry, LogType, InventoryItem } from '@/types/game';
+import { GameLogEntry, InventoryItem, LogType } from '@/types/game';
 import { say } from '@/utils/dialogueUtils';
 
 export const createLog = (type: LogType, message: string, details?: string): GameLogEntry => ({
@@ -399,7 +399,6 @@ export const useGameLogic = (
         : Math.min(theoreticalEndTime, currentTime + currentTotalDuration * 1000);
     const activePuzzleId = currentScenarioStep?.componentId;
 
-
     const addItemToInventory = async (
         item: InventoryItem,
         // change le type pour accepter la fonction
@@ -470,6 +469,6 @@ export const useGameLogic = (
         submitModuleAction,
         isHost,
         leaveGame,
-        addItemToInventory
+        addItemToInventory,
     };
 };

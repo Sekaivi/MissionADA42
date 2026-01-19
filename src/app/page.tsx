@@ -405,7 +405,7 @@ const GameContent = () => {
             </div>
 
             {/* VUE DEBUG */}
-            <div className={isAlternateView ? '_DEBUG_CONTENT my-4 space-y-4' : 'hidden'}>
+            <div className={isAlternateView ? '_DEBUG_CONTENT mt-4 space-y-4 pb-[20px]' : 'hidden'}>
                 <DebugPage
                     currentTab={currentTab}
                     onTabChange={handleTabChange}

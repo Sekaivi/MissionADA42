@@ -9,10 +9,10 @@ import { MicrophoneModule } from '@/components/Tutorial/MicrophoneModule';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaQRScanner } from '@/components/alpha/AlphaQRScanner';
+import { useEscapeGame } from '@/context/EscapeGameContext';
+import { ITEMS_REGISTRY } from '@/data/items';
 import { MODULES, ModuleId } from '@/data/modules';
-import {useEscapeGame} from "@/context/EscapeGameContext";
-import {ITEMS_REGISTRY} from "@/data/items";
-import {InventoryItem} from "@/types/game";
+import { InventoryItem } from '@/types/game';
 
 /**
  * transforme n'importe quelle donnée en objet JSON valide (Record<string, unknown>)

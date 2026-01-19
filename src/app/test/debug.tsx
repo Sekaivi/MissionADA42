@@ -15,9 +15,9 @@ import {
 import { PlayIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
+import { LogTerminal } from '@/components/LogTerminal';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
-import { AlphaTerminalWrapper } from '@/components/alpha/AlphaTerminalWrapper';
 import { ModuleLink } from '@/components/alpha/ModuleLink';
 import { HintSystem } from '@/components/ui/HintSystem';
 import { useEscapeGame } from '@/context/EscapeGameContext';
@@ -98,7 +98,7 @@ export default function DebugPage({
         <>
             {/* TAB: TERMINAL */}
             {currentTab === 'home' && (
-                <div className="space-y-4">
+                <>
                     {/* infos de session */}
                     {gameLogic && (
                         <AlphaCard
@@ -215,23 +215,10 @@ export default function DebugPage({
                             )}
 
                             {/* historique classique */}
-                            <AlphaTerminalWrapper>
-                                <div className="space-y-1 font-mono text-xs">
-                                    <div className="text-brand-emerald mb-2">
-                                        {'>'} SYSTEM_READY...
-                                    </div>
-                                    {gameLogic?.gameState?.history?.map((entry, i) => (
-                                        <div key={i} className="border-border mb-1 border-l-2 pl-2">
-                                            <span className="text-muted text-xs">
-                                                {new Date(entry.solvedAt).toLocaleTimeString()}
-                                            </span>
-                                            <div className="text-brand-blue">
-                                                [{entry.solverName}] step_{entry.step} OK
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AlphaTerminalWrapper>
+                            <LogTerminal
+                                logs={gameLogic?.gameState?.logs || []}
+                                systemMessage={gameLogic?.gameState?.message}
+                            />
                         </div>
                     </AlphaCard>
 
@@ -264,7 +251,7 @@ export default function DebugPage({
                             {isLeaving ? 'Déconnexion...' : 'Quitter'}
                         </AlphaButton>
                     )}
-                </div>
+                </>
             )}
 
             {/* TAB: MODULES */}
