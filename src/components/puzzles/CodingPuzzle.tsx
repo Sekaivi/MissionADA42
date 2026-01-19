@@ -62,21 +62,21 @@ const MESSAGE_CONFIG: Record<
     }
 > = {
     win: {
-        title: 'ACCESS GRANTED',
-        description: 'Root privileges acquired.\nSystem unlocked.',
-        actionLabel: 'EXIT_SYSTEM()',
+        title: 'ACCÈS AUTORISÉ',
+        description: 'Autorisations root accordées.\nSystème dévérouillé.',
+        actionLabel: 'SORTIE_SYSTÈME()',
         variant: 'success',
     },
     breach: {
-        title: '/// SECURITY BREACH ///',
-        description: 'Firewall counter-measures detected.\nCode complexity increased.',
-        actionLabel: 'RETRY_CONNECT()',
+        title: '/// FAILLE DE SÉCURITÉ ///',
+        description: 'Menaces contre le pare-feu détectées.\nComplexité du code augmentée.',
+        actionLabel: 'REDEMARRAGE()',
         variant: 'error',
         titleClass: 'animate-pulse glitch-effect',
     },
     lockdown: {
-        title: 'SYSTEM LOCKDOWN',
-        description: 'Too many failed attempts.\nSystem requires manual reboot.',
+        title: 'VEROUILLAGE DU SYSTÈME',
+        description: "Trop d'essais ratés.\nRedémarrage manuel du système requis",
         actionLabel: 'REBOOT_SYSTEM()',
         variant: 'error',
     },
@@ -488,9 +488,14 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts
                     <AlphaButton onClick={verifyCode} className="mx-auto">
                         EXECUTE_CODE()
                     </AlphaButton>
-                    <p className="text-muted text-center">
-                        Tap a block to select • Tilt device to move
-                    </p>
+                    <div className="text-muted text-center space-y-3">
+                        <p>
+                            Touchez un bloc pour le sélectionner.
+                        </p>
+                        <p>
+                            Inclinez le téléphone pour le déplacer.
+                        </p>
+                    </div>
                 </div>
             )}
         </div>
