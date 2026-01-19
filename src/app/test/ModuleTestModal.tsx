@@ -9,7 +9,10 @@ import { MicrophoneModule } from '@/components/Tutorial/MicrophoneModule';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaQRScanner } from '@/components/alpha/AlphaQRScanner';
+import { useEscapeGame } from '@/context/EscapeGameContext';
+import { ITEMS_REGISTRY } from '@/data/items';
 import { MODULES, ModuleId } from '@/data/modules';
+import { InventoryItem } from '@/types/game';
 
 /**
  * transforme n'importe quelle donnée en objet JSON valide (Record<string, unknown>)
@@ -36,6 +39,43 @@ export const ModuleTestModal = ({
     onSuccess,
     isTutorial = false,
 }: ModuleTestModalProps) => {
+    const { logic } = useEscapeGame();
+
+    const handleScan = (scanData: string) => {
+        // on tente de trouver l'objet dans le registre
+        // scanData peut être un ID ("12") ou du texte brut ("https://...")
+        const itemDef = ITEMS_REGISTRY[scanData];
+
+        // si c'est un objet connu
+        if (itemDef) {
+            const { onCollectScript, ...itemData } = itemDef;
+            const newItem: InventoryItem = {
+                ...itemData,
+                isFound: true,
+            };
+
+            if (logic?.addItemToInventory) {
+                logic.addItemToInventory(newItem, onCollectScript);
+
+                // en tuto on valide aussi le module techniquement
+                if (isTutorial) {
+                    onSuccess('qr_scanner', { status: 'calibrated', content: scanData });
+                }
+                return true;
+            }
+        }
+
+        // si objet inconnu, mais on est en Tutoriel => accepté pour valider la calibration
+        if (isTutorial) {
+            onSuccess('qr_scanner', { status: 'calibrated', content: scanData });
+            return true;
+        }
+
+        // si objet inconnu en jeu normal => ignoré
+        console.warn(`Objet inconnu scanné : ${scanData}`);
+        return false;
+    };
+
     const [isSimulating, setIsSimulating] = useState(false);
     const moduleConfig = MODULES.find((m) => m.id === moduleId);
 
@@ -113,14 +153,7 @@ export const ModuleTestModal = ({
                     )}
 
                     <AlphaQRScanner
-                        onScan={(code) => {
-                            if (code && code.length > 0) {
-                                // renvoie le contenu du QR Code
-                                onSuccess('qr_scanner', { content: code, format: 'qr_code' });
-                                return true;
-                            }
-                            return false;
-                        }}
+                        onScan={handleScan}
                         // Fallback
                         onSolve={() => onSuccess('qr_scanner', { status: 'manual_override' })}
                     />

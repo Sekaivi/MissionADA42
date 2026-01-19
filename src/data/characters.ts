@@ -30,8 +30,8 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'system',
         name: 'SYSTEM',
         avatars: {
-            default: '/images/avatars/mettaton.webp',
-            error: '/images/avatars/mettaton_error.webp',
+            default: '/images/avatars/system/mettaton.png',
+            error: '/images/avatars/system/mettaton_error.png',
         },
         defaultSide: 'left',
     },

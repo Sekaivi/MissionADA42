@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
+import { LogTerminal } from '@/components/LogTerminal';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
@@ -26,7 +27,6 @@ import { AlphaPuzzleHeader } from '@/components/alpha/AlphaGameHeader';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
 import { AlphaInfoRow } from '@/components/alpha/AlphaInfoRow';
 import { AlphaInput } from '@/components/alpha/AlphaInput';
-import { AlphaTerminalWrapper } from '@/components/alpha/AlphaTerminalWrapper';
 import { AlphaTitle } from '@/components/alpha/AlphaTitle';
 import { SCENARIO } from '@/data/alphaScenario';
 import { createLog } from '@/hooks/useGameLogic';
@@ -140,39 +140,7 @@ function GameControlPanel() {
         return () => clearInterval(interval);
     }, []);
 
-    const historyRef = React.useRef<HTMLDivElement>(null);
-    // si l'utilisateur regarde l'historique
-    const isUserScrolledUp = React.useRef(false);
-    // nombre de logs précédents pour ne scroller que s'il y a du nouveau
-    const prevLogLength = React.useRef(0);
-
     const state = gameState as ExtendedGameState;
-    const currentLogs = state?.logs || [];
-
-    // détecter si l'utilisateur scrolle manuellement vers le haut
-    const handleScroll = useCallback(() => {
-        if (!historyRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = historyRef.current;
-
-        // si on est à plus de 50px du bas, on considère que l'user regarde l'historique
-        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
-        isUserScrolledUp.current = !isAtBottom;
-    }, []);
-
-    useEffect(() => {
-        if (!historyRef.current) return;
-
-        const hasNewLogs = currentLogs.length > prevLogLength.current;
-
-        // on scroll auto si
-        // premier chargement (prevLogLength === 0)
-        // nouveaux logs ET l'utilisateur n'est pas en train de lire l'historique
-        if (prevLogLength.current === 0 || (hasNewLogs && !isUserScrolledUp.current)) {
-            historyRef.current.scrollTop = historyRef.current.scrollHeight;
-        }
-
-        prevLogLength.current = currentLogs.length;
-    }, [currentLogs.length]);
 
     useEffect(() => {
         if (!gameCode) router.push('/mc-admin');
@@ -348,53 +316,7 @@ function GameControlPanel() {
                         />
 
                         {/* log */}
-                        <AlphaTerminalWrapper>
-                            <div
-                                onScroll={handleScroll}
-                                className={'max-h-[200px] overflow-y-scroll'}
-                                ref={historyRef}
-                            >
-                                {state.logs && state.logs.length > 0 ? (
-                                    [...state.logs].map((log) => (
-                                        <div
-                                            key={log.id}
-                                            className="flex gap-2 font-mono text-xs opacity-80 transition-opacity hover:opacity-100"
-                                        >
-                                            <span className="text-muted">
-                                                {new Date(log.timestamp).toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                    second: '2-digit',
-                                                })}
-                                            </span>
-                                            <span
-                                                className={clsx(
-                                                    'w-10 text-right font-bold',
-                                                    log.type === 'ADMIN' && 'text-brand-purple',
-                                                    log.type === 'ERROR' && 'text-brand-error',
-                                                    log.type === 'WARNING' && 'text-brand-yellow',
-                                                    log.type === 'SUCCESS' && 'text-brand-emerald',
-                                                    log.type === 'PLAYER' && 'text-brand-blue',
-                                                    (log.type === 'INFO' || !log.type) &&
-                                                        'text-gray-400'
-                                                )}
-                                            >
-                                                [{log.type ? log.type.substring(0, 3) : 'SYS'}]
-                                            </span>
-                                            <span className="truncate text-gray-300">
-                                                {log.message}
-                                            </span>{' '}
-                                            :<span>{log.details}</span>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-gray-500 italic">
-                                        <span className="mr-2 opacity-50">&gt;</span>
-                                        {state.message || 'Système nominal...'}
-                                    </div>
-                                )}
-                            </div>
-                        </AlphaTerminalWrapper>
+                        <LogTerminal logs={state.logs || []} systemMessage={state.message} />
                     </AlphaCard>
 
                     <AlphaCard

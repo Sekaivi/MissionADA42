@@ -62,6 +62,7 @@ export interface GameState {
     active_challenge?: ChallengeCommand | null; // canal 2 : défis bloquants persistants
     bonusTime?: number; // temps ajouté/retiré en MINUTES (ex: 5, -2)
     logs?: GameLogEntry[];
+    inventory?: InventoryItem[];
 }
 
 export type AdminCommandType = 'MESSAGE' | 'GLITCH' | 'INVERT' | 'SKIP' | 'ADD_TIME'; // commandes éphémères
@@ -77,4 +78,12 @@ export interface ChallengeCommand {
     id: number;
     type: ChallengeType;
     payload?: string | number | Record<string, unknown>; // accepte string, nombre, ou objet générique (ex: { difficulty: 1 })
+}
+
+export interface InventoryItem {
+    id: string;
+    name: string;
+    desc: string;
+    isFound: boolean; // pour savoir si on l'a déjà ou non
+    sprite: string; // chemin vers l'image
 }

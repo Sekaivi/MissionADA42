@@ -91,8 +91,8 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.paj,
-            "Vous aurez évidemment relevé le choix de nom spécial pour une tâche tout aussi spéciale..."
-        )
+            'Vous aurez évidemment relevé le choix de nom spécial pour une tâche tout aussi spéciale...'
+        ),
     ],
     debug_pres_home: [
         say(
@@ -405,7 +405,7 @@ const GameContent = () => {
             </div>
 
             {/* VUE DEBUG */}
-            <div className={isAlternateView ? '_DEBUG_CONTENT my-4 space-y-4' : 'hidden'}>
+            <div className={isAlternateView ? '_DEBUG_CONTENT mt-4 space-y-4 pb-[20px]' : 'hidden'}>
                 <DebugPage
                     currentTab={currentTab}
                     onTabChange={handleTabChange}

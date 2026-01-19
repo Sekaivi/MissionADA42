@@ -5,7 +5,7 @@ import { CHARACTERS } from '@/data/characters';
 import { useGameEffects } from '@/hooks/useGameEffects';
 import { useGameSync } from '@/hooks/useGameSync';
 import { DialogueLine } from '@/types/dialogue';
-import { GameLogEntry, LogType } from '@/types/game';
+import { GameLogEntry, InventoryItem, LogType } from '@/types/game';
 import { say } from '@/utils/dialogueUtils';
 
 export const createLog = (type: LogType, message: string, details?: string): GameLogEntry => ({
@@ -399,6 +399,50 @@ export const useGameLogic = (
         : Math.min(theoreticalEndTime, currentTime + currentTotalDuration * 1000);
     const activePuzzleId = currentScenarioStep?.componentId;
 
+    const addItemToInventory = async (
+        item: InventoryItem,
+        // change le type pour accepter la fonction
+        scriptDefinition?: DialogueLine[] | ((inv: InventoryItem[]) => DialogueLine[])
+    ) => {
+        if (!gameState) return;
+
+        // vérif doublon
+        const currentInventory = gameState.inventory || [];
+        const alreadyHasItem = currentInventory.some((i) => i.id === item.id);
+        if (alreadyHasItem) return;
+
+        // résolution du script
+        let scriptToPlay: DialogueLine[] = [];
+
+        if (scriptDefinition) {
+            if (typeof scriptDefinition === 'function') {
+                // exécute la fonction avec l'inventaire actuel (avant l'ajout du nouvel objet)
+                scriptToPlay = scriptDefinition(currentInventory);
+            } else {
+                // tableau simple
+                scriptToPlay = scriptDefinition;
+            }
+        }
+
+        // màj l'inventaire
+        await updateState({
+            ...gameState,
+            inventory: [...currentInventory, item],
+            lastUpdate: Date.now(),
+            logs: [
+                ...(gameState.logs || []),
+                createLog('SUCCESS', 'Inventaire mis à jour', `Objet trouvé : ${item.name}`),
+            ],
+        });
+
+        if (scriptToPlay.length > 0) {
+            setTimeout(() => {
+                setAdminScript(scriptToPlay);
+                setAdminDialogueOpen(true);
+            }, 500);
+        }
+    };
+
     return {
         gameState,
         updateState,
@@ -425,5 +469,6 @@ export const useGameLogic = (
         submitModuleAction,
         isHost,
         leaveGame,
+        addItemToInventory,
     };
 };

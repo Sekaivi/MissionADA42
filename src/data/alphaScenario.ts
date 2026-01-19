@@ -3,8 +3,7 @@ import { Scenario } from '@/types/scenario';
 export const SCENARIO: Scenario = {
     id: 'scenario_alpha_01',
     name: 'Mission Ada42',
-    description:
-        '',
+    description: '',
     defaultDuration: 3600,
     defaultTimeBeforeNextStep: 3000,
     steps: [

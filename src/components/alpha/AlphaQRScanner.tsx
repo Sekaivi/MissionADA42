@@ -9,25 +9,43 @@ import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 
-type ScannerStatus = PuzzlePhases | 'evidence';
+// URL OBLIGATOIRE pour les objets d'inventaire
+const ACCEPTED_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+// On ajoute 'foreign' pour gérer les codes inconnus sans erreur
+type ScannerStatus = PuzzlePhases | 'evidence' | 'foreign';
 
 interface AlphaQRScannerProps extends PuzzleProps {
     target?: string;
     onScan?: (code: string) => boolean;
 }
 
+// Petit utilitaire pour l'affichage UI
+const isValidUrl = (string: string) => {
+    try {
+        const url = new URL(string.trim());
+        return ['http:', 'https:'].includes(url.protocol);
+    } catch {
+        return false;
+    }
+};
+
 export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps) => {
     const elementId = 'reader-stream';
 
     const [lastResult, setLastResult] = useState<string | null>(null);
     const [scanStatus, setScanStatus] = useState<ScannerStatus>('idle');
+    const [extractedId, setExtractedId] = useState<string | null>(null); // Pour l'affichage de l'ID extrait
 
+    // Refs pour garder les valeurs à jour dans le callback du scanner
     const lastResultRef = useRef<string | null>(null);
     const onResultRef = useRef(onSolve);
     const onScanRef = useRef(onScan);
     const targetRef = useRef(target);
+
+    // Refs techniques
     const scannerRef = useRef<Html5Qrcode | null>(null);
-    const mountRef = useRef<HTMLDivElement>(null);
+    const mountRef = useRef<HTMLDivElement>(null); // Typage correct ici
     const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -53,69 +71,78 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
                 scannerRef.current = html5QrCode;
 
                 const qrBoxSize = (viewfinderWidth: number, viewfinderHeight: number) => {
-                    // on prend 60% du plus petit côté pour être sûr que la zone de scan rentre dans l'écran quel que soit le zoom
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                     const size = Math.floor(minEdge * 0.6);
-                    return {
-                        width: size,
-                        height: size,
-                    };
+                    return { width: size, height: size };
                 };
 
                 await html5QrCode.start(
                     { facingMode: 'environment' },
-                    {
-                        fps: 10,
-                        qrbox: qrBoxSize,
-                    },
+                    { fps: 10, qrbox: qrBoxSize },
 
-                    // callback succès
+                    // --- CALLBACK SUCCÈS ---
                     (decodedText) => {
-                        if (decodedText === lastResultRef.current) return;
+                        const cleanText = decodedText.trim();
 
-                        lastResultRef.current = decodedText;
-                        setLastResult(decodedText);
+                        if (cleanText === lastResultRef.current) return;
 
-                        // target check
-                        if (targetRef.current && decodedText.trim() === targetRef.current.trim()) {
+                        lastResultRef.current = cleanText;
+                        setLastResult(cleanText);
+
+                        // 1. TARGET CHECK (GAGNÉ)
+                        if (targetRef.current && cleanText === targetRef.current.trim()) {
                             setScanStatus('win');
                             setTimeout(() => {
                                 onResultRef.current();
-                                html5QrCode.pause();
+                                try {
+                                    html5QrCode.pause();
+                                } catch (e) {
+                                    console.error(e);
+                                }
                             }, SCENARIO.defaultTimeBeforeNextStep);
                             return;
                         }
 
-                        // evidence check
-                        if (onScanRef.current) {
-                            const isUseful = onScanRef.current(decodedText);
-                            if (isUseful) {
-                                setScanStatus('evidence');
-                                if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
-                                errorTimeoutRef.current = setTimeout(() => {
-                                    setScanStatus('idle');
-                                    lastResultRef.current = null;
-                                }, 3000);
-                                return;
+                        // 2. EVIDENCE CHECK (Preuve via URL avec proofId)
+                        if (cleanText.startsWith(ACCEPTED_BASE_URL)) {
+                            try {
+                                // On parse l'URL pour extraire proprement les paramètres
+                                const urlObj = new URL(cleanText);
+                                const proofId = urlObj.searchParams.get('proofId'); // Ex: récupère "34"
+
+                                if (proofId && onScanRef.current) {
+                                    // On envoie JUSTE l'ID à la fonction d'inventaire
+                                    const isUseful = onScanRef.current(proofId);
+
+                                    if (isUseful) {
+                                        setExtractedId(proofId); // Pour l'affichage UI
+                                        setScanStatus('evidence');
+                                        resetStatusAfterDelay(3000);
+                                        return;
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('URL invalide malgré le préfixe', error);
                             }
                         }
-
-                        // fail
-                        setScanStatus('lose');
-                        if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
-                        errorTimeoutRef.current = setTimeout(() => {
-                            setScanStatus('idle');
-                            lastResultRef.current = null;
-                        }, 2000);
+                        // 3. FOREIGN CHECK (CODE INCONNU / EXTERNE)
+                        setScanStatus('foreign');
+                        resetStatusAfterDelay(2000);
                     },
-
-                    // callback erreur
                     () => {}
                 );
             } catch (err) {
                 console.error('Erreur caméra', err);
                 setScanStatus('lose');
             }
+        };
+
+        const resetStatusAfterDelay = (ms: number) => {
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+            errorTimeoutRef.current = setTimeout(() => {
+                setScanStatus('idle');
+                lastResultRef.current = null;
+            }, ms);
         };
 
         const timer = setTimeout(initScanner, 300);
@@ -132,22 +159,34 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
         };
     }, []);
 
+    // --- GESTION DE L'UI ---
+
     let feedbackMessage = 'RECHERCHE DE SIGNAL...';
     let feedbackType: 'info' | 'success' | 'error' | 'warning' = 'info';
     let containerBorderClass = 'border-brand-emerald/20';
     let textClass = 'text-brand-emerald';
+    let dataTypeLabel = 'RAW DATA';
 
     if (scanStatus === 'win') {
         feedbackMessage = 'CIBLE VERROUILLÉE';
         feedbackType = 'success';
         containerBorderClass = 'border-brand-emerald';
+        dataTypeLabel = 'MISSION TARGET';
     } else if (scanStatus === 'evidence') {
-        feedbackMessage = 'PREUVE RÉCUPÉRÉE';
+        feedbackMessage = "AJOUTÉE À L'INVENTAIRE" + (extractedId ? ` (ID: ${extractedId})` : '');
         feedbackType = 'success';
         containerBorderClass = 'border-brand-purple shadow-[0_0_20px_var(--color-brand-purple)]';
         textClass = 'text-brand-purple';
+        dataTypeLabel = 'SYSTEM DATA';
+    } else if (scanStatus === 'foreign') {
+        const isUrl = lastResult && isValidUrl(lastResult);
+        feedbackMessage = 'URL EXTERNE DÉTECTÉE';
+        feedbackType = 'warning';
+        containerBorderClass = 'border-brand-blue';
+        textClass = 'text-brand-blue';
+        dataTypeLabel = isUrl ? 'EXTERNAL LINK' : 'UNKNOWN DATA';
     } else if (scanStatus === 'lose') {
-        feedbackMessage = 'SIGNAL NON RECONNU';
+        feedbackMessage = 'ERREUR CAPTEUR';
         feedbackType = 'error';
         containerBorderClass = 'border-brand-error';
         textClass = 'text-brand-error';
@@ -169,9 +208,13 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
             />
 
             <div
-                className={`border-border bg-surface h-16 overflow-hidden rounded border p-2 font-mono text-xs break-all transition-colors ${textClass}`}
+                className={`border-border bg-surface relative min-h-[4rem] overflow-hidden rounded border p-2 font-mono text-xs break-all transition-colors ${textClass}`}
             >
-                <span className="mr-2 opacity-50">[DATA]:</span>
+                <div className="mb-1 flex items-center justify-between opacity-50">
+                    <span className="font-bold uppercase">[{dataTypeLabel}]</span>
+                    {scanStatus === 'foreign' && <span className="text-[10px]">IGNORED</span>}
+                </div>
+
                 {lastResult || (
                     <span className="text-muted animate-pulse opacity-50">
                         En attente de flux...
