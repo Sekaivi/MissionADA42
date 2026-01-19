@@ -1,16 +1,34 @@
 import React from 'react';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { PlayCircleIcon } from '@heroicons/react/24/solid';
 
 import { ModuleItem } from '@/types/alpha/module';
 
-export function ModuleLink({ href, title, subtitle, icon: Icon, isGame = false }: ModuleItem) {
+export function ModuleLink({
+    href,
+    onClick,
+    title,
+    subtitle,
+    icon: Icon,
+    isGame = false,
+}: ModuleItem) {
+    const router = useRouter();
+
+    const handleClick = () => {
+        if (href) {
+            router.push(href);
+        } else {
+            onClick?.();
+        }
+    };
+
     return (
-        <Link
-            href={href}
-            className={`group relative flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
+        <button
+            type="button"
+            onClick={handleClick}
+            className={`group relative flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
                 isGame
                     ? 'border-brand-emerald/30 bg-brand-emerald/10 hover:border-brand-emerald hover:bg-brand-emerald/20'
                     : 'border-border bg-surface hover:border-muted hover:bg-surface-highlight'
@@ -47,6 +65,6 @@ export function ModuleLink({ href, title, subtitle, icon: Icon, isGame = false }
             {isGame && (
                 <PlayCircleIcon className="text-brand-emerald h-8 w-8 opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
             )}
-        </Link>
+        </button>
     );
 }

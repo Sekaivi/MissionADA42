@@ -15,13 +15,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaError } from '@/components/alpha/AlphaError';
 import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
-import { PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { useCamera } from '@/hooks/useCamera';
 import { useColorDetection } from '@/hooks/useColorDetection';
 import { ColorDefinition } from '@/types/colorDetection';
 import { PRESETS } from '@/utils/colorPresets';
 
-interface ColorScannerProps extends PuzzleProps {
+interface ColorScannerProps {
+    onSolve: (detectedColor: ColorDefinition) => void;
+    isSolved?: boolean;
     targetColorId?: string;
     onFail?: () => void;
     sequenceHistory?: string[];
@@ -151,7 +152,7 @@ export const ColorScannerModule: React.FC<ColorScannerProps> = ({
                             if (navigator.vibrate) navigator.vibrate(200);
 
                             setTimeout(() => {
-                                onSolve();
+                                onSolve(detectedPreset);
                             }, 0);
 
                             setTimeout(() => setIsValidating(false), 1500);

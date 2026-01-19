@@ -30,11 +30,11 @@ export const AlphaButton = ({
         primary:
             'border-brand-emerald text-brand-emerald bg-brand-emerald/10 hover:bg-brand-emerald hover:text-black',
         secondary:
-            'border-border text-muted hover:border-foreground-highlight hover:text-foreground-highlight bg-transparent',
+            'border-border text-muted hover:border-foreground hover:text-foreground bg-transparent',
         danger: 'border-brand-error text-brand-error bg-brand-error/10 hover:bg-brand-error hover:text-white',
         warning:
             'border-brand-orange text-brand-orange bg-brand-orange/10 hover:bg-brand-orange hover:text-white',
-        ghost: 'border-transparent text-muted hover:text-brand-emerald hover:bg-white/5',
+        ghost: 'border-transparent text-muted hover:text-foreground hover:bg-transparent',
     };
 
     const sizes = {

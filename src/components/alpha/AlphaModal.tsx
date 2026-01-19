@@ -7,6 +7,7 @@ import {
     CheckCircleIcon,
     ExclamationTriangleIcon,
     InformationCircleIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -34,8 +35,18 @@ interface AlphaModalProps {
     durationUnit?: DurationUnit;
 
     onAutoClose?: () => void;
+
+    /** fonction appelée lors du clic sur la croix ou l'overlay */
     onClose?: () => void;
+
+    /** fonction appelée lors du clic sur le bouton principal */
+    onAction?: () => void;
+
+    /** label du bouton principal. Si non défini, le bouton n'apparaît que si onAction est présent */
     actionLabel?: string;
+
+    /** cacher la croix de fermeture */
+    hideCloseButton?: boolean;
 }
 
 const THEME_CONFIG = {
@@ -81,11 +92,14 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
     durationUnit = 's',
     onAutoClose,
     onClose,
-    actionLabel = 'Fermer',
+    onAction,
+    actionLabel = 'Valider',
+    hideCloseButton = false,
 }) => {
     const theme = THEME_CONFIG[variant];
     const DisplayIcon = Icon || theme.defaultIcon;
 
+    // hook pour éviter les erreurs d'hydratation Next.js avec les Portals
     const isClient = useSyncExternalStore(
         () => () => {},
         () => true,
@@ -97,13 +111,12 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
         if (!autoCloseDuration) return null;
 
         return {
-            // Framer Motion attend des secondes
             seconds: durationUnit === 's' ? autoCloseDuration : autoCloseDuration / 1000,
-            // setTimeout attend des ms
             ms: durationUnit === 'ms' ? autoCloseDuration : autoCloseDuration * 1000,
         };
     }, [autoCloseDuration, durationUnit]);
 
+    // timer Auto-close
     useEffect(() => {
         if (isOpen && durationData && onAutoClose) {
             const timer = setTimeout(onAutoClose, durationData.ms);
@@ -112,23 +125,23 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
     }, [isOpen, durationData, onAutoClose]);
 
     const target = typeof document !== 'undefined' ? document.body : null;
-    if (!isClient) return null;
-    if (!target) return null;
+    if (!isClient || !target) return null;
 
     const modalContent = (
         <AnimatePresence>
             {isOpen && (
                 <ThemedPortalWrapper>
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        {/* overlay */}
+                        {/* overlay ferme la modale si on clique à côté */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={onClose}
-                            className="absolute inset-0 bg-black/80"
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                         />
 
+                        {/* fenêtre modale */}
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -140,13 +153,22 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                 className={`bg-background border ${theme.border} rounded-xl ${theme.shadow} overflow-hidden`}
                             >
                                 <div
-                                    className={`${theme.bg} border-b p-2 text-center ${theme.border}`}
+                                    className={`${theme.bg} border-b p-2 text-center ${theme.border} relative`}
                                 >
                                     <p
                                         className={`text-xs font-black tracking-[0.2em] uppercase ${theme.primary}`}
                                     >
                                         {title || variant.toUpperCase()}
                                     </p>
+
+                                    {!hideCloseButton && onClose && (
+                                        <button
+                                            onClick={onClose}
+                                            className={`hover:bg-surface text-brand-error absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors`}
+                                        >
+                                            <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col items-center p-8 text-center">
@@ -175,11 +197,12 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
 
                                     {children && <div className="mt-4 w-full">{children}</div>}
 
-                                    {!durationData && onClose && (
+                                    {/* bouton d'action */}
+                                    {!durationData && onAction && (
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={onClose}
+                                            onClick={onAction}
                                             className={`mt-6 rounded-full border px-6 py-2 ${theme.border} ${theme.bg} ${theme.primary} hover:bg-opacity-40 text-xs font-bold tracking-wider uppercase transition-all`}
                                         >
                                             {actionLabel}
@@ -187,7 +210,7 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                     )}
                                 </div>
 
-                                {/* barre de progression */}
+                                {/* barre de progression (si auto-close) */}
                                 <div className="bg-foreground h-1 w-full">
                                     {durationData ? (
                                         <motion.div

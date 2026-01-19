@@ -1,7 +1,8 @@
 import React from 'react';
 
 export type ModuleItem = {
-    href: string;
+    href?: string;
+    onClick?: () => void;
     title: string;
     subtitle: string;
     icon: React.ElementType;

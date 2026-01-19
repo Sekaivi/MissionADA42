@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import { CpuChipIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
 import { AlphaButton } from '@/components/alpha/AlphaButton';
@@ -11,11 +12,8 @@ import { AlphaError } from '@/components/alpha/AlphaError';
 import AlphaFeedbackPill from '@/components/alpha/AlphaFeedbackPill';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaSuccess } from '@/components/alpha/AlphaSuccess';
-import { AlphaVideoContainer } from '@/components/alpha/AlphaVideoContainer';
 import { DialogueBox } from '@/components/dialogueBox';
 import { SCENARIO } from '@/data/alphaScenario';
-import { useCamera } from '@/hooks/useCamera';
-import { useColorDetection } from '@/hooks/useColorDetection';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { ColorDefinition } from '@/types/colorDetection';
 
@@ -23,7 +21,6 @@ import { PuzzlePhases, PuzzleProps } from './PuzzleRegistry';
 
 export type ChromaticPuzzlePhases = PuzzlePhases | 'memory' | 'scan';
 
-// def type de la config
 interface ChromaticConfig {
     sequence: ColorDefinition[];
 }
@@ -64,19 +61,19 @@ export const AlphaSequenceDisplay: React.FC<AlphaSequenceDisplayProps> = ({
                         key={index}
                         style={dynamicStyle}
                         className={clsx(
-                            'flex h-12 w-12 items-center justify-center rounded-full border-2 font-bold transition-all duration-300',
+                            'flex h-14 w-14 items-center justify-center rounded-full border-4 font-bold transition-all duration-300',
                             isMemory && 'scale-110 text-white shadow-lg',
-                            isCompleted && 'text-white opacity-50',
-                            isActive && 'scale-110 animate-pulse border-current bg-transparent',
-                            isPending && 'bg-surface-highlight border-border text-muted opacity-30'
+                            isCompleted && 'scale-90 text-white opacity-50',
+                            isActive && 'scale-125 animate-bounce border-current bg-transparent',
+                            isPending && 'border-gray-300 bg-gray-100 text-gray-300'
                         )}
                     >
                         {!isMemory && (
                             <>
                                 {isCompleted ? (
-                                    <CheckIcon className="h-6 w-6" />
+                                    <CheckIcon className="h-8 w-8" />
                                 ) : (
-                                    <QuestionMarkCircleIcon className="h-6 w-6" />
+                                    <QuestionMarkCircleIcon className="h-8 w-8" />
                                 )}
                             </>
                         )}
@@ -92,11 +89,9 @@ export const ChromaticPuzzle = ({
     isSolved,
     scripts = {},
     puzzleConfig,
+    lastModuleAction,
 }: PuzzleProps<ChromaticPuzzlePhases, ChromaticConfig>) => {
-    const GAME_PRESETS = useMemo(() => {
-        return puzzleConfig?.sequence || [];
-    }, [puzzleConfig?.sequence]);
-
+    const GAME_PRESETS = useMemo(() => puzzleConfig?.sequence || [], [puzzleConfig?.sequence]);
     const MEMO_TIME = useMemo(() => {
         return GAME_PRESETS.length > 0 ? Math.max(3, Math.ceil(GAME_PRESETS.length * 1.5)) : 0;
     }, [GAME_PRESETS.length]);
@@ -104,32 +99,19 @@ export const ChromaticPuzzle = ({
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<ChromaticPuzzlePhases>(scripts);
 
-    const { videoRef, error, isMirrored } = useCamera('environment');
-
-    const scanConfig = useMemo(() => ({ size: 180, xOffset: 0, yOffset: 0 }), []);
-
-    const activePresets = useMemo(() => GAME_PRESETS, [GAME_PRESETS]);
-
     const displayPhase = (gameState === 'idle' ? 'init' : gameState) as ChromaticPuzzlePhases;
 
     const [sequence, setSequence] = useState<string[]>([]);
     const [step, setStep] = useState(0);
     const [, setTimeLeft] = useState(MEMO_TIME);
     const [feedbackMsg, setFeedbackMsg] = useState('Initialisation...');
-    const [isValidating, setIsValidating] = useState(false);
-    const processingRef = useRef(false);
 
-    const { detectedId } = useColorDetection(
-        videoRef,
-        activePresets,
-        gameState === 'scan',
-        scanConfig
-    );
+    const lastProcessedActionTime = useRef<number>(0);
 
     const generateSequence = useCallback(() => {
-        if (GAME_PRESETS.length === 0) return; // sécurité
-
+        if (GAME_PRESETS.length === 0) return;
         const availableIds = GAME_PRESETS.map((p) => p.id);
+        // shuffle
         for (let i = availableIds.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [availableIds[i], availableIds[j]] = [availableIds[j], availableIds[i]];
@@ -143,19 +125,16 @@ export const ChromaticPuzzle = ({
         setStep(0);
         setTimeLeft(MEMO_TIME);
         setFeedbackMsg(`Mémorisez la séquence : ${MEMO_TIME}s`);
-
-        processingRef.current = false;
-        setIsValidating(false);
     }, [generateSequence, triggerPhase, MEMO_TIME]);
 
-    // timer
+    // timer phase mémoire
     useEffect(() => {
         if (gameState !== 'memory') return;
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     triggerPhase('scan');
-                    setFeedbackMsg("SCANNEZ LES OBJETS DANS L'ORDRE");
+                    setFeedbackMsg('SCANNEZ LES COULEURS VIA LE DEBUGGER');
                     return 0;
                 }
                 setFeedbackMsg(`Mémorisez la séquence : ${prev - 1}s`);
@@ -165,61 +144,56 @@ export const ChromaticPuzzle = ({
         return () => clearInterval(timer);
     }, [gameState, triggerPhase]);
 
-    // validation de la couleur détectée
+    // écoute module externe
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        if (gameState !== 'scan') return;
+        // pendant la phase de scan
 
-        if (gameState === 'scan' && detectedId && !processingRef.current) {
+        // SÉCURITÉ :
+        // si pas d'action, on sort
+        // si action déjà traitée (timestamp identique), on sort
+        if (!lastModuleAction || lastModuleAction.timestamp === lastProcessedActionTime.current) {
+            return;
+        }
+
+        // on flag comme traitée immédiatement pour ne pas y revenir
+        lastProcessedActionTime.current = lastModuleAction.timestamp;
+
+        console.log('ChromaticPuzzle : Nouvelle action reçue : ', lastModuleAction);
+
+        if (lastModuleAction?.id === 'color_scanner' && lastModuleAction.data) {
+            const scannedColorData = lastModuleAction.data;
+            const scannedId = scannedColorData.id;
+
             const expectedId = sequence[step];
+            const detectedPreset = GAME_PRESETS.find((p) => p.id === scannedId);
 
-            if (detectedId === expectedId) {
-                processingRef.current = true;
-
-                requestAnimationFrame(() => {
-                    setIsValidating(true);
-                    setFeedbackMsg(`Analyse en cours...`);
-                });
-
-                timer = setTimeout(() => {
-                    const colorName = GAME_PRESETS.find((p) => p.id === detectedId)?.name;
-
-                    setFeedbackMsg(`CORRECT ! ${colorName} validé.`);
+            setTimeout(() => {
+                if (scannedId === expectedId) {
+                    // succès
+                    setFeedbackMsg(`CORRECT ! ${detectedPreset?.name || 'Couleur'} validé.`);
                     const nextStep = step + 1;
                     setStep(nextStep);
 
-                    processingRef.current = false;
-                    setIsValidating(false);
-
                     if (nextStep >= sequence.length) {
                         triggerPhase('win');
-                        setFeedbackMsg('Séquence Complète.\nAccès Autorisé.');
+                        setFeedbackMsg('Séquence Complète. Accès Autorisé.');
                     }
-                }, 800);
-            }
-        }
-
-        return () => {
-            clearTimeout(timer);
-            if (processingRef.current) {
-                if (gameState === 'scan') {
-                    setFeedbackMsg('Analyse interrompue (mouvement détecté)');
+                } else {
+                    // erreur
+                    setFeedbackMsg(
+                        `ERREUR ! ${detectedPreset?.name || 'Couleur inconnue'} détecté.`
+                    );
+                    // TODO: reset ou pénalité ?
                 }
-                processingRef.current = false;
-                setIsValidating(false);
-            }
-        };
-    }, [detectedId, gameState, sequence, step, onSolve, triggerPhase, GAME_PRESETS]);
-
-    // init
-    useEffect(() => {
-        // ne pas lancer l'intro si pas de config
-        if (GAME_PRESETS.length > 0) {
-            triggerPhase('intro');
+            }, 0);
         }
-    }, [triggerPhase, GAME_PRESETS.length]);
+    }, [lastModuleAction, gameState, sequence, step, triggerPhase, GAME_PRESETS]);
 
-    // transitions automatiques après dialogues
     useScenarioTransition(gameState, isDialogueOpen, {
+        idle: () => {
+            if (GAME_PRESETS.length > 0) triggerPhase('intro');
+        },
         intro: startGame,
         win: () => {
             setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
@@ -227,12 +201,7 @@ export const ChromaticPuzzle = ({
     });
 
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE CHROMATIQUE VALIDÉE'} />;
-
-    // erreur si la config est manquante
-    if (GAME_PRESETS.length === 0)
-        return <AlphaError message="Erreur de configuration : séquence vide" />;
-
-    if (error) return <AlphaError message={error} />;
+    if (GAME_PRESETS.length === 0) return <AlphaError message="Erreur config" />;
 
     return (
         <div className="space-y-6">
@@ -250,52 +219,50 @@ export const ChromaticPuzzle = ({
                 durationUnit={'ms'}
             />
 
-            <AlphaCard title="Module de Sécurité Chromatique">
+            <AlphaCard title="Séquence de Sécurité">
                 <AlphaSequenceDisplay
                     sequence={sequence}
                     presets={GAME_PRESETS}
                     gameState={displayPhase}
                     step={step}
-                    className="mb-6"
+                    className="mt-4 mb-8"
                 />
 
                 <AlphaFeedbackPill
                     message={feedbackMsg}
-                    type={gameState === 'win' ? 'success' : 'info'}
-                    isLoading={gameState === 'intro' || (isValidating && gameState !== 'win')}
+                    type={
+                        gameState === 'win'
+                            ? 'success'
+                            : gameState === 'memory'
+                              ? 'warning'
+                              : 'info'
+                    }
+                    pulse={gameState === 'scan'}
                 />
-            </AlphaCard>
 
-            {gameState !== 'win' && (
-                <AlphaCard>
-                    <AlphaVideoContainer
-                        scanSettings={gameState === 'scan' ? scanConfig : undefined}
-                        label={gameState === 'scan' ? 'SCAN EN COURS' : 'ATTENTE'}
-                        videoRef={videoRef}
-                        isMirrored={isMirrored}
-                    >
-                        {detectedId && gameState === 'scan' && (
-                            <div className="absolute right-0 bottom-4 left-0 text-center">
-                                <span
-                                    className="border-border rounded border bg-black/80 px-3 py-1 font-bold text-white shadow-lg backdrop-blur-sm"
-                                    style={{
-                                        borderColor: GAME_PRESETS.find((p) => p.id === detectedId)
-                                            ?.displayHex,
-                                        color: GAME_PRESETS.find((p) => p.id === detectedId)
-                                            ?.displayHex,
-                                    }}
-                                >
-                                    {GAME_PRESETS.find((p) => p.id === detectedId)?.name}
-                                </span>
-                            </div>
-                        )}
-                    </AlphaVideoContainer>
-                </AlphaCard>
-            )}
+                {gameState === 'scan' && (
+                    <AlphaCard>
+                        <div className="text-muted flex flex-col items-center gap-2 text-sm">
+                            <CpuChipIcon className="text-brand-purple h-8 w-8 animate-pulse" />
+                            <p>
+                                Utilisez le <strong>Scanner de Couleurs</strong> dans l'interface{' '}
+                                <span className="text-brand-purple font-mono font-bold">DEBUG</span>{' '}
+                                pour valider la séquence.
+                            </p>
+                            <p className="text-xs italic">Switch requis (Secouez le téléphone)</p>
+                        </div>
+                    </AlphaCard>
+                )}
+            </AlphaCard>
 
             {(gameState === 'scan' || gameState === 'win') && !isDialogueOpen && (
                 <div className="flex justify-center">
-                    <AlphaButton onClick={startGame}>Réinitialiser la séquence</AlphaButton>
+                    <AlphaButton onClick={startGame} variant="secondary" size="sm">
+                        <div className="flex items-center gap-2">
+                            <ArrowPathIcon className="h-4 w-4" />
+                            Réessayer
+                        </div>
+                    </AlphaButton>
                 </div>
             )}
         </div>

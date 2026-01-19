@@ -7,6 +7,7 @@ interface CardProps {
     className?: string;
     contentClassName?: string;
     title?: string;
+    icon?: React.ElementType;
     action?: ReactNode; // bouton optionnel en haut à droite
     progress?: number; // pourcentage d'une étape
 }
@@ -14,6 +15,7 @@ interface CardProps {
 export const AlphaCard = ({
     title,
     children,
+    icon: Icon,
     action,
     className = '',
     contentClassName = '',
@@ -24,13 +26,16 @@ export const AlphaCard = ({
     >
         {title && (
             <div className="border-border bg-surface-highlight/30 flex items-center justify-between border-b px-4 py-3">
-                <h3 className="text-muted text-xs font-bold tracking-wider uppercase">{title}</h3>
-                {action && <div>{action}</div>}
+                <h3 className="text-muted flex items-center text-xs font-bold tracking-wider uppercase">
+                    {Icon && <Icon className="mr-2 h-3 w-3" />}
+                    {title}
+                </h3>
+                {action && <>{action}</>}
             </div>
         )}
-        <div className={`flex-1 p-4 ${contentClassName}`}>{children}</div>
+        <div className={`flex-1 space-y-4 p-4 ${contentClassName}`}>{children}</div>
 
-        {progress && (
+        {progress ? (
             <div className="bg-surface-highlight absolute bottom-0 left-0 h-1 w-full">
                 <motion.div
                     className="bg-brand-emerald h-full"
@@ -39,6 +44,8 @@ export const AlphaCard = ({
                     transition={{ duration: 0.5 }}
                 />
             </div>
+        ) : (
+            ''
         )}
     </div>
 );
