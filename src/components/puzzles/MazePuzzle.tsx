@@ -39,7 +39,7 @@ interface WallConfig {
 
 const GAME_DIMENSIONS = { width: 300, height: 400 };
 
-// Configuration du niveau (Restaurée depuis le code de référence)
+// Configuration du niveau
 const LEVEL_CONFIG = {
     time: 60,
     start: { x: 20, y: 10 },
@@ -81,9 +81,11 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
     // Ref pour éviter les re-renders inutiles lors de la mise à jour de isStabilizing
     const isStabilizingRef = useRef(false);
 
+    // initialiser les murs immédiatement avec LEVEL_CONFIG
     const gameState = useRef<GameState>({
-        player: { x: -100, y: -100, w: 20, h: 20 },
-        walls: [],
+        player: { x: LEVEL_CONFIG.start.x,
+            y: LEVEL_CONFIG.start.y, w: 20, h: 20 },
+        walls: JSON.parse(JSON.stringify(LEVEL_CONFIG.walls)), // Pré-chargement des murs
         vx: 0,
         vy: 0,
         lastTime: 0,
@@ -106,6 +108,7 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
         state.vy = 0;
         state.isLocked = true;
 
+        // réinitialisation propre lors du start/gameover
         state.walls = JSON.parse(JSON.stringify(LEVEL_CONFIG.walls));
         // Typage explicite ici pour éviter l'erreur linter
         state.walls.forEach((w: WallConfig) => {
@@ -293,6 +296,7 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
         ctx.font = 'bold 12px monospace';
         ctx.fillText('EXIT', target.x + 10, target.y + 20);
 
+        // dessin des murs (même s'ils ont h=0 au début, la boucle s'exécute)
         walls.forEach((w) => {
             const grad = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
             grad.addColorStop(0, '#ff0000');
@@ -437,7 +441,7 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
                                                 ACTIVER & JOUER
                                             </AlphaButton>
                                         ) : (
-                                            <AlphaButton onClick={() => triggerPhase('intro')}>
+                                            <AlphaButton onClick={() => triggerPhase('intro')} className={'mx-auto'}>
                                                 LANCER SÉQUENCE
                                             </AlphaButton>
                                         )}
