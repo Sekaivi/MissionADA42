@@ -10,6 +10,9 @@ import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { AlphaQRScanner } from '@/components/alpha/AlphaQRScanner';
 import { MODULES, ModuleId } from '@/data/modules';
+import {useEscapeGame} from "@/context/EscapeGameContext";
+import {ITEMS_REGISTRY} from "@/data/items";
+import {InventoryItem} from "@/types/game";
 
 /**
  * transforme n'importe quelle donnée en objet JSON valide (Record<string, unknown>)
@@ -36,6 +39,31 @@ export const ModuleTestModal = ({
     onSuccess,
     isTutorial = false,
 }: ModuleTestModalProps) => {
+    const { logic } = useEscapeGame();
+
+    const handleScan = (proofId: string) => {
+        const itemDef = ITEMS_REGISTRY[proofId];
+
+        if (!itemDef) {
+            console.warn(`Objet inconnu scanné : ${proofId}`);
+            return false;
+        }
+
+        const { onCollectScript, ...itemData } = itemDef;
+
+        const newItem: InventoryItem = {
+            ...itemData,
+            isFound: true,
+        };
+
+        if (logic?.addItemToInventory) {
+            logic.addItemToInventory(newItem, onCollectScript);
+            return true; // Succès
+        }
+
+        return true;
+    };
+
     const [isSimulating, setIsSimulating] = useState(false);
     const moduleConfig = MODULES.find((m) => m.id === moduleId);
 
@@ -113,14 +141,7 @@ export const ModuleTestModal = ({
                     )}
 
                     <AlphaQRScanner
-                        onScan={(code) => {
-                            if (code && code.length > 0) {
-                                // renvoie le contenu du QR Code
-                                onSuccess('qr_scanner', { content: code, format: 'qr_code' });
-                                return true;
-                            }
-                            return false;
-                        }}
+                        onScan={handleScan}
                         // Fallback
                         onSolve={() => onSuccess('qr_scanner', { status: 'manual_override' })}
                     />
