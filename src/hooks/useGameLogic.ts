@@ -30,6 +30,9 @@ export const useGameLogic = (
 ) => {
     const { gameState, updateState, error } = useGameSync(gameCode, initialIsHost);
 
+    // état pour la modale de trouvaille
+    const [newItemNotification, setNewItemNotification] = useState<InventoryItem | null>(null);
+
     // calcul dynamique du statut 'hôte' en checkant la liste des joueurs actuelle
     const isHost = useMemo(() => {
         if (!gameState?.players) return initialIsHost;
@@ -435,6 +438,9 @@ export const useGameLogic = (
             ],
         });
 
+        // modale pour la trouvaille
+        setNewItemNotification(item);
+
         if (scriptToPlay.length > 0) {
             setTimeout(() => {
                 setAdminScript(scriptToPlay);
@@ -442,6 +448,9 @@ export const useGameLogic = (
             }, 500);
         }
     };
+
+    // pour fermer la modale de trouvaille
+    const dismissItemNotification = () => setNewItemNotification(null);
 
     return {
         gameState,
@@ -470,5 +479,7 @@ export const useGameLogic = (
         isHost,
         leaveGame,
         addItemToInventory,
+        newItemNotification,
+        dismissItemNotification,
     };
 };

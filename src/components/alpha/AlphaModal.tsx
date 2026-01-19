@@ -195,7 +195,9 @@ export const AlphaModal: React.FC<AlphaModalProps> = ({
                                         </p>
                                     )}
 
-                                    {children && <div className="mt-4 w-full">{children}</div>}
+                                    {children && (
+                                        <div className="mt-4 w-full space-y-4">{children}</div>
+                                    )}
 
                                     {/* bouton d'action */}
                                     {!durationData && onAction && (

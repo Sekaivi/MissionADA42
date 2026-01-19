@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 
+import Image from 'next/image';
+
 import {
     ArrowRightEndOnRectangleIcon,
     BellAlertIcon,
@@ -18,6 +20,7 @@ import clsx from 'clsx';
 import { LogTerminal } from '@/components/LogTerminal';
 import { AlphaButton } from '@/components/alpha/AlphaButton';
 import { AlphaCard } from '@/components/alpha/AlphaCard';
+import { AlphaModal } from '@/components/alpha/AlphaModal';
 import { ModuleLink } from '@/components/alpha/ModuleLink';
 import { InventoryGrid } from '@/components/inventory/InventoryGrid';
 import { InventoryItemDetails } from '@/components/inventory/InventoryItemDetails';
@@ -54,14 +57,12 @@ export default function DebugPage({
 
     const [viewedItem, setViewedItem] = useState<InventoryItemUI | null>(null);
 
-    // Transformation des items du jeu vers le format UI
     const inventoryItems: InventoryItemUI[] = (gameLogic?.gameState?.inventory || []).map(
         (item) => ({
             id: item.id,
             name: item.name,
             description: item.desc,
-            sprite: item.sprite, // Le sprite (URL) est passé ici
-            // icon: <DocumentIcon /> // Fallback si pas de sprite
+            sprite: item.sprite,
         })
     );
 
@@ -110,8 +111,46 @@ export default function DebugPage({
         );
     };
 
+    const handleCloseItemModal = () => {
+        if (gameLogic) {
+            gameLogic.dismissItemNotification();
+            // onTabChange('evidence');
+        }
+    };
+
     return (
         <>
+            {/* MODALE DE DÉCOUVERTE D'OBJET */}
+            {gameLogic && (
+                <AlphaModal
+                    isOpen={!!gameLogic.newItemNotification}
+                    onClose={handleCloseItemModal}
+                    title="NOUVELLE PREUVE"
+                    message={`Vous avez récupéré : ${gameLogic.newItemNotification?.name}`}
+                    subMessage="Donnée décryptée. Consultez l'onglet PREUVES."
+                    variant="success"
+                >
+                    {gameLogic.newItemNotification?.sprite && (
+                        <div className="relative mx-auto h-24 w-24">
+                            <Image
+                                fill
+                                src={gameLogic.newItemNotification.sprite}
+                                alt="Item"
+                                className="h-full w-full object-contain drop-shadow-lg"
+                            />
+                        </div>
+                    )}
+
+                    <AlphaButton
+                        onClick={handleCloseItemModal}
+                        variant={'primary'}
+                        className={'mx-auto'}
+                    >
+                        Compris
+                    </AlphaButton>
+                </AlphaModal>
+            )}
+
             {/* TAB: TERMINAL */}
             {currentTab === 'home' && (
                 <>
@@ -287,12 +326,12 @@ export default function DebugPage({
                                     isLocked && 'pointer-events-none opacity-50',
                                     getHighlightClass(
                                         mod.id,
-                                        `rounded-lg transition-all ${
+                                        `rounded-xl border transition-all ${
                                             isActiveInGame
                                                 ? 'bg-brand-purple/20 border-brand-purple'
                                                 : showValidatedStyle
                                                   ? 'bg-brand-emerald/10 border-brand-emerald text-brand-emerald pointer-events-none opacity-70'
-                                                  : 'border-none'
+                                                  : 'border-none border-transparent'
                                         }`
                                     )
                                 )}
@@ -327,13 +366,6 @@ export default function DebugPage({
                     ) : (
                         // VUE GRILLE
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-muted text-xs font-bold uppercase">
-                                    Base de données : {inventoryItems.length} élément(s)
-                                </h3>
-                            </div>
-
-                            {/* Le bloc conditionnel doit être À L'INTÉRIEUR de la div flex-col */}
                             {inventoryItems.length > 0 ? (
                                 <InventoryGrid
                                     items={inventoryItems}
@@ -341,8 +373,8 @@ export default function DebugPage({
                                     variant="primary"
                                 />
                             ) : (
-                                <div className="border-border bg-surface flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center opacity-50">
-                                    <FolderOpenIcon className="mb-2 h-12 w-12" />
+                                <div className="border-border bg-surface flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed py-12 text-center opacity-50">
+                                    <FolderOpenIcon className="h-12 w-12" />
                                     <p className="font-mono text-sm">Aucune preuve collectée.</p>
                                     <p className="text-xs">
                                         Utilisez le SCANNER pour analyser l'environnement.

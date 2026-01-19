@@ -16,15 +16,15 @@ const SCRIPTS: Partial<Record<CodingPuzzlePhases, DialogueLine[]>> = {
     win: [
         say(
             CHARACTERS.unknown,
-            'Vous voyez le dev c’est pas si dur, vous faites les acteurs mais vous êtes juste encore plus flemmards que vous n’êtes bêtes !'
+            "Vous voyez le dev c'est pas si dur, vous faites les acteurs mais vous êtes juste encore plus flemmards que vous n'êtes bêtes !"
         ),
         say(
             CHARACTERS.unknown,
-            'En tout cas bravo, vous avez réussi cette étape. Mais n’oubliez pas qu’il vous reste peu de temps avant que MMI ne soit anéanti par mon magnifique virus !'
+            "En tout cas bravo, vous avez réussi cette étape. Mais n'oubliez pas qu'il vous reste peu de temps avant que MMI ne soit anéanti par mon magnifique virus !"
         ),
         say(
             CHARACTERS.unknown,
-            'Je parie que n’importe lequel d’entre vous serait incapable de coder un virus pareil même après la 3e année, alors bonne chance pour retrouver la clé USB !'
+            "Je parie que n'importe lequel d'entre vous serait incapable de coder un virus pareil même après la 3e année, alors bonne chance pour retrouver la clé USB !"
         ),
     ],
 };

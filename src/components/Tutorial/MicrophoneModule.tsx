@@ -108,9 +108,9 @@ export const MicrophoneModule: React.FC<PuzzleProps> = ({ onSolve, isSolved }) =
             <AlphaModal
                 isOpen={isValidating}
                 variant="success"
-                title="FLUX D'AIR CONFIRMÉ"
+                title="Microphone fonctionnel"
                 message="Analyse Terminée"
-                subMessage="Le système de ventilation a été réactivé."
+                subMessage="La détection sonore de l'environnement est opérationnelle."
                 Icon={SpeakerWaveIcon}
                 autoCloseDuration={SCENARIO.defaultTimeBeforeNextStep}
                 durationUnit={'ms'}

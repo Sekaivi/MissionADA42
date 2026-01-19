@@ -39,11 +39,11 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     intro: [
         say(
             CHARACTERS.fabien,
-            'Ah, bonjour à tous, ça fait plaisir de vous voir mobilisés et prêts à aider l’IUT.'
+            "Ah, bonjour à tous, ça fait plaisir de vous voir mobilisés et prêts à aider l'IUT."
         ),
         say(
             CHARACTERS.fabien,
-            'Bon les élèves de 3e année vous ont déjà expliqué la situation j’imagine, donc faisons court.'
+            "Bon les élèves de 3e année vous ont déjà expliqué la situation j'imagine, donc faisons court."
         ),
         say(
             CHARACTERS.fabien,
@@ -63,20 +63,20 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            'Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des deuxième années.'
+            "Il a menacé d'activer immédiatement le virus si ce puzzle n'était pas fait exclusivement par des étudiants en deuxième année."
         ),
         say(
             CHARACTERS.fabien,
-            "Merci de vous être portés volontaires pour trouver cette clé, activer l'antivirus et sauver l’IUT !"
+            "Merci de vous être portés volontaires pour trouver cette clé, activer l'antivirus et sauver l\'IUT !"
         ),
         say(
             CHARACTERS.fabien,
-            "D’ailleurs, même si ce n'est pas la priorité ultime, il faudrait aussi trouver l’identité de l’élève qui a créé ce virus..."
+            "D\'ailleurs, même si ce n'est pas la priorité ultime, il faudrait aussi trouver l\'identité de l\'élève qui a créé ce virus..."
         ),
         say(
             CHARACTERS.paj,
-            'Si on l’attrape, il subira les conséquences de ses actes et je m’en assurerai personnellement...',
-            {}
+            "Si on l'attrape, il subira les conséquences de ses actes et je m'en assurerai personnellement...",
+            { emotion: 'angry' }
         ),
         say(
             CHARACTERS.goguey,

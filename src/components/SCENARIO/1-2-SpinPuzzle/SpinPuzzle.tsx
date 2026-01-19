@@ -9,7 +9,7 @@ const SCRIPTS: Partial<Record<SpinPuzzlePhases, DialogueLine[]>> = {
     win: [
         say(
             CHARACTERS.unknown,
-            'Haha, vous êtes si ridicules... Allez je m’adapte à vous, la prochaine énigme sera ajustée à votre bassesse.'
+            "Haha, vous êtes si ridicules... Allez je m'adapte à vous, la prochaine énigme sera ajustée à votre bassesse."
         ),
     ],
 };

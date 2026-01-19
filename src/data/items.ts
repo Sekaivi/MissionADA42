@@ -18,7 +18,7 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
         id: '1',
         name: 'Liste_Notes_SAE203.pdf',
         desc: 'Un relevé de notes étonnamment excellent. Aucune mauvaise note !',
-        sprite: '',
+        sprite: '/images/clues/notes.png',
         onCollectScript: [
             say(
                 CHARACTERS.goguey,
@@ -27,11 +27,11 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
             say(CHARACTERS.fabien, "SAE 203... Il n'y a que des bonnes notes !"),
             say(
                 CHARACTERS.fabien,
-                'On dirait que notre piste de vengeance de la SAE de dev n’est pas la bonne...'
+                "On dirait que notre piste de vengeance de la SAE de dev n'est pas la bonne..."
             ),
             say(
                 CHARACTERS.fabien,
-                'Bon, ce genre de document nous aidera peut-être à trouver qui est à l’origine de ce virus et du vol de l’antivirus, mais en attendant, concentrez-vous sur la localisation de ce dernier.'
+                "Bon, ce genre de document nous aidera peut-être à trouver qui est à l'origine de ce virus et du vol de l'antivirus, mais en attendant, concentrez-vous sur la localisation de ce dernier."
             ),
         ],
     },
@@ -39,7 +39,7 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
         id: '2',
         name: 'Lettre_Motivation_MMI.pdf',
         desc: 'Une lettre de supplication adressée au grand chef de département, M. Lestideau.',
-        sprite: '',
+        sprite: '/images/clues/lettre_motiv.png',
         onCollectScript: (inventory) => {
             // vérifie si l'item 1 est déjà dans l'inventaire
             const hasItem1 = inventory.some((i) => i.id === '1');
@@ -48,7 +48,7 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
                 return [
                     say(
                         CHARACTERS.fabien,
-                        'Encore une pièce à conviction ! Je sens qu’on se rapproche…'
+                        "Encore une pièce à conviction ! Je sens qu'on se rapproche..."
                     ),
                 ];
             } else {
@@ -65,11 +65,11 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
         id: '3',
         name: 'Lettre_Refus_MMI.pdf',
         desc: 'Un document administratif froid avec un tampon "REFUSÉ".',
-        sprite: '',
+        sprite: '/images/clues/refus.png',
         onCollectScript: [
             say(
                 CHARACTERS.fabien,
-                'Et une de plus ! Je vais recouper les informations pendant que vous continuez à résoudre ce problème de virus, votre aide est très précieuse, merci.'
+                'Et un indice de plus ! Je vais recouper les informations pendant que vous continuez à résoudre ce problème de virus, votre aide est très précieuse, merci.'
             ),
         ],
     },
@@ -77,7 +77,7 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
         id: '4',
         name: 'Certificat_Scolarite_MPH.pdf',
         desc: "La preuve d'une réorientation subie et non choisie.",
-        sprite: '',
+        sprite: '/images/clues/certificat.png',
         onCollectScript: (inventory) => {
             const hasItem1 = inventory.some((i) => i.id === '1');
 
@@ -85,7 +85,7 @@ export const ITEMS_REGISTRY: Record<string, ItemDefinition> = {
                 return [
                     say(
                         CHARACTERS.fabien,
-                        'On n’est plus qu’à un pas. On devrait trouver notre malfaiteur dans quelques minutes seulement.'
+                        "On n'est plus qu'à un pas. On devrait trouver notre malfaiteur dans quelques minutes seulement."
                     ),
                 ];
             } else {

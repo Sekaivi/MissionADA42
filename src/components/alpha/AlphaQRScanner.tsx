@@ -20,20 +20,9 @@ interface AlphaQRScannerProps extends PuzzleProps {
     onScan?: (code: string) => boolean;
 }
 
-// Petit utilitaire pour l'affichage UI
-const isValidUrl = (string: string) => {
-    try {
-        const url = new URL(string.trim());
-        return ['http:', 'https:'].includes(url.protocol);
-    } catch {
-        return false;
-    }
-};
-
 export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps) => {
     const elementId = 'reader-stream';
 
-    const [lastResult, setLastResult] = useState<string | null>(null);
     const [scanStatus, setScanStatus] = useState<ScannerStatus>('idle');
     const [extractedId, setExtractedId] = useState<string | null>(null); // Pour l'affichage de l'ID extrait
 
@@ -87,7 +76,6 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
                         if (cleanText === lastResultRef.current) return;
 
                         lastResultRef.current = cleanText;
-                        setLastResult(cleanText);
 
                         // 1. TARGET CHECK (GAGNÉ)
                         if (targetRef.current && cleanText === targetRef.current.trim()) {
@@ -164,32 +152,23 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
     let feedbackMessage = 'RECHERCHE DE SIGNAL...';
     let feedbackType: 'info' | 'success' | 'error' | 'warning' = 'info';
     let containerBorderClass = 'border-brand-emerald/20';
-    let textClass = 'text-brand-emerald';
-    let dataTypeLabel = 'RAW DATA';
 
     if (scanStatus === 'win') {
         feedbackMessage = 'CIBLE VERROUILLÉE';
         feedbackType = 'success';
         containerBorderClass = 'border-brand-emerald';
-        dataTypeLabel = 'MISSION TARGET';
     } else if (scanStatus === 'evidence') {
         feedbackMessage = "AJOUTÉE À L'INVENTAIRE" + (extractedId ? ` (ID: ${extractedId})` : '');
         feedbackType = 'success';
         containerBorderClass = 'border-brand-purple shadow-[0_0_20px_var(--color-brand-purple)]';
-        textClass = 'text-brand-purple';
-        dataTypeLabel = 'SYSTEM DATA';
     } else if (scanStatus === 'foreign') {
-        const isUrl = lastResult && isValidUrl(lastResult);
         feedbackMessage = 'URL EXTERNE DÉTECTÉE';
         feedbackType = 'warning';
         containerBorderClass = 'border-brand-blue';
-        textClass = 'text-brand-blue';
-        dataTypeLabel = isUrl ? 'EXTERNAL LINK' : 'UNKNOWN DATA';
     } else if (scanStatus === 'lose') {
         feedbackMessage = 'ERREUR CAPTEUR';
         feedbackType = 'error';
         containerBorderClass = 'border-brand-error';
-        textClass = 'text-brand-error';
     }
 
     return (
@@ -206,21 +185,6 @@ export const AlphaQRScanner = ({ onSolve, target, onScan }: AlphaQRScannerProps)
                 qrMountRef={mountRef}
                 qrElementId={elementId}
             />
-
-            <div
-                className={`border-border bg-surface relative min-h-[4rem] overflow-hidden rounded border p-2 font-mono text-xs break-all transition-colors ${textClass}`}
-            >
-                <div className="mb-1 flex items-center justify-between opacity-50">
-                    <span className="font-bold uppercase">[{dataTypeLabel}]</span>
-                    {scanStatus === 'foreign' && <span className="text-[10px]">IGNORED</span>}
-                </div>
-
-                {lastResult || (
-                    <span className="text-muted animate-pulse opacity-50">
-                        En attente de flux...
-                    </span>
-                )}
-            </div>
         </div>
     );
 };

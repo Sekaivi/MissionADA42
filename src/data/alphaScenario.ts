@@ -16,14 +16,14 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_qcm-puzzle_1',
-                    text: 'Si c’est ce que je pense on l’a vraiment beaucoup répété…',
+                    text: "Si c'est ce que je pense on l'a vraiment beaucoup répété...",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 1,
                 },
                 {
                     id: 'h_qcm-puzzle_2',
-                    text: 'Allez, c’est vraiment ce qui caractérise MMI.',
+                    text: "Allez, c'est vraiment ce qui caractérise MMI.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 180,
@@ -62,7 +62,7 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_chromatic-puzzle_1',
-                    text: "Jetez peut-être un coup d'œil aux outils qu’on a mis en place.",
+                    text: "Jetez peut-être un coup d'œil aux outils qu\'on a mis en place.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 1,
@@ -76,7 +76,7 @@ export const SCENARIO: Scenario = {
                 },
                 {
                     id: 'h_chromatic-puzzle_3',
-                    text: 'J’imagine qu’il faut scanner les couleurs demandées avec l’outil adapté.',
+                    text: "J'imagine qu'il faut scanner les couleurs demandées avec l'outil adapté.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 360,
@@ -93,21 +93,21 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_morse-puzzle_1',
-                    text: 'Ca ressemble beaucoup à du morse…',
+                    text: 'Ca ressemble beaucoup à du morse...',
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 1,
                 },
                 {
                     id: 'h_morse-puzzle_2',
-                    text: 'Maintenant on dirait que notre malfaiteur a du mal à se servir d’un clavier correctement.',
+                    text: "Maintenant on dirait que notre malfaiteur a du mal à se servir d'un clavier correctement.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 180,
                 },
                 {
                     id: 'h_morse-puzzle_3',
-                    text: 'Pourtant il suffit d’appuyer sur la touche Windows + Espace pour changer son clavier de QWERTY à AZERTY',
+                    text: "Pourtant il suffit d'appuyer sur la touche Windows + Espace pour changer son clavier de QWERTY à AZERTY",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 360,
@@ -125,7 +125,7 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_dns-puzzle_1',
-                    text: 'Même si vous vous en souvenez pas c’est logique !',
+                    text: "Même si vous vous en souvenez pas c'est logique !",
                     isLocked: true,
                     characterId: 'paj',
                     unlockDelay: 1,
@@ -139,7 +139,7 @@ export const SCENARIO: Scenario = {
                 },
                 {
                     id: 'h_dns-puzzle_3',
-                    text: 'Vous me désespérez... La réponse c’est d’abord saisie puis requête, contact avec le serveur et enfin réponse du serveur.',
+                    text: "Vous me désespérez... La réponse c'est d'abord saisie puis requête, contact avec le serveur et enfin réponse du serveur.",
                     isLocked: true,
                     characterId: 'paj',
                     unlockDelay: 360,
@@ -157,14 +157,14 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_ide-puzzle_1',
-                    text: 'Si y a bien un endroit où je me marre c’est bien le tableau de memes.',
+                    text: "Si y a bien un endroit où je me marre c'est bien le tableau de memes.",
                     isLocked: true,
                     characterId: 'goguey',
                     unlockDelay: 1,
                 },
                 {
                     id: 'h_ide-puzzle_2',
-                    text: 'J’ai l’impression que des nouveaux memes ont fait leur apparition.',
+                    text: "J'ai l'impression que des nouveaux memes ont fait leur apparition.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 180,
@@ -187,7 +187,7 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_coding-puzzle_1',
-                    text: "Rappelez-vous de vos cours d'algorithmique, l’important ici c’est la structure du code pas le contenu des fonctions. Vous avez pas besoin de comprendre ce que ça fait tant que vous comprenez dans quel ordre ça s’exécute.",
+                    text: "Rappelez-vous de vos cours d'algorithmique, l\'important ici c\'est la structure du code pas le contenu des fonctions. Vous avez pas besoin de comprendre ce que ça fait tant que vous comprenez dans quel ordre ça s\'exécute.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 1,
@@ -212,14 +212,14 @@ export const SCENARIO: Scenario = {
                 },
                 {
                     id: 'h_post-it-puzzle_2',
-                    text: 'J’ai l’impression que ça pourrait être une clé d’accès, donc une suite de chiffres.',
+                    text: "J'ai l'impression que ça pourrait être une clé d'accès, donc une suite de chiffres.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 180,
                 },
                 {
                     id: 'h_post-it-puzzle_3',
-                    text: 'Je crois que j’ai compris, on dirait que c’est du morse qui dessine la forme de sa signification.',
+                    text: "Je crois que j'ai compris, on dirait que c'est du morse qui dessine la forme de sa signification.",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 360,
@@ -267,21 +267,21 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_orientation-puzzle_1',
-                    text: 'C’est la séquence pour refermer la couche de sécurité du pare-feu.',
+                    text: "C'est la séquence pour refermer la couche de sécurité du pare-feu.",
                     isLocked: true,
                     characterId: 'paj',
                     unlockDelay: 1,
                 },
                 {
                     id: 'h_orientation-puzzle_2',
-                    text: 'Allez, il faut juste la reproduire, c’est pas sorcier normalement.',
+                    text: "Allez, il faut juste la reproduire, c'est pas sorcier normalement.",
                     isLocked: true,
                     characterId: 'paj',
                     unlockDelay: 180,
                 },
                 {
                     id: 'h_orientation-puzzle_3',
-                    text: 'Bon... Il faut simplement faire les mouvements indiqués dans l’ordre.',
+                    text: "Bon... Il faut simplement faire les mouvements indiqués dans l'ordre.",
                     isLocked: true,
                     characterId: 'paj',
                     unlockDelay: 360,
@@ -330,7 +330,7 @@ export const SCENARIO: Scenario = {
             hints: [
                 {
                     id: 'h_chest-puzzle_1',
-                    text: 'Essayez par tous les moyens de trouver ce mot de passe, la clé est à l’intérieur du coffre !',
+                    text: "Essayez par tous les moyens de trouver ce mot de passe, la clé est à l'intérieur du coffre !",
                     isLocked: true,
                     characterId: 'fabien',
                     unlockDelay: 1,

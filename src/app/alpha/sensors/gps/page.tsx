@@ -15,7 +15,7 @@ const SCRIPTS: Partial<Record<GpsPuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(
             CHARACTERS.fabien,
-            'On a réussi à localiser d’où provient le signal de son puzzle, j’imagine que la suite de son épreuve se passe là-bas.'
+            "On a réussi à localiser d'où provient le signal de son puzzle, j'imagine que la suite de son épreuve se passe là-bas."
         ),
         say(
             CHARACTERS.fabien,

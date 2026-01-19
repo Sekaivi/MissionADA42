@@ -18,7 +18,7 @@ const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
         say(CHARACTERS.unknown, 'Bienvenue ! HAHAHAHAHA !'),
         say(
             CHARACTERS.unknown,
-            'Alors comme ça vous voulez retrouver l’antivirus et empêcher mon petit bébé de prendre le contrôle de votre cher IUT ?'
+            "Alors comme ça vous voulez retrouver l'antivirus et empêcher mon petit bébé de prendre le contrôle de votre cher IUT ?"
         ),
         say(
             CHARACTERS.unknown,
@@ -26,13 +26,13 @@ const SCRIPTS: Partial<Record<QuizPuzzlePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.unknown,
-            'D’ailleurs comme vous pouvez le voir, dans maintenant moins d’une heure le virus va s’activer et vous pourrez dire bye-bye à votre diplôme !'
+            "D'ailleurs comme vous pouvez le voir, dans maintenant moins d'une heure le virus va s'activer et vous pourrez dire bye-bye à votre diplôme !"
         ),
     ],
     win: [
         say(
             CHARACTERS.unknown,
-            'Bravo, maintenant que vous vous croyez tellement intelligents, passons à l’énigme suivante...'
+            "Bravo, maintenant que vous vous croyez tellement intelligents, passons à l'énigme suivante..."
         ),
     ],
 };

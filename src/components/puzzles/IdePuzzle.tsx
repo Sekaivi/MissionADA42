@@ -380,7 +380,7 @@ const WebsiteWindow = ({
                         )}
                     >
                         Le Bachelor Universitaire de Technologie Métiers du Multimédia et de
-                        l’Internet (BUT MMI) est une formation en 3 ans, reconnue par l'Etat et les
+                        l\'Internet (BUT MMI) est une formation en 3 ans, reconnue par l'Etat et les
                         entreprises. Le diplôme valant grade de licence professionnelle
                         universitaire (Bac+3) permet autant une insertion professionnelle qu'une
                         poursuite d'études (Bac+4/5).

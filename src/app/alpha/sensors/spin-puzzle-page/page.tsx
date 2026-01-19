@@ -10,7 +10,7 @@ const SCRIPTS: Partial<Record<SpinPuzzlePhases, DialogueLine[]>> = {
     win: [
         say(
             CHARACTERS.harry,
-            'Haha, vous êtes si ridicules… Allez je m’adapte à vous, voici une petite énigme pour élève de CP.'
+            "Haha, vous êtes si ridicules... Allez je m'adapte à vous, voici une petite énigme pour élève de CP."
         ),
     ],
 };
