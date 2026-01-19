@@ -12,6 +12,9 @@ const puzzleConfig = {
 };
 
 const SCRIPTS: Partial<Record<ChromaticPuzzlePhases, DialogueLine[]>> = {
+    intro: [
+        say(CHARACTERS.goguey, "Concentre-toi, une séquence de couleurs va apparaître, mémorise-la et scanne les couleurs grâce à tes modules."),
+    ],
     win: [
         say(CHARACTERS.unknown, "C'est bien, vous grandissez vite à ce que je vois !"),
         say(CHARACTERS.unknown, 'Bon maintenant, on va voir ce dont vous êtes vraiment capables.'),

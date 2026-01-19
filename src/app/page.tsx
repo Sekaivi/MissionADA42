@@ -37,10 +37,52 @@ export type GamePhases =
 
 const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     intro: [
-        say(CHARACTERS.fabien, 'Ah, bonjour à tous, ça fait plaisir de vous voir.'),
         say(
+            CHARACTERS.fabien,
+            'Ah, bonjour à tous, ça fait plaisir de vous voir mobilisés et prêts à aider l’IUT.'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Bon les élèves de 3e année vous ont déjà expliqué la situation j’imagine, donc faisons court.'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Un élève vient de développer un virus qui menace toutes les machines, alors M. Jacquot a créé un antivirus.'
+        ),
+        say(
+            CHARACTERS.fabien,
+            "Le problème, c'est que la clé USB sur laquelle il était stocké a été subtilisée par ce mystérieux élève..."
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Comme par hasard, cet évènement est survenu juste après une SAE de dev !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'On a reçu un message du malfaiteur et il nous a laissé des puzzles pour retrouver notre précieuse clé USB !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Il a menacé d’activer immédiatement le virus si ce puzzle n’était pas fait exclusivement par des premières années.'
+        ),
+        say(
+            CHARACTERS.fabien,
+            'Vous avez donc été choisis pour trouver cette clé, l’activer et sauver l’IUT !'
+        ),
+        say(
+            CHARACTERS.fabien,
+            "D’ailleurs, même si ce n'est pas la priorité ultime, il faudrait aussi trouver l’identité de l’élève qui a créé ce virus..."
+        ),
+        say(
+            CHARACTERS.paj,
+            'Si on l’attrape, il subira les conséquences de ses actes, et je m’en assurerai personnellement.',
+            {}
+        ),        say(
             CHARACTERS.goguey,
-            "Parfois, il faudra utiliser l'interface debug. Secoue ton téléphone !"
+            "Avant ça, laisse-moi te présenter les outils que tu utiliseras pour retrouver ce criminel ! Il faudra parfois que tu utilises l'interface debug."
+        ),say(
+            CHARACTERS.goguey,
+            "Secoue ton téléphone pour y accéder!"
         ),
     ],
     debug_start: [

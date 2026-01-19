@@ -177,13 +177,16 @@ export default function Homepage({
                         </AlphaCircularGauge>
                     </div>
 
-                    {!isTimeUp && (
-                        <AlphaFeedbackPill
-                            message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
-                            type={isValidationPending ? 'success' : 'info'}
-                            pulse={isValidationPending}
-                        />
-                    )}
+                    <div className={'text-center'}>
+                        {!isTimeUp && (
+                            <AlphaFeedbackPill
+                                message={isValidationPending ? 'SUCCÈS' : 'EN COURS'}
+                                type={isValidationPending ? 'success' : 'info'}
+                                pulse={isValidationPending}
+                            />
+                        )}
+                    </div>
+
                 </>
             )}
 

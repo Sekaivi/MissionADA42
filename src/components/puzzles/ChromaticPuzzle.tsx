@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CpuChipIcon } from '@heroicons/react/24/outline';
 import { ArrowPathIcon, CheckIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
@@ -124,7 +123,7 @@ export const ChromaticPuzzle = ({
         triggerPhase('memory');
         setStep(0);
         setTimeLeft(MEMO_TIME);
-        setFeedbackMsg(`Mémorisez la séquence : ${MEMO_TIME}s`);
+        setFeedbackMsg(`Mémorisez : ${MEMO_TIME}s`);
     }, [generateSequence, triggerPhase, MEMO_TIME]);
 
     // timer phase mémoire
@@ -134,10 +133,10 @@ export const ChromaticPuzzle = ({
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     triggerPhase('scan');
-                    setFeedbackMsg('SCANNEZ LES COULEURS VIA LE DEBUGGER');
+                    setFeedbackMsg('SCANNEZ');
                     return 0;
                 }
-                setFeedbackMsg(`Mémorisez la séquence : ${prev - 1}s`);
+                setFeedbackMsg(`Mémorisez : ${prev - 1}s`);
                 return prev - 1;
             });
         }, 1000);
@@ -219,7 +218,7 @@ export const ChromaticPuzzle = ({
                 durationUnit={'ms'}
             />
 
-            <AlphaCard title="Séquence de Sécurité">
+            <AlphaCard title="Séquence de Sécurité" className={'text-center'}>
                 <AlphaSequenceDisplay
                     sequence={sequence}
                     presets={GAME_PRESETS}
@@ -239,20 +238,6 @@ export const ChromaticPuzzle = ({
                     }
                     pulse={gameState === 'scan'}
                 />
-
-                {gameState === 'scan' && (
-                    <AlphaCard>
-                        <div className="text-muted flex flex-col items-center gap-2 text-sm">
-                            <CpuChipIcon className="text-brand-purple h-8 w-8 animate-pulse" />
-                            <p>
-                                Utilisez le <strong>Scanner de Couleurs</strong> dans l'interface{' '}
-                                <span className="text-brand-purple font-mono font-bold">DEBUG</span>{' '}
-                                pour valider la séquence.
-                            </p>
-                            <p className="text-xs italic">Switch requis (Secouez le téléphone)</p>
-                        </div>
-                    </AlphaCard>
-                )}
             </AlphaCard>
 
             {(gameState === 'scan' || gameState === 'win') && !isDialogueOpen && (
