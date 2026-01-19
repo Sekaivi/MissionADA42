@@ -15,6 +15,7 @@ import {
     LockOpenIcon,
     MapIcon,
     MapPinIcon,
+    MicrophoneIcon,
     PencilIcon,
     PhotoIcon,
     PlusIcon,
@@ -27,6 +28,7 @@ import {
     UserGroupIcon,
     VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { FireIcon } from '@heroicons/react/24/solid';
 
 import { AlphaCard } from '@/components/alpha/AlphaCard';
 import { AlphaGrid } from '@/components/alpha/AlphaGrid';
@@ -208,6 +210,26 @@ const ALPHA_MODULES: ModuleGroup[] = [
                 subtitle:
                     'Basé sur le composant QuizGame valide, customisable. Supporte les dialogues',
                 icon: LockOpenIcon,
+                isGame: true,
+            },
+        ],
+    },
+    {
+        title: 'Microphone',
+        icon: MicrophoneIcon,
+        headerColor: 'text-brand-purple',
+        items: [
+            {
+                href: '/alpha/mic/mic-only',
+                title: 'Module microphone',
+                subtitle: '',
+                icon: MicrophoneIcon,
+            },
+            {
+                href: '/alpha/mic/firewall-puzzle-page',
+                title: 'Jeu du pare-feu',
+                subtitle: '',
+                icon: FireIcon,
                 isGame: true,
             },
         ],
