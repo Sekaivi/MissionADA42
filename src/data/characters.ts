@@ -6,9 +6,7 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'harry',
         name: 'Harry',
         avatars: {
-            default: '/images/avatars/shrekos.jpg',
-            scared: '/images/avatars/shrekos_scared.png',
-            happy: '/images/avatars/shrekos_happy.webp',
+            default: '/images/avatars/harry/harry_final.gif',
         },
         defaultSide: 'left',
     },
@@ -16,7 +14,7 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'fanfaron-mystérieux',
         name: 'Fanfaron mystérieux',
         avatars: {
-            default: '/images/avatars/mysterious.jpg',
+            default: '/images/avatars/harry/glitch.gif',
         },
         defaultSide: 'left',
     },
@@ -24,8 +22,8 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'fabien',
         name: 'Fabien Romanens',
         avatars: {
-            default: '/images/avatars/fabienromanens.jpg',
-            shocked: '/images/avatars/fabos_shocked.jpeg',
+            default: '/images/avatars/romanens/default.gif',
+            shocked: '/images/avatars/romanens/shocked.gif',
         },
         defaultSide: 'right',
     },
@@ -42,7 +40,8 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'paj',
         name: 'Pierre-Alain Jacquot',
         avatars: {
-            default: '/images/avatars/paj.png',
+            default: '/images/avatars/jacquot/default.gif',
+            angry: '/images/avatars/jacquot/angry.gif',
         },
         defaultSide: 'right',
     },
@@ -50,7 +49,8 @@ export const CHARACTERS: Record<string, Character> = {
         id: 'goguey',
         name: 'Alix Goguey',
         avatars: {
-            default: '/images/avatars/alixgoguey.jpg',
+            default: '/images/avatars/goguey/default.gif',
+            happy: '/images/avatars/goguey/happy.gif',
         },
         defaultSide: 'right',
     },

@@ -446,6 +446,8 @@ export default function QuizGame({
         onDialogueComplete,
     } = useGameScenario<QuizPuzzlePhases>(scripts);
 
+    const [isReadyToLeave, setIsReadyToLeave] = useState(false);
+
     useScenarioTransition(phase, isDialogueOpen, {
         idle: () => {
             triggerPhase('intro');
@@ -454,7 +456,12 @@ export default function QuizGame({
             triggerPhase('playing');
         },
         win: () => {
-            setTimeout(() => onSolve(), SCENARIO.defaultTimeBeforeNextStep);
+            setTimeout(() => {
+                setIsReadyToLeave(true); // Déclenche la fermeture visuelle de la modale
+
+                // On attend que l'animation de fermeture de la modale se finisse (ex: 300ms)
+                onSolve();
+            }, SCENARIO.defaultTimeBeforeNextStep);
         },
     });
 
@@ -543,7 +550,7 @@ export default function QuizGame({
             />
 
             <AlphaModal
-                isOpen={phase === 'win' && !isDialogueOpen}
+                isOpen={phase === 'win' && !isDialogueOpen && !isReadyToLeave}
                 variant={'success'}
                 title={modalConfig?.title || 'Puzzle validé'}
                 message={modalConfig?.message || ''}

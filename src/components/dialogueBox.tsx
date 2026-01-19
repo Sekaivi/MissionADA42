@@ -88,6 +88,20 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
 
     const initialY = position === 'bottom' ? 50 : -50;
 
+    const getAvatarSource = (originalSrc: string | undefined, isAnimating: boolean) => {
+        if (!originalSrc) return '';
+
+        // Si on écrit (isTyping = true), on garde le GIF original
+        if (isAnimating) {
+            return originalSrc;
+        }
+
+        // Sinon, on remplace l'extension (.gif ou .webp) par .png
+        // Assurez-vous d'avoir les fichiers .png correspondants !
+        return originalSrc.replace(/\.(gif|webp)$/i, '.png');
+    };
+    const currentAvatarSrc = getAvatarSource(currentLine?.avatar, isTyping);
+
     if (!isClient) return null;
 
     const content = (
@@ -112,7 +126,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                             transition: { duration: 0.2 },
                         }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="border-border bg-surface pointer-events-auto relative w-full max-w-4xl rounded-lg border-2 p-6 shadow-2xl backdrop-blur-md"
+                        className="border-border bg-surface pointer-events-auto relative w-full max-w-4xl rounded-lg shadow-2xl backdrop-blur-md"
                         onClick={handleInteraction}
                     >
                         <motion.div
@@ -128,48 +142,52 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                             {currentLine.speaker}
                         </motion.div>
 
-                        <div className="flex items-start gap-3" onClick={handleInteraction}>
+                        <div className="flex gap-3" onClick={handleInteraction}>
                             <AnimatePresence mode="popLayout">
                                 {currentLine.avatar && (
                                     <motion.div
                                         key={`${currentLine.speaker}-${currentLine.side}`}
-                                        initial={{
-                                            opacity: 0,
-                                            x: isRightAvatar ? 30 : -30,
-                                            scale: 0.9,
-                                        }}
-                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                        exit={{
-                                            opacity: 0,
-                                            x: isRightAvatar ? 30 : -30,
-                                            scale: 0.9,
-                                        }}
-                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                         className={clsx(
-                                            'border-border relative h-18 w-18 flex-shrink-0 overflow-hidden rounded border-2 shadow-inner',
+                                            'relative flex flex-shrink-0 items-end overflow-hidden shadow-inner',
                                             isRightAvatar ? 'order-last' : ''
                                         )}
                                     >
                                         <motion.div
                                             key={currentLine.avatar}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="relative h-full w-full"
+                                            initial={{
+                                                opacity: 0,
+                                                x: isRightAvatar ? 30 : -30,
+                                                scale: 0.9,
+                                            }}
+                                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                                            exit={{
+                                                opacity: 0,
+                                                x: isRightAvatar ? 30 : -30,
+                                                scale: 0.9,
+                                            }}
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 300,
+                                                damping: 25,
+                                            }}
                                         >
                                             <Image
-                                                src={currentLine.avatar}
+                                                width={80}
+                                                height={80}
+                                                src={currentAvatarSrc}
                                                 alt={currentLine.speaker}
-                                                fill
-                                                className="object-cover"
+                                                className={clsx(
+                                                    'object-contain',
+                                                    isRightAvatar && 'rotate-y-180'
+                                                )}
                                             />
                                         </motion.div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <div className="relative z-0 flex-grow pt-2">
-                                <p className="min-h-[4rem] font-mono text-sm leading-relaxed">
+                            <div className="relative z-0 flex-grow">
+                                <p className="min-h-[4rem] py-6 pl-6 font-mono text-sm leading-relaxed">
                                     {displayedText}
                                     {isTyping && (
                                         <motion.span
@@ -188,7 +206,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className={clsx(
-                                    'text-brand-emerald absolute right-2 bottom-1.5 flex items-center gap-2 transition-all duration-300',
+                                    'text-brand-emerald absolute bottom-1.5 left-2 flex items-center gap-2 transition-all duration-300',
                                     isLastLine ? 'font-bold text-emerald-400' : ''
                                 )}
                             >

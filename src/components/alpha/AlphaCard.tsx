@@ -33,7 +33,9 @@ export const AlphaCard = ({
                 {action && <>{action}</>}
             </div>
         )}
-        <div className={`flex-1 space-y-4 p-4 ${contentClassName}`}>{children}</div>
+        <div className={`_CONTENT_ALPHA_CARD flex-1 space-y-4 p-4 ${contentClassName}`}>
+            {children}
+        </div>
 
         {progress ? (
             <div className="bg-surface-highlight absolute bottom-0 left-0 h-1 w-full">
