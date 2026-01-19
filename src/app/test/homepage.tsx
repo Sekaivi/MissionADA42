@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { HashtagIcon, PuzzlePieceIcon } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { WelcomeScreen } from '@/app/test/WelcomeScreen';
 import { AlphaCircularGauge } from '@/components/alpha/AlphaCircularGauge';
@@ -131,6 +132,8 @@ export default function Homepage({
         ? PUZZLE_COMPONENTS[activePuzzleId as PuzzleComponentId]
         : null;
 
+    const shouldShowPuzzle = ActivePuzzle && gameState;
+
     return (
         <>
             {isGameActive && (
@@ -222,26 +225,45 @@ export default function Homepage({
 
                                 {/* ZONE PUZZLE */}
                                 <>
-                                    {ActivePuzzle ? (
-                                        <ActivePuzzle
-                                            onSolve={onPuzzleSolve || (() => {})}
-                                            isSolved={false}
-                                            data={gameState || undefined}
-                                            lastModuleAction={lastModuleAction}
-                                        />
-                                    ) : (
-                                        <div className="text-muted flex flex-col items-center justify-center text-center">
-                                            <PuzzlePieceIcon
-                                                className={'h-12 w-12 animate-pulse'}
-                                            />
-                                            <p className="mt-2 text-sm italic">
-                                                Synchronisation du module...
-                                            </p>
-                                            <span className="font-mono text-xs">
-                                                ID: {activePuzzleId}
-                                            </span>
-                                        </div>
-                                    )}
+                                    <AnimatePresence mode="wait">
+                                        {shouldShowPuzzle ? (
+                                            <motion.div
+                                                key={activePuzzleId || missionStep}
+                                                initial={{ opacity: 0, x: 20, filter: 'blur(8px)' }}
+                                                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                                                exit={{ opacity: 0, x: -20, filter: 'blur(8px)' }}
+                                                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                                className="w-full"
+                                            >
+                                                <ActivePuzzle
+                                                    onSolve={onPuzzleSolve || (() => {})}
+                                                    isSolved={false}
+                                                    data={gameState || undefined}
+                                                    lastModuleAction={lastModuleAction}
+                                                />
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div
+                                                key="loader"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="text-muted flex flex-col items-center justify-center text-center"
+                                            >
+                                                <PuzzlePieceIcon
+                                                    className={'h-12 w-12 animate-pulse'}
+                                                />
+                                                <p className="mt-2 text-sm italic">
+                                                    Synchronisation du module...
+                                                </p>
+                                                {activePuzzleId && (
+                                                    <span className="font-mono text-xs">
+                                                        ID: {activePuzzleId}
+                                                    </span>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </>
                             </>
                         )}

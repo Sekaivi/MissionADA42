@@ -6,7 +6,6 @@ interface MicrophoneData {
     isBlowing: boolean;
     intensity: number;
     volume: number;
-
 }
 
 export function useMicrophone() {

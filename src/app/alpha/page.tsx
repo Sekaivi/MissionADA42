@@ -220,8 +220,14 @@ const ALPHA_MODULES: ModuleGroup[] = [
         headerColor: 'text-brand-purple',
         items: [
             {
-                href: '/alpha/mic/mic-only',
-                title: 'Module microphone',
+                href: '/alpha/mic/mic-only-debug',
+                title: 'debug microphone',
+                subtitle: '',
+                icon: MicrophoneIcon,
+            },
+            {
+                href: '/alpha/mic/mic-module',
+                title: '> Module microphone',
                 subtitle: '',
                 icon: MicrophoneIcon,
             },
