@@ -488,13 +488,9 @@ export const CodingPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts
                     <AlphaButton onClick={verifyCode} className="mx-auto">
                         EXECUTE_CODE()
                     </AlphaButton>
-                    <div className="text-muted text-center space-y-3">
-                        <p>
-                            Touchez un bloc pour le sélectionner.
-                        </p>
-                        <p>
-                            Inclinez le téléphone pour le déplacer.
-                        </p>
+                    <div className="text-muted space-y-3 text-center">
+                        <p>Touchez un bloc pour le sélectionner.</p>
+                        <p>Inclinez le téléphone pour le déplacer.</p>
                     </div>
                 </div>
             )}

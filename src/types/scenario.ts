@@ -1,9 +1,12 @@
 import { PuzzleComponentId } from '@/components/puzzles/PuzzleRegistry';
+import { CharacterId } from '@/data/characters';
 
 export interface Hint {
     id: string;
     text: string;
     isLocked: boolean;
+    characterId?: CharacterId;
+    unlockDelay?: number;
 }
 
 export interface ScenarioStep {

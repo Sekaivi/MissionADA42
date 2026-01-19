@@ -22,6 +22,7 @@ import { AlphaHeader } from '@/components/alpha/AlphaHeader';
 import { DialogueBox } from '@/components/dialogueBox';
 import { EmergencyOverlay } from '@/components/overlays/EmergencyOverlay';
 import { DefeatScreen, PUZZLE_COMPONENTS } from '@/components/puzzles/PuzzleRegistry';
+import { HintSystem } from '@/components/ui/HintSystem';
 import { SCENARIO } from '@/data/alphaScenario';
 import { CHARACTERS } from '@/data/characters';
 import { useGameEffects } from '@/hooks/useGameEffects';
@@ -204,6 +205,7 @@ const useSharedGameLogic = (gameCode: string | null, isHost: boolean) => {
         adminDialogueOpen,
         setAdminDialogueOpen,
         adminScript,
+        setAdminScript,
         activeChallenge,
         handleChallengeResolved,
         effectiveStartTime,
@@ -407,6 +409,7 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
         adminDialogueOpen,
         setAdminDialogueOpen,
         adminScript,
+        setAdminScript,
         activeChallenge,
         handleChallengeResolved,
         effectiveStartTime,
@@ -420,6 +423,12 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
     } = logic;
 
     const title = isHost ? 'Tableau de Bord Hôte' : 'Terminal Agent';
+
+    const [fallbackTime] = useState(() => Date.now());
+
+    const rawStepStartTime = gameState?.lastStepTime || logic.effectiveStartTime || fallbackTime;
+
+    const startTimeMs = Number(rawStepStartTime);
 
     if (isTimeUp) {
         return (
@@ -521,6 +530,20 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
                         }
                         data={gameState || undefined}
                     />
+
+                    {!isGameWon && (
+                        <div className="flex justify-center border-t border-white/5 pt-4">
+                            <HintSystem
+                                key={currentScenarioStep.id}
+                                step={currentScenarioStep}
+                                startTime={startTimeMs} // 👈 On passe la prop ici
+                                onShowScript={(script) => {
+                                    setAdminScript(script);
+                                    setAdminDialogueOpen(true);
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 

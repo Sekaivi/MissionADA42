@@ -18,6 +18,7 @@ import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 import { useGameScenario, useScenarioTransition } from '@/hooks/useGameScenario';
 import { useOrientation } from '@/hooks/useOrientation';
+import { DialogueLine } from '@/types/dialogue';
 
 const LEVELS = [
     { target: 360, label: '1 Tour à Droite', direction: 'right' },
@@ -28,6 +29,8 @@ const LEVELS = [
 export type SpinPuzzlePhases = PuzzlePhases;
 
 export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts = {} }) => {
+    const [hintScript, setHintScript] = useState<DialogueLine[] | null>(null);
+
     const { gameState, triggerPhase, isDialogueOpen, currentScript, onDialogueComplete } =
         useGameScenario<SpinPuzzlePhases>(scripts);
 
@@ -105,14 +108,22 @@ export const SpinPuzzle: React.FC<PuzzleProps> = ({ onSolve, isSolved, scripts =
         },
     });
 
+    const handleDialogueClose = () => {
+        if (hintScript) {
+            setHintScript(null);
+        } else {
+            onDialogueComplete();
+        }
+    };
+
     if (isSolved) return <AlphaSuccess message={'SÉQUENCE VALIDÉE'} />;
 
     return (
         <>
             <DialogueBox
-                isOpen={isDialogueOpen}
-                script={currentScript}
-                onComplete={onDialogueComplete}
+                isOpen={isDialogueOpen || !!hintScript}
+                script={hintScript || currentScript}
+                onComplete={handleDialogueClose}
             />
 
             {/* cas iOS demande la permission */}

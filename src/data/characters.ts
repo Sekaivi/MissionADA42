@@ -1,7 +1,4 @@
-// data/characters.ts
-import { Character } from '@/types/dialogue';
-
-export const CHARACTERS: Record<string, Character> = {
+export const CHARACTERS = {
     harry: {
         id: 'harry',
         name: 'Harry',
@@ -62,4 +59,6 @@ export const CHARACTERS: Record<string, Character> = {
         },
         defaultSide: 'right',
     },
-};
+} as const;
+
+export type CharacterId = keyof typeof CHARACTERS;
