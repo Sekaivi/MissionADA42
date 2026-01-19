@@ -10,7 +10,7 @@ import { PuzzlePhases, PuzzleProps } from '@/components/puzzles/PuzzleRegistry';
 import { SCENARIO } from '@/data/alphaScenario';
 
 // URL OBLIGATOIRE pour les objets d'inventaire
-const ACCEPTED_BASE_URL = 'https://wheezier-ashlea-girly.ngrok-free.dev/';
+const ACCEPTED_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 // On ajoute 'foreign' pour gérer les codes inconnus sans erreur
 type ScannerStatus = PuzzlePhases | 'evidence' | 'foreign';
