@@ -428,7 +428,9 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
 
     const rawStepStartTime = gameState?.lastStepTime
         ? gameState.lastStepTime
-        : (safeStep === 1 ? logic.effectiveStartTime : fallbackTime);
+        : safeStep === 1
+          ? logic.effectiveStartTime
+          : fallbackTime;
 
     const startTimeMs = Number(rawStepStartTime);
 
@@ -538,7 +540,7 @@ const GameInterfaceLayout: React.FC<GameInterfaceLayoutProps> = ({
                             <HintSystem
                                 key={currentScenarioStep.id}
                                 step={currentScenarioStep}
-                                startTime={startTimeMs} // 👈 On passe la prop ici
+                                startTime={startTimeMs}
                                 onShowScript={(script) => {
                                     setAdminScript(script);
                                     setAdminDialogueOpen(true);

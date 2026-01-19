@@ -414,6 +414,7 @@ export const useGameLogic = (
         adminDialogueOpen,
         setAdminDialogueOpen,
         adminScript,
+        setAdminScript,
         activeChallenge,
         handleChallengeResolved,
         submitProposal,
