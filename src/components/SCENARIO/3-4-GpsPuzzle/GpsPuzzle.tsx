@@ -6,6 +6,11 @@ import { CHARACTERS } from '@/data/characters';
 import { DialogueLine } from '@/types/dialogue';
 import { say } from '@/utils/dialogueUtils';
 
+const puzzleConfig = {
+    lat: 45.20372213834273,
+    long: 5.701471833458243,
+};
+
 const SCRIPTS: Partial<Record<GpsPuzzlePhases, DialogueLine[]>> = {
     intro: [
         say(
@@ -35,5 +40,12 @@ const SCRIPTS: Partial<Record<GpsPuzzlePhases, DialogueLine[]>> = {
 };
 
 export default function GpsPuzzle({ isSolved, onSolve }: PuzzleProps) {
-    return <GpsGame scripts={SCRIPTS} onSolve={onSolve} isSolved={isSolved} />;
+    return (
+        <GpsGame
+            scripts={SCRIPTS}
+            onSolve={onSolve}
+            isSolved={isSolved}
+            puzzleConfig={puzzleConfig}
+        />
+    );
 }

@@ -14,6 +14,7 @@ import FirewallPuzzle from '@/components/SCENARIO/3-2-FirewallPuzzle/FirewallPuz
 import OrientationPuzzleS3E3 from '@/components/SCENARIO/3-3-OrientationPuzzle/OrientationPuzzle';
 import GpsPuzzle from '@/components/SCENARIO/3-4-GpsPuzzle/GpsPuzzle';
 import ChestCodePuzzleS4E1 from '@/components/SCENARIO/4-1-ChestCodePuzzle/ChestCodePuzzle';
+import CoffreFin from '@/components/SCENARIO/4-2-CoffreFin/CoffreFin';
 import { ModuleId } from '@/data/modules';
 import { DialogueLine } from '@/types/dialogue';
 import { GameState, HistoryEntry } from '@/types/game';
@@ -161,6 +162,7 @@ export const PUZZLE_COMPONENTS = {
 
     // étape 4
     'chest-puzzle': ChestCodePuzzleS4E1,
+    'antivirus-puzzle': CoffreFin,
 
     'victory-screen': VictoryScreen,
 };

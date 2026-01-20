@@ -14,7 +14,7 @@ import {
     ShieldCheckIcon,
     UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { ArrowLeftIcon, PlayIcon } from '@heroicons/react/24/solid';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 
 import { LogTerminal } from '@/components/LogTerminal';
@@ -27,7 +27,6 @@ import { InventoryItemDetails } from '@/components/inventory/InventoryItemDetail
 import { InventoryItemUI } from '@/components/inventory/InventorySlot';
 import { HintSystem } from '@/components/ui/HintSystem';
 import { useEscapeGame } from '@/context/EscapeGameContext';
-import { SCENARIO } from '@/data/alphaScenario';
 import { MODULES, ModuleId } from '@/data/modules';
 import { useGameLogic } from '@/hooks/useGameLogic';
 
@@ -384,38 +383,6 @@ export default function DebugPage({
                         </div>
                     )}
                 </div>
-            )}
-
-            {/* TAB: ADMIN */}
-            {currentTab === 'admin' && isHost && gameLogic && (
-                <AlphaCard title="Contrôle Maître du Jeu" className="border-brand-purple">
-                    <div className="space-y-6">
-                        <div className="bg-brand-purple/10 rounded-lg p-4 text-center">
-                            <div className="text-brand-purple text-xs font-bold">État actuel</div>
-                            <div className="text-2xl font-black text-white">
-                                {gameLogic.currentScenarioStep?.title || 'En attente'}
-                            </div>
-                            <div className="text-muted text-xs">
-                                Étape {gameLogic.gameState?.step || 0} / {SCENARIO.steps.length}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-muted text-xs font-bold uppercase">
-                                Actions Force Majeure
-                            </p>
-                            {!validationRequest && (
-                                <AlphaButton
-                                    onClick={() => gameLogic.initiateNextStep()}
-                                    variant="secondary"
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <PlayIcon className="h-4 w-4" /> SKIPPER L'ÉTAPE (Force)
-                                    </div>
-                                </AlphaButton>
-                            )}
-                        </div>
-                    </div>
-                </AlphaCard>
             )}
 
             {/* nav en bas */}

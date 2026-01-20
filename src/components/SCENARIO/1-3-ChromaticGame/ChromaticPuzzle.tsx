@@ -8,7 +8,7 @@ import { PRESETS } from '@/utils/colorPresets';
 import { say } from '@/utils/dialogueUtils';
 
 const puzzleConfig = {
-    sequence: [PRESETS.BLANC],
+    sequence: [PRESETS.VERT, PRESETS.ROUGE, PRESETS.BLEU, PRESETS.NOIR],
 };
 
 const SCRIPTS: Partial<Record<ChromaticPuzzlePhases, DialogueLine[]>> = {

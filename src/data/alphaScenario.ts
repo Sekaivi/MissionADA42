@@ -338,8 +338,14 @@ export const SCENARIO: Scenario = {
             ],
         },
 
-        // fin : mettre le code trouvé dans la clef de Jacquot
-
+        {
+            id: 'step_4_2',
+            title: 'Mot de passe antivirus',
+            description: '',
+            componentId: 'antivirus-puzzle',
+            solution: '',
+            hints: [],
+        },
         {
             id: 'step_win',
             title: 'Victoire',

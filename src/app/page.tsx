@@ -230,8 +230,8 @@ const GameContent = () => {
     };
 
     const { requestPermission, permissionGranted } = useShake(switchInterface, {
-        threshold: 20,
-        minShakes: 4,
+        threshold: 17,
+        minShakes: 3,
         timeout: 1000,
     });
 

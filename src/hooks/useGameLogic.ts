@@ -307,21 +307,30 @@ export const useGameLogic = (
         const now = Date.now();
         const startOfStep = toMs(gameState.lastStepTime || effectiveStartTime);
 
+        const completedStep = gameState.step;
+        const completedStepIndex = Math.max(0, completedStep - 1);
+        const completedStepData = SCENARIO.steps[completedStepIndex];
+        const completedStepTitle = completedStepData ? completedStepData.title : 'Inconnu';
+
         const historyEntry = {
-            step: gameState.step,
+            step: completedStep,
+            stepTitle: completedStepTitle,
             solverName: gameState.pendingProposal?.playerName || 'Commandement',
             solvedAt: now,
             duration: (now - startOfStep) / 1000,
             lastStepTime: now,
         };
 
-        const completedStep = gameState.step;
+        // infos de la nouvelle étape
         const nextStep = gameState.validationRequest.nextStep;
+        const nextStepIndex = Math.max(0, nextStep - 1);
+        const nextStepData = SCENARIO.steps[nextStepIndex];
+        const nextStepTitle = nextStepData ? nextStepData.title : '';
 
         await updateState({
             ...gameState,
             step: nextStep,
-            message: `Étape ${nextStep}`,
+            message: `Étape ${nextStep} : ${nextStepTitle}`,
             history: [historyEntry, ...(gameState.history || [])],
             lastStepTime: now,
             lastUpdate: now,
@@ -332,7 +341,7 @@ export const useGameLogic = (
                 ...(gameState.logs || []),
                 createLog(
                     'SUCCESS',
-                    `ÉTAPE ${completedStep} TERMINÉE`,
+                    `ÉTAPE ${completedStep} : ${completedStepTitle.toUpperCase()} TERMINÉE`,
                     `Résolu par: ${historyEntry.solverName} (${historyEntry.duration.toFixed(0)}s)`
                 ),
             ],

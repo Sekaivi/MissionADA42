@@ -83,8 +83,7 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
 
     // initialiser les murs immédiatement avec LEVEL_CONFIG
     const gameState = useRef<GameState>({
-        player: { x: LEVEL_CONFIG.start.x,
-            y: LEVEL_CONFIG.start.y, w: 20, h: 20 },
+        player: { x: LEVEL_CONFIG.start.x, y: LEVEL_CONFIG.start.y, w: 20, h: 20 },
         walls: JSON.parse(JSON.stringify(LEVEL_CONFIG.walls)), // Pré-chargement des murs
         vx: 0,
         vy: 0,
@@ -441,7 +440,10 @@ export default function MazePuzzle({ onSolve, isSolved, scripts = {}, modalConfi
                                                 ACTIVER & JOUER
                                             </AlphaButton>
                                         ) : (
-                                            <AlphaButton onClick={() => triggerPhase('intro')} className={'mx-auto'}>
+                                            <AlphaButton
+                                                onClick={() => triggerPhase('intro')}
+                                                className={'mx-auto'}
+                                            >
                                                 LANCER SÉQUENCE
                                             </AlphaButton>
                                         )}

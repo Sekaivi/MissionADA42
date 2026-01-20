@@ -151,7 +151,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className={clsx(
-                                'bg-brand-emerald border-brand-emerald absolute -top-5 rounded border px-4 py-1 text-sm font-bold tracking-wider uppercase shadow-md',
+                                'bg-brand-emerald border-brand-emerald absolute -top-5 rounded border px-4 py-1 text-sm font-bold tracking-wider uppercase',
                                 isRightAvatar ? 'right-6' : 'left-6'
                             )}
                         >
@@ -178,7 +178,7 @@ export const DialogueBox: React.FC<DialogueBoxProps> = ({
                                         }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                         className={clsx(
-                                            'relative flex h-[115px] w-[115px] flex-shrink-0 items-end overflow-hidden shadow-inner',
+                                            'relative flex h-[115px] w-[115px] flex-shrink-0 items-end overflow-hidden',
                                             isRightAvatar ? 'order-last' : ''
                                         )}
                                     >
