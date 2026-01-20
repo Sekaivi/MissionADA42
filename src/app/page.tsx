@@ -43,7 +43,7 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.fabien,
-            "Bon les élèves de 3e année vous ont déjà expliqué la situation j'imagine, donc faisons court."
+            "Bon, les élèves de 3e année vous ont déjà expliqué la situation j'imagine, donc faisons court."
         ),
         say(
             CHARACTERS.fabien,
@@ -105,11 +105,15 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
         ),
         say(
             CHARACTERS.goguey,
-            "Durant votre mission, si l'un d'entre vous termine une mission plus tôt que les autres, votre chef d'équipe pourra alors lancer une requête de synchronisation."
+            "Durant votre mission, vous devrez tous résoudre l'énigme en cours afin de passer à la suivante."
         ),
         say(
             CHARACTERS.goguey,
-            "Vous pourrez alors continuer tous ensemble, si tant est que tout le monde l'accepte !",
+            "Toutefois, si l'un d'entre vous termine une énigme mais que les autres n'y parviennent pas, votre chef d'équipe pourra alors lancer une requête de synchronisation."
+        ),
+        say(
+            CHARACTERS.goguey,
+            "Cette requête apparaîtra ici, au niveau du terminal. Une fois la demande acceptée par tout le monde, vous pourrez alors accéder à la prochaine étape tous ensemble !",
             { emotion: 'happy' }
         ),
     ],
@@ -136,15 +140,19 @@ const SCRIPTS: Partial<Record<GamePhases, DialogueLine[]>> = {
     tuto_color: [
         say(CHARACTERS.paj, 'Quelle tronche ! Bien. Maintenant, teste le scanner de couleur.'),
     ],
-    tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le merveilleux Décodeur QR. Indispensable !')],
-    tuto_gyro: [say(CHARACTERS.paj, 'Calibrez moi le Gyroscope.')],
-    tuto_mic: [say(CHARACTERS.paj, "Et enfin, le Micro. On a besoin d'oreilles partout.")],
+    tuto_qr: [say(CHARACTERS.paj, 'Ensuite, le merveilleux décodeur QR. Indispensable !')],
+    tuto_gyro: [say(CHARACTERS.paj, 'Calibrez-moi le gyroscope.')],
+    tuto_mic: [say(CHARACTERS.paj, "Et enfin, le micro. On a besoin d'oreilles partout.")],
     debug_all_validated: [
         say(CHARACTERS.paj, 'Ton équipement est opérationnel.'),
         say(
             CHARACTERS.goguey,
-            "Vous pouvez retourner sur l'interface principale pour débuter l'énigme laissée par l'élève !"
+            "Vous pouvez retourner sur l'interface principale pour résoudre les puzzles laissés par l'élève !"
         ),
+        say(
+            CHARACTERS.goguey,
+            "Désignez un chef de groupe qui lancera la mission, et rejoignez-le par la suite."
+        )
     ],
 };
 

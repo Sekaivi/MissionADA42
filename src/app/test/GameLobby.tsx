@@ -38,7 +38,7 @@ export const GameLobby = () => {
                         className="bg-surface border-border hover:bg-surface flex flex-col items-center gap-2 rounded-xl border p-4 transition-all"
                     >
                         <ComputerDesktopIcon className="text-brand-purple h-12 w-12" />
-                        <span className="font-bold">CRÉER UNE MISSION</span>
+                        <span className="font-bold">LANCER LA MISSION</span>
                         <span className="text-muted text-xs">(Hôte)</span>
                     </button>
                     <button
@@ -65,8 +65,8 @@ export const GameLobby = () => {
                     Retour
                 </button>
             }
+            contentClassName={'space-y-4'}
         >
-            <div className="space-y-4 py-4">
                 <form onSubmit={view === 'host' ? handleCreate : handleJoin} className="space-y-4">
                     <AlphaInput
                         required
@@ -100,7 +100,6 @@ export const GameLobby = () => {
                               : 'CONNEXION'}
                     </AlphaButton>
                 </form>
-            </div>
         </AlphaCard>
     );
 };
