@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { FireIcon } from '@heroicons/react/24/solid';
 
@@ -54,7 +54,7 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
         useGameScenario<FirewallPuzzlePhases>(scripts);
 
     // CAPTEURS
-    const { data: orientationData } = useOrientation();
+    const { data: orientationData, error } = useOrientation();
     const { data: mic, requestPermission } = useMicrophone();
 
     // LOGIQUE DE JEU
@@ -64,6 +64,9 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
         isBlowing: mic.isBlowing,
         onWin: () => triggerPhase('win'),
     });
+
+    // DEBUG
+    const [debugMessages, setDebugMessages] = useState('');
 
     const onStart = async () => {
         await requestPermission();
@@ -105,6 +108,11 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
         return () => cancelAnimationFrame(frameId);
     }, [temp]); // recalibrage si la température change
 
+    // DEBUG
+    useEffect(() => {
+        setDebugMessages("isBlowing: " + mic.isBlowing + " and current Orientation data: " + orientationData)
+    }, [mic.isBlowing])
+
     return (
         <>
             <DialogueBox
@@ -112,6 +120,15 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
                 script={currentScript}
                 onComplete={onDialogueComplete}
             />
+
+            {/*POUR DEBUG */}
+            {debugMessages}
+            <h1>Orientation Data:</h1>
+            <p>Error: {error}</p>
+            <p>Alpha: {orientationData.alpha}</p>
+            <p>beta: {orientationData.beta}</p>
+            <p>gamma: {orientationData.gamma}</p>
+            <p>heading: {orientationData.heading}</p>
 
             {/* ÉTAT 1: DEMANDE D'ACCÈS */}
             {gameState === 'intro' && (
