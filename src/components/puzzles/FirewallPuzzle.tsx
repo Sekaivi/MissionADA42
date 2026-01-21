@@ -69,9 +69,15 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
     const [debugMessages, setDebugMessages] = useState('');
 
     const onStart = async () => {
-        await requestPermission();
-        await requestOrient() ;
-        triggerPhase('playing');
+        try {
+            await Promise.all([
+                requestOrient(),
+                requestPermission()
+            ]);
+            triggerPhase('playing');
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     useScenarioTransition(gameState, isDialogueOpen, {
