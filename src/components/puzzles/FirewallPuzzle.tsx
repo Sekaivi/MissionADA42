@@ -54,7 +54,7 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
         useGameScenario<FirewallPuzzlePhases>(scripts);
 
     // CAPTEURS
-    const { data: orientationData, error, permissionGranted } = useOrientation();
+    const { data: orientationData, error, permissionGranted, requestPermission: requestOrient } = useOrientation();
     const { data: mic, requestPermission } = useMicrophone();
 
     // LOGIQUE DE JEU
@@ -70,6 +70,7 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
 
     const onStart = async () => {
         await requestPermission();
+        await requestOrient() ;
         triggerPhase('playing');
     };
 
