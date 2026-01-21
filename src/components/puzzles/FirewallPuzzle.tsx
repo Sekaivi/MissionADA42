@@ -125,7 +125,7 @@ export default function FirewallPuzzle({ onSolve, isSolved, scripts = {} }: Puzz
             {debugMessages}
             <h1>Orientation Data:</h1>
             <p>Error: {error}</p>
-            <p>Permission Granted: {permissionGranted} </p>
+            <p>Permission Granted: {permissionGranted ? "oui" : "non"} </p>
             <p>Alpha: {orientationData.alpha}</p>
             <p>beta: {orientationData.beta}</p>
             <p>gamma: {orientationData.gamma}</p>
